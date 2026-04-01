@@ -1,250 +1,2811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pile of Shame Support Network — Season Stats</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #2a2a2a;
+      --surface: #333333;
+      --surface2: #3a3a3a;
+      --border: #444444;
+      --text: #f0f0f0;
+      --muted: #aaa;
+      --faint: #555555;
+      --win: #4a9e5c;
+      --win-bg: #1a3520;
+      --loss: #c0392b;
+      --loss-bg: #3a1510;
+      --draw: #4a7fb5;
+      --draw-bg: #152030;
+      --accent: #ff6a00;
+      --accent-bg: #3d2200;
+      --accent-muted: #cc5500;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
 
-Warhammer 40,000 — Season Stats
-Pile of Shame Support Network
-2025–26 SeasonWarhammer 40,00014 events35 players with results10th Edition
-Grand Tournaments
-▼
-RTTs
-▼
-Teams Events
-▼
-Champions of Shame
-▼
-1
-Gabriel Evans
-Necrons +1 more
-14W 2L
-76%
-16 games · 88% raw
-▼
-2
-Tom Durrands
-Death Guard
-14W 2L
-76%
-16 games · 88% raw
-▼
-3
-Nathan Sears
-Space Marines +1 more
-26W 6L
-76%
-32 games · 81% raw
-▼
-4
-Cayleb Langhals
-Thousand Sons +1 more
-38W 12L 2D
-71%
-52 games · 73% raw
-▼
-5
-Aneurin Brewer
-Drukhari
-8W 2L
-69%
-10 games · 80% raw
-▼
-6
-Callum Stayton
-Dark Angels +1 more
-8W 2L
-69%
-10 games · 80% raw
-▼
-7
-Robert Briden
-Necrons
-8W 2L
-69%
-10 games · 80% raw
-▼
-8
-Tim Waters
-Drukhari +1 more
-30W 12L
-69%
-42 games · 71% raw
-▼
-9
-Paul Looker
-Drukhari
-12W 4L
-68%
-16 games · 75% raw
-▼
-10
-Jack Turner
-Thousand Sons +1 more
-18W 8L
-66%
-26 games · 69% raw
-▼
-11
-Henry Bamford
-Orks
-14W 6L
-66%
-20 games · 70% raw
-▼
-12
-Alex Higgins
-Astra Militarum +1 more
-8W 4L
-63%
-12 games · 67% raw
-▼
-13
-Alex Ford
-Aeldari +2 more
-20W 12L
-61%
-32 games · 63% raw
-▼
-14
-Guy Miscampbell
-Deathwatch
-20W 12L
-61%
-32 games · 63% raw
-▼
-15
-Nora Tinfou
-Adepta Sororitas
-12W 8L
-59%
-20 games · 60% raw
-▼
-16
-Matt Whiteley
-Space Marines
-6W 4L
-59%
-10 games · 60% raw
-▼
-17
-Oscar Luckin
-Emperor's Children
-6W 4L
-59%
-10 games · 60% raw
-▼
-18
-Jamie Payton
-Blood Angels
-14W 10L
-58%
-24 games · 58% raw
-▼
-19
-Anthony Keen
-Astra Militarum +1 more
-30W 22L
-58%
-52 games · 58% raw
-▼
-20
-Daniel Green
-World Eaters +1 more
-8W 8L
-53%
-16 games · 50% raw
-▼
-21
-Joshua Nevins
-Adeptus Mechanicus
-10W 10L
-53%
-20 games · 50% raw
-▼
-22
-Spencer James
-Emperor's Children +1 more
-10W 10L
-53%
-20 games · 50% raw
-▼
-23
-Samuel Francis
-Chaos Daemons +1 more
-18W 18L
-52%
-36 games · 50% raw
-▼
-24
-Ben Verpaalen
-Necrons
-4W 6L
-49%
-10 games · 40% raw
-▼
-25
-Ben Partington
-Tyranids
-2W 4L
-49%
-6 games · 33% raw
-▼
-26
-Michael Maris
-Chaos Knights
-2W 4L
-49%
-6 games · 33% raw
-▼
-27
-Rob Huang
-Space Marines
-2W 4L
-49%
-6 games · 33% raw
-▼
-28
-Ben Adams
-Adeptus Custodes
-14W 18L
-47%
-32 games · 44% raw
-▼
-29
-Tom McCaughey
-Death Guard
-4W 8L
-44%
-12 games · 33% raw
-▼
-30
-Chris Enderby
-Blood Angels +1 more
-8W 14L
-43%
-22 games · 36% raw
-▼
-31
-Ricky Noton
-Necrons +1 more
-2W 10L
-35%
-12 games · 17% raw
-▼
-32
-Harvey R
-Blood Angels +1 more
-12W 30L
-34%
-42 games · 29% raw
-▼
-33
-Samuel Hardisty
-Chaos Space Marines +1 more
-2W 14L
-30%
-16 games · 13% raw
-▼
-Tournament Results
-▼
-Season Highlights
-▼
-Faction Win Rates
-▼
-Pile of Shame Support Network · 2025–26 Season Last updated: 31 Mar 2026 Results link to Best Coast Pairings · Submit results via the Submit tab
+    /* ── HEADER ── */
+    .site-header {
+      border-bottom: 1px solid var(--border);
+      padding: 3rem 2rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .header-eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    .header-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      letter-spacing: 0.04em;
+      color: var(--text);
+      line-height: 0.95;
+      margin-bottom: 1rem;
+    }
+    .header-meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .header-meta span { display: flex; align-items: center; gap: 6px; }
+    .header-meta span::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--faint); display: inline-block; }
+
+    /* ── PAGE ── */
+    .page { max-width: 1200px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
+
+    /* ── SECTION LABELS ── */
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      margin-top: 3rem;
+    }
+    .section-head:first-child { margin-top: 0; }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.06em;
+      color: var(--text);
+    }
+    .section-rule { flex: 1; height: 1px; background: var(--border); }
+
+    /* ── SEASON SUMMARY ── */
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .stat-cell {
+      background: var(--surface);
+      padding: 1.25rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-label { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 0.04em; line-height: 1; color: var(--text); }
+    .stat-value.w { color: var(--win); }
+    .stat-value.l { color: var(--loss); }
+    .stat-value.d { color: var(--draw); }
+
+    /* ── FILTER BUTTONS ── */
+    .filter-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 400;
+      letter-spacing: 0.05em;
+      padding: 5px 14px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover { border-color: var(--faint); color: var(--text); }
+    .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ── LEADERBOARD ── */
+    .leaderboard { display: flex; flex-direction: column; gap: 2px; }
+    .lb-row {
+      display: grid;
+      grid-template-columns: 32px 1fr 120px 90px 70px;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-radius: 4px;
+      border: 1px solid transparent;
+      transition: border-color 0.15s;
+    }
+    .lb-row:hover { border-color: var(--border); }
+    .lb-row.top3 { border-color: var(--faint); }
+    .lb-row.top3:nth-child(1) { background: var(--accent-bg); border-color: var(--accent-muted); }
+    .lb-rank {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    .lb-row.top3:nth-child(1) .lb-rank { color: var(--accent); }
+    .lb-name { font-size: 0.9rem; font-weight: 400; color: var(--text); }
+    .lb-faction { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+    .lb-record { display: flex; gap: 6px; }
+    .rec-badge {
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 3px;
+      letter-spacing: 0.03em;
+    }
+    .rec-w { background: var(--win-bg); color: var(--win); }
+    .rec-l { background: var(--loss-bg); color: var(--loss); }
+    .rec-d { background: var(--draw-bg); color: var(--draw); }
+    .lb-winrate {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 0.04em;
+      text-align: right;
+    }
+    .lb-bar-wrap { display: none; }
+
+    /* ── EVENTS ── */
+    .event-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .event-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .event-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.06em;
+      color: var(--text);
+    }
+    .event-meta { font-size: 0.75rem; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+    .event-meta a { color: var(--accent); text-decoration: none; }
+    .event-meta a:hover { text-decoration: underline; }
+    .event-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .event-table th {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 400;
+      text-align: left;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .event-table th:last-child, .event-table td:last-child { text-align: right; }
+    .event-table td { padding: 10px 16px; border-bottom: 1px solid #1a1a1a; color: #aaa; vertical-align: middle; }
+    .event-table tr:last-child td { border-bottom: none; }
+    .event-table tr:hover td { background: #181818; }
+    .player-cell { color: var(--text); font-weight: 400; }
+    .placing-cell { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.04em; color: var(--text); }
+    .placing-top { color: var(--accent); }
+    .format-pill {
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 3px;
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--faint);
+    }
+    .wld-cell { display: flex; gap: 4px; justify-content: flex-end; }
+
+    /* ── HIGHLIGHTS ── */
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .highlight-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .highlight-card.gold { border-color: var(--accent-muted); background: var(--accent-bg); }
+    .highlight-label {
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .highlight-card:not(.gold) .highlight-label { color: var(--muted); }
+    .highlight-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      line-height: 1.1;
+      cursor: pointer;
+    }
+    .highlight-name:hover { color: var(--accent); }
+    .highlight-detail { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+
+    /* ── PLAYER PANEL ── */
+    .player-panel {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: min(480px, 100vw);
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .player-panel.open { transform: translateX(0); }
+    .panel-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .panel-overlay.open { opacity: 1; pointer-events: all; }
+    .panel-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      z-index: 1;
+    }
+    .panel-close {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .panel-close:hover { color: var(--text); border-color: var(--faint); }
+    .panel-body { padding: 1.5rem; flex: 1; }
+    .panel-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .panel-stat {
+      background: var(--surface2);
+      border-radius: 4px;
+      padding: 10px 12px;
+    }
+    .panel-stat-label { font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+    .panel-stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.04em; line-height: 1; }
+    .p-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.04em; color: var(--text); line-height: 1; }
+    .p-faction { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+    .p-section-label { font-size: 0.65rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; margin-top: 1.25rem; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+    .p-event-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 0;
+      border-bottom: 1px solid #3a3a3a;
+      font-size: 0.82rem;
+    }
+    .p-event-row:last-child { border-bottom: none; }
+    .p-event-name { color: var(--text); font-weight: 400; }
+    .p-event-meta { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+    .player-link { cursor: pointer; text-decoration: none; color: inherit; border-bottom: 1px dotted var(--muted); transition: border-color 0.15s; }
+    .player-link:hover { border-bottom-color: var(--accent); color: var(--accent); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .lb-row { grid-template-columns: 28px 1fr 90px; }
+      .lb-faction { display: none; }
+      .event-table th:nth-child(3), .event-table td:nth-child(3) { display: none; }
+    }
+    @media (max-width: 500px) {
+      .lb-winrate { display: none; }
+      .lb-row { grid-template-columns: 28px 1fr 90px; }
+    }
+
+    /* ── TABS ── */
+    .tab-bar { display: flex; gap: 2px; margin-top: 1.5rem; border-bottom: 1px solid var(--border); }
+    .tab-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 400;
+      padding: 8px 20px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── FORMAT GROUP ── */
+    .fmt-group { margin-bottom: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .fmt-group-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .fmt-group-head:hover { background: var(--surface2); }
+    .fmt-group-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.06em; color: var(--text); }
+    .fmt-group-meta { font-size: 0.72rem; color: var(--muted); }
+    .fmt-group-body { display: none; border-top: 1px solid var(--border); }
+    .fmt-group-body.open { display: block; }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      font-size: 0.72rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     EDIT YOUR DATA HERE
+     ════════════════════════════════════════ -->
+<script id="data" type="application/json">
+{
+  "team": "Pile of Shame Support Network",
+  "season": "2025–26 Season",
+  "game": "Warhammer 40,000",
+  "currentEdition": 10,
+  "lastUpdated": "31 Mar 2026",
+  "awardsArchive": [],
+
+  "players": [
+    { "name": "Aidan Bell",         "factions": [] },
+    { "name": "Alex Carey",         "factions": [] },
+    { "name": "Alex Ford",          "factions": ["Drukhari", "Aeldari", "Chaos Space Marines"] },
+    { "name": "Alex Higgins",       "factions": ["Imperial Knights"] },
+    { "name": "Aneurin Brewer",     "factions": ["Drukhari"] },
+    { "name": "Anthony Keen",       "factions": ["Astra Militarum", "Orks"] },
+    { "name": "Artur Tokarski",     "factions": ["Death Guard"] },
+    { "name": "Ben Adams",          "factions": ["Adeptus Custodes"] },
+    { "name": "Ben Partington",     "factions": ["Tyranids"] },
+    { "name": "Ben Verpaalen",      "factions": ["Necrons"] },
+    { "name": "Callum Stayton",     "factions": ["Dark Angels", "Space Marines"] },
+    { "name": "Cayleb Langhals",    "factions": ["Thousand Sons", "Death Guard"] },
+    { "name": "Chris Enderby",      "factions": ["Blood Angels", "Chaos Space Marines"] },
+    { "name": "Christian Thomson",  "factions": [] },
+    { "name": "Daniel Green",       "factions": ["World Eaters", "Genestealer Cult"] },
+    { "name": "Gabriel Evans",      "factions": ["Necrons", "Genestealer Cult"] },
+    { "name": "Guy Miscampbell",    "factions": ["Deathwatch"] },
+    { "name": "Harvey R",           "factions": ["Emperor's Children", "Blood Angels"] },
+    { "name": "Henry Bamford",      "factions": ["Orks"] },
+    { "name": "Jack Turner",        "factions": ["Thousand Sons", "Orks"] },
+    { "name": "Jamie Payton",       "factions": ["Blood Angels"] },
+    { "name": "Joe Winter",         "factions": [] },
+    { "name": "Joshua Nevins",      "factions": ["Adeptus Mechanicus"] },
+    { "name": "Kareem Hussain",     "factions": [] },
+    { "name": "Matt Whiteley",      "factions": ["Space Marines"] },
+    { "name": "Matthew Yeoh",       "factions": ["Chaos Knights"] },
+    { "name": "Michael Maris",      "factions": ["Chaos Knights"] },
+    { "name": "Nathan Sears",       "factions": ["Space Marines", "Black Templars"] },
+    { "name": "Nora Tinfou",        "factions": ["Adepta Sororitas"] },
+    { "name": "Ollie Smith",        "factions": [] },
+    { "name": "Oscar Luckin",       "factions": ["Emperor's Children"] },
+    { "name": "Paul Looker",        "factions": ["Drukhari"] },
+    { "name": "Ricky Noton",        "factions": ["Necrons"] },
+    { "name": "Rob Huang",          "factions": ["Space Marines"] },
+    { "name": "Robert Briden",      "factions": ["Necrons"] },
+    { "name": "Samuel Francis",     "factions": ["Chaos Daemons", "Black Templars"] },
+    { "name": "Samuel Hardisty",    "factions": ["Chaos Space Marines", "Genestealer Cult"] },
+    { "name": "Sean Preston",       "factions": [] },
+    { "name": "Spencer James",      "factions": ["Emperor's Children", "Black Templars"] },
+    { "name": "Terra Luna-Mae",     "factions": [] },
+    { "name": "Tim Waters",         "factions": ["Drukhari", "Chaos Space Marines"] },
+    { "name": "Tom Durrands",       "factions": ["Death Guard"] },
+    { "name": "Tom McCaughey",      "factions": ["Death Guard"] }
+  ],
+
+  "events": [
+    {
+      "name": "Winter ITT — Feb 2025",
+      "date": "Feb 2025",
+      "format": "Teams", "edition": 10,
+      "totalPlayers": 697,
+      "totalTeams": 141,
+      "bcpUrl": "https://www.bestcoastpairings.com/event/7BKVP0KP1W",
+      "subteams": [
+        { "name": "Pile of Shame Support Network", "placing": 45, "w": 2, "l": 2, "d": 1 }
+      ],
+      "results": [
+        { "player": "Matt Whiteley",   "faction": "Space Marines",    "placing": 45, "subteam": "Pile of Shame Support Network", "w": 3, "l": 1, "d": 1 },
+        { "player": "Cayleb Langhals", "faction": "Thousand Sons",    "placing": 45, "subteam": "Pile of Shame Support Network", "w": 2, "l": 2, "d": 1 },
+        { "player": "Daniel Green",    "faction": "Genestealer Cult", "placing": 45, "subteam": "Pile of Shame Support Network", "w": 2, "l": 2, "d": 1 },
+        { "player": "Alex Ford",       "faction": "Aeldari",          "placing": 45, "subteam": "Pile of Shame Support Network", "w": 2, "l": 3, "d": 0 },
+        { "player": "Anthony Keen",    "faction": "Orks",             "placing": 45, "subteam": "Pile of Shame Support Network", "w": 2, "l": 3, "d": 0 }
+      ]
+    },
+    {
+      "name": "Spring ITT — May 2025",
+      "date": "May 2025",
+      "format": "Teams", "edition": 10,
+      "totalPlayers": 372,
+      "totalTeams": 75,
+      "bcpUrl": "https://warhammer.bestcoastpairings.com/event/1T1G7HHJ23",
+      "subteams": [
+        { "name": "Pile of Shame Support Network", "placing": 69, "w": 1, "l": 4, "d": 0 }
+      ],
+      "results": [
+        { "player": "Daniel Green",  "faction": "World Eaters",    "placing": 69, "subteam": "Pile of Shame Support Network", "w": 2, "l": 3, "d": 0 },
+        { "player": "Tom McCaughey", "faction": "Death Guard",     "placing": 69, "subteam": "Pile of Shame Support Network", "w": 2, "l": 3, "d": 0 },
+        { "player": "Alex Ford",     "faction": "Aeldari",         "placing": 69, "subteam": "Pile of Shame Support Network", "w": 1, "l": 3, "d": 1 },
+        { "player": "Chris Enderby", "faction": "Blood Angels",    "placing": 69, "subteam": "Pile of Shame Support Network", "w": 1, "l": 4, "d": 0 },
+        { "player": "Ricky Noton",   "faction": "Necrons",         "placing": 69, "subteam": "Pile of Shame Support Network", "w": 1, "l": 4, "d": 0 }
+      ]
+    },
+    {
+      "name": "Bristol GT",
+      "date": "Jun 2025",
+      "format": "GT", "edition": 10,
+      "totalPlayers": 429,
+      "bcpUrl": "",
+      "results": [
+        { "player": "Harvey R", "faction": "Blood Angels", "placing": 368, "w": 1, "l": 4, "d": 0 }
+      ]
+    },
+    {
+      "name": "Summer ITT — Aug 2025",
+      "date": "Aug 2025",
+      "format": "Teams", "edition": 10,
+      "totalPlayers": 321,
+      "totalTeams": 65,
+      "bcpUrl": "https://warhammer.bestcoastpairings.com/event/GXLBCXXRBK",
+      "subteams": [
+        { "name": "Pile of Shame Support Network", "placing": 57, "w": 1, "l": 3, "d": 1 }
+      ],
+      "results": [
+        { "player": "Anthony Keen",   "faction": "Astra Militarum",    "placing": 57, "subteam": "Pile of Shame Support Network", "w": 3, "l": 1, "d": 1 },
+        { "player": "Alex Ford",      "faction": "Chaos Space Marines","placing": 57, "subteam": "Pile of Shame Support Network", "w": 2, "l": 2, "d": 1 },
+        { "player": "Cayleb Langhals","faction": "Thousand Sons",      "placing": 57, "subteam": "Pile of Shame Support Network", "w": 2, "l": 3, "d": 0 },
+        { "player": "Ben Partington", "faction": "Tyranids",           "placing": 57, "subteam": "Pile of Shame Support Network", "w": 1, "l": 3, "d": 1 },
+        { "player": "Chris Enderby",  "faction": "Blood Angels",       "placing": 57, "subteam": "Pile of Shame Support Network", "w": 0, "l": 4, "d": 1 }
+      ]
+    },
+    {
+      "name": "Shameful Saturday RTT",
+      "date": "Aug 2025",
+      "format": "RTT", "edition": 10,
+      "totalPlayers": 24,
+      "bcpUrl": "https://warhammer.bestcoastpairings.com/event/BJ4irqFcaNz9",
+      "results": [
+        { "player": "Tom Durrands",    "faction": "Death Guard",         "placing": 1,  "w": 3, "l": 0, "d": 0 },
+        { "player": "Nathan Sears",    "faction": "Space Marines",       "placing": 2,  "w": 3, "l": 0, "d": 0 },
+        { "player": "Chris Enderby",   "faction": "Blood Angels",        "placing": 3,  "w": 2, "l": 1, "d": 0 },
+        { "player": "Tim Waters",      "faction": "Chaos Space Marines", "placing": 4,  "w": 2, "l": 1, "d": 0 },
+        { "player": "Guy Miscampbell", "faction": "Deathwatch",          "placing": 5,  "w": 2, "l": 1, "d": 0 },
+        { "player": "Alex Higgins",    "faction": "Imperial Knights",    "placing": 6,  "w": 2, "l": 1, "d": 0 },
+        { "player": "Tom McCaughey",   "faction": "Death Guard",         "placing": 7,  "w": 1, "l": 2, "d": 0 },
+        { "player": "Rob Huang",       "faction": "Space Marines",       "placing": 8,  "w": 1, "l": 2, "d": 0 },
+        { "player": "Harvey R",        "faction": "Blood Angels",        "placing": 9,  "w": 1, "l": 2, "d": 0 },
+        { "player": "Ben Partington",  "faction": "Tyranids",            "placing": 10, "w": 1, "l": 2, "d": 0 },
+        { "player": "Alex Ford",       "faction": "Chaos Space Marines", "placing": 11, "w": 1, "l": 2, "d": 0 },
+        { "player": "Michael Maris",   "faction": "Chaos Knights",       "placing": 12, "w": 1, "l": 2, "d": 0 },
+        { "player": "Ricky Noton",     "faction": "Chaos Knights",       "placing": 13, "w": 0, "l": 3, "d": 0 }
+      ]
+    },
+    {
+      "name": "London Grand Tournament — 40k Main Event",
+      "date": "Sep 2025",
+      "format": "GT", "edition": 10,
+      "totalPlayers": 1088,
+      "bcpUrl": "https://www.bestcoastpairings.com/event/ET7AYRU8JU",
+      "results": [
+        { "player": "Cayleb Langhals", "faction": "Death Guard",         "placing": 21,   "w": 5, "l": 0, "d": 0, "shadow": true },
+        { "player": "Gabriel Evans",   "faction": "Necrons",             "placing": 68,   "w": 4, "l": 1, "d": 0 },
+        { "player": "Tom Durrands",    "faction": "Death Guard",         "placing": 73,   "w": 4, "l": 1, "d": 0 },
+        { "player": "Callum Stayton",  "faction": "Dark Angels",         "placing": 107,  "w": 4, "l": 1, "d": 0 },
+        { "player": "Nora Tinfou",     "faction": "Adepta Sororitas",    "placing": 284,  "w": 3, "l": 2, "d": 0 },
+        { "player": "Alex Ford",       "faction": "Aeldari",             "placing": 291,  "w": 3, "l": 2, "d": 0 },
+        { "player": "Nathan Sears",    "faction": "Black Templars",      "placing": 323,  "w": 3, "l": 2, "d": 0 },
+        { "player": "Guy Miscampbell", "faction": "Deathwatch",          "placing": 368,  "w": 3, "l": 2, "d": 0 },
+        { "player": "Tim Waters",      "faction": "Drukhari",            "placing": 397,  "w": 3, "l": 2, "d": 0 },
+        { "player": "Jack Turner",     "faction": "Thousand Sons",       "placing": 412,  "w": 3, "l": 2, "d": 0 },
+        { "player": "Daniel Green",    "faction": "World Eaters",        "placing": 447,  "w": 3, "l": 2, "d": 0 },
+        { "player": "Henry Bamford",   "faction": "Orks",                "placing": 466,  "w": 3, "l": 2, "d": 0 },
+        { "player": "Matt Whiteley",   "faction": "Space Marines",       "placing": 476,  "w": 3, "l": 2, "d": 0 },
+        { "player": "Joshua Nevins",   "faction": "Adeptus Mechanicus",  "placing": 513,  "w": 2, "l": 2, "d": 0 },
+        { "player": "Jamie Payton",    "faction": "Blood Angels",        "placing": 517,  "w": 2, "l": 2, "d": 0 },
+        { "player": "Anthony Keen",    "faction": "Astra Militarum",     "placing": 526,  "w": 2, "l": 3, "d": 0 },
+        { "player": "Ben Verpaalen",   "faction": "Necrons",             "placing": 634,  "w": 2, "l": 3, "d": 0 },
+        { "player": "Samuel Francis",  "faction": "Black Templars",      "placing": 780,  "w": 2, "l": 3, "d": 0 },
+        { "player": "Harvey R",        "faction": "Blood Angels",        "placing": 856,  "w": 1, "l": 4, "d": 0 },
+        { "player": "Samuel Hardisty", "faction": "Chaos Space Marines", "placing": 866,  "w": 1, "l": 4, "d": 0 },
+        { "player": "Chris Enderby",   "faction": "Blood Angels",        "placing": 873,  "w": 2, "l": 3, "d": 0 },
+        { "player": "Spencer James",   "faction": "Black Templars",      "placing": 880,  "w": 1, "l": 4, "d": 0 },
+        { "player": "Ricky Noton",     "faction": "Necrons",             "placing": 1064, "w": 0, "l": 0, "d": 0, "dropped": true }
+      ]
+    },
+    {
+      "name": "Coventry GT",
+      "date": "Oct 2025",
+      "format": "GT", "edition": 10,
+      "totalPlayers": 110,
+      "bcpUrl": "https://www.bestcoastpairings.com/event/itoyHR0D0ZJd",
+      "results": [
+        { "player": "Anthony Keen",    "faction": "Orks",        "placing": 41, "w": 3, "l": 2, "d": 0 },
+        { "player": "Cayleb Langhals", "faction": "Death Guard", "placing": 51, "w": 2, "l": 2, "d": 1 }
+      ]
+    },
+    {
+      "name": "Autumn ITT — Nov 2025",
+      "date": "Nov 2025",
+      "format": "Teams", "edition": 10,
+      "totalPlayers": 579,
+      "totalTeams": 117,
+      "bcpUrl": "https://warhammer.bestcoastpairings.com/event/7rYPg1e8opAm",
+      "subteams": [
+        { "name": "[C]lap or Be Clapped",    "placing": 7,  "w": 4, "l": 1, "d": 0 },
+        { "name": "The Sh[a]meful Suspects", "placing": 17, "w": 3, "l": 1, "d": 1 },
+        { "name": "Shame before [B]eauty",  "placing": 61, "w": 2, "l": 2, "d": 1 }
+      ],
+      "results": [
+        { "player": "Tom Durrands",    "faction": "Death Guard",        "placing": 7,  "subteam": "[C]lap or Be Clapped",    "w": 5, "l": 0, "d": 0 },
+        { "player": "Gabriel Evans",   "faction": "Necrons",            "placing": 7,  "subteam": "[C]lap or Be Clapped",    "w": 4, "l": 1, "d": 0 },
+        { "player": "Nathan Sears",    "faction": "Black Templars",     "placing": 7,  "subteam": "[C]lap or Be Clapped",    "w": 3, "l": 0, "d": 2 },
+        { "player": "Jack Turner",     "faction": "Orks",               "placing": 7,  "subteam": "[C]lap or Be Clapped",    "w": 2, "l": 2, "d": 1 },
+        { "player": "Joshua Nevins",   "faction": "Adeptus Mechanicus", "placing": 7,  "subteam": "[C]lap or Be Clapped",    "w": 1, "l": 4, "d": 0 },
+        { "player": "Cayleb Langhals", "faction": "Death Guard",        "placing": 17, "subteam": "The Sh[a]meful Suspects", "w": 4, "l": 0, "d": 1 },
+        { "player": "Daniel Green",    "faction": "World Eaters",       "placing": 17, "subteam": "The Sh[a]meful Suspects", "w": 3, "l": 1, "d": 1 },
+        { "player": "Matt Whiteley",   "faction": "Space Marines",      "placing": 17, "subteam": "The Sh[a]meful Suspects", "w": 3, "l": 1, "d": 1 },
+        { "player": "Anthony Keen",    "faction": "Orks",               "placing": 17, "subteam": "The Sh[a]meful Suspects", "w": 3, "l": 2, "d": 0 },
+        { "player": "Alex Ford",       "faction": "Aeldari",            "placing": 17, "subteam": "The Sh[a]meful Suspects", "w": 2, "l": 3, "d": 0 },
+        { "player": "Alex Higgins",    "faction": "Astra Militarum",    "placing": 61, "subteam": "Shame before [B]eauty",   "w": 3, "l": 2, "d": 0 },
+        { "player": "Callum Stayton",  "faction": "Space Marines",      "placing": 61, "subteam": "Shame before [B]eauty",   "w": 3, "l": 2, "d": 0 },
+        { "player": "Ben Verpaalen",   "faction": "Necrons",            "placing": 61, "subteam": "Shame before [B]eauty",   "w": 3, "l": 2, "d": 0 },
+        { "player": "Chris Enderby",   "faction": "Chaos Space Marines","placing": 61, "subteam": "Shame before [B]eauty",   "w": 2, "l": 3, "d": 0 },
+        { "player": "Tom McCaughey",   "faction": "Death Guard",        "placing": 61, "subteam": "Shame before [B]eauty",   "w": 2, "l": 3, "d": 0 }
+      ]
+    },
+    {
+      "name": "Shaming in the New Year RTT",
+      "date": "Jan 2026",
+      "format": "RTT", "edition": 10,
+      "totalPlayers": 24,
+      "bcpUrl": "https://warhammer.bestcoastpairings.com/event/hXTljkWs4EZQ",
+      "results": [
+        { "player": "Nathan Sears",    "faction": "Space Marines",       "placing": 1,  "w": 3, "l": 0, "d": 0 },
+        { "player": "Gabriel Evans",   "faction": "Genestealer Cult",    "placing": 3,  "w": 3, "l": 0, "d": 0 },
+        { "player": "Tim Waters",      "faction": "Drukhari",            "placing": 4,  "w": 2, "l": 1, "d": 0 },
+        { "player": "Anthony Keen",    "faction": "Astra Militarum",     "placing": 5,  "w": 2, "l": 1, "d": 0 },
+        { "player": "Alex Ford",       "faction": "Drukhari",            "placing": 6,  "w": 2, "l": 1, "d": 0 },
+        { "player": "Jack Turner",     "faction": "Thousand Sons",       "placing": 7,  "w": 2, "l": 1, "d": 0 },
+        { "player": "Jamie Payton",    "faction": "Blood Angels",        "placing": 8,  "w": 2, "l": 1, "d": 0 },
+        { "player": "Cayleb Langhals", "faction": "Thousand Sons",       "placing": 9,  "w": 2, "l": 1, "d": 0 },
+        { "player": "Joshua Nevins",   "faction": "Adeptus Mechanicus",  "placing": 10, "w": 2, "l": 1, "d": 0 },
+        { "player": "Alex Higgins",    "faction": "Astra Militarum",     "placing": 12, "w": 2, "l": 1, "d": 0 },
+        { "player": "Daniel Green",    "faction": "World Eaters",        "placing": 13, "w": 1, "l": 2, "d": 0 },
+        { "player": "Tom McCaughey",   "faction": "Death Guard",         "placing": 14, "w": 1, "l": 2, "d": 0 },
+        { "player": "Guy Miscampbell", "faction": "Deathwatch",          "placing": 15, "w": 1, "l": 2, "d": 0 },
+        { "player": "Ben Adams",       "faction": "Adeptus Custodes",    "placing": 16, "w": 1, "l": 2, "d": 0 },
+        { "player": "Harvey R",        "faction": "Blood Angels",        "placing": 18, "w": 1, "l": 2, "d": 0 },
+        { "player": "Samuel Francis",  "faction": "Chaos Daemons",       "placing": 19, "w": 1, "l": 2, "d": 0 },
+        { "player": "Ricky Noton",     "faction": "Necrons",             "placing": 20, "w": 1, "l": 2, "d": 0 },
+        { "player": "Samuel Hardisty", "faction": "Genestealer Cult",    "placing": 22, "w": 0, "l": 3, "d": 0 },
+        { "player": "Chris Enderby",   "faction": "Chaos Space Marines", "placing": 23, "w": 0, "l": 3, "d": 0 }
+      ]
+    },
+    {
+      "name": "Nottingham GT",
+      "date": "Jan 2026",
+      "format": "GT", "edition": 10,
+      "totalPlayers": 361,
+      "bcpUrl": "https://www.bestcoastpairings.com/event/17IxNtUMzFAt",
+      "results": [
+        { "player": "Tim Waters",      "faction": "Drukhari",         "placing": 8,   "w": 5, "l": 1, "d": 0, "shadow": true },
+        { "player": "Cayleb Langhals", "faction": "Death Guard",      "placing": 31,  "w": 4, "l": 1, "d": 0 },
+        { "player": "Anthony Keen",    "faction": "Astra Militarum",  "placing": 55,  "w": 4, "l": 1, "d": 0 },
+        { "player": "Jamie Payton",    "faction": "Blood Angels",     "placing": 101, "w": 3, "l": 2, "d": 0 },
+        { "player": "Samuel Francis",  "faction": "Chaos Daemons",   "placing": 159, "w": 3, "l": 2, "d": 0 },
+        { "player": "Ben Adams",       "faction": "Adeptus Custodes", "placing": 260, "w": 2, "l": 3, "d": 0 },
+        { "player": "Guy Miscampbell", "faction": "Deathwatch",       "placing": 348, "w": 0, "l": 0, "d": 0, "dropped": true }
+      ]
+    },
+    {
+      "name": "Winter ITT — Feb 2026",
+      "date": "Feb 2026",
+      "format": "Teams", "edition": 10,
+      "totalPlayers": 766,
+      "totalTeams": 153,
+      "bcpUrl": "https://warhammer.bestcoastpairings.com/event/oKHbPVIATP8j",
+      "subteams": [
+        { "name": "The Sh[a]meful Suspects", "placing": 60,  "w": 2, "l": 1, "d": 2 },
+        { "name": "[D]a Empuror's Shamepions", "placing": 85,  "w": 2, "l": 2, "d": 1 },
+        { "name": "[E]verlasting Shame",       "placing": 113, "w": 2, "l": 3, "d": 0 }
+      ],
+      "results": [
+        { "player": "Tim Waters",      "faction": "Drukhari",            "placing": 85,  "subteam": "[D]a Empuror's Shamepions",  "w": 4, "l": 1, "d": 0 },
+        { "player": "Matthew Yeoh",    "faction": "Chaos Knights",       "placing": 113, "subteam": "[E]verlasting Shame",        "w": 3, "l": 0, "d": 2 },
+        { "player": "Cayleb Langhals", "faction": "Death Guard",         "placing": 60,  "subteam": "The Sh[a]meful Suspects",  "w": 3, "l": 1, "d": 1 },
+        { "player": "Samuel Francis",  "faction": "Chaos Daemons",       "placing": 85,  "subteam": "[D]a Empuror's Shamepions",  "w": 3, "l": 2, "d": 0 },
+        { "player": "Daniel Green",    "faction": "World Eaters",        "placing": 60,  "subteam": "The Sh[a]meful Suspects",  "w": 3, "l": 2, "d": 0 },
+        { "player": "Anthony Keen",    "faction": "Astra Militarum",     "placing": 60,  "subteam": "The Sh[a]meful Suspects",  "w": 2, "l": 2, "d": 1 },
+        { "player": "Nora Tinfou",     "faction": "Adepta Sororitas",    "placing": 113, "subteam": "[E]verlasting Shame",        "w": 2, "l": 2, "d": 1 },
+        { "player": "Alex Ford",       "faction": "Drukhari",            "placing": 60,  "subteam": "The Sh[a]meful Suspects",  "w": 2, "l": 2, "d": 1 },
+        { "player": "Guy Miscampbell", "faction": "Deathwatch",          "placing": 85,  "subteam": "[D]a Empuror's Shamepions",  "w": 1, "l": 3, "d": 1 },
+        { "player": "Henry Bamford",   "faction": "Orks",                "placing": 85,  "subteam": "[D]a Empuror's Shamepions",  "w": 1, "l": 4, "d": 0 },
+        { "player": "Harvey R",        "faction": "Blood Angels",        "placing": 113, "subteam": "[E]verlasting Shame",        "w": 1, "l": 4, "d": 0 },
+        { "player": "Matt Whiteley",   "faction": "Space Marines",       "placing": 60,  "subteam": "The Sh[a]meful Suspects",  "w": 1, "l": 4, "d": 0 },
+        { "player": "Spencer James",   "faction": "Emperor's Children",  "placing": 113, "subteam": "[E]verlasting Shame",        "w": 1, "l": 4, "d": 0 },
+        { "player": "Artur Tokarski",  "faction": "Death Guard",         "placing": 113, "subteam": "[E]verlasting Shame",        "w": 0, "l": 5, "d": 0 },
+        { "player": "Chris Enderby",   "faction": "Chaos Space Marines", "placing": 85,  "subteam": "[D]a Empuror's Shamepions",  "w": 0, "l": 5, "d": 0 }
+      ]
+    },
+    {
+      "name": "Incursion Events 40K Singles RTT",
+      "date": "Mar 2026",
+      "format": "RTT", "edition": 10,
+      "totalPlayers": 24,
+      "bcpUrl": "https://www.bestcoastpairings.com/event/W9jivYOVo0bn",
+      "results": [
+        { "player": "Ben Adams",      "faction": "Adeptus Custodes", "placing": 2,  "w": 3, "l": 0, "d": 0 },
+        { "player": "Anthony Keen",   "faction": "Astra Militarum",  "placing": 6,  "w": 2, "l": 1, "d": 0 },
+        { "player": "Cayleb Langhals","faction": "Thousand Sons",    "placing": 11, "w": 2, "l": 1, "d": 0 }
+      ]
+    },
+    {
+      "name": "Brighton 40k RTT I",
+      "date": "Mar 2026",
+      "format": "RTT", "edition": 10,
+      "totalPlayers": 26,
+      "bcpUrl": "https://www.bestcoastpairings.com/event/iPv19bg7n3Vr",
+      "results": [
+        { "player": "Paul Looker", "faction": "Drukhari", "placing": 2, "w": 3, "l": 0, "d": 0 }
+      ]
+    },
+    {
+      "name": "Windsor GT",
+      "date": "Mar 2026",
+      "format": "GT", "edition": 10,
+      "totalPlayers": 227,
+      "bcpUrl": "https://www.bestcoastpairings.com/event/AZFDANhFHJS6",
+      "results": [
+        { "player": "Jack Turner",     "faction": "Thousand Sons",       "placing": 16,  "w": 4, "l": 1, "d": 0 },
+        { "player": "Aneurin Brewer",  "faction": "Drukhari",            "placing": 32,  "w": 4, "l": 1, "d": 0 },
+        { "player": "Henry Bamford",   "faction": "Orks",                "placing": 33,  "w": 4, "l": 1, "d": 0 },
+        { "player": "Alex Ford",       "faction": "Drukhari",            "placing": 38,  "w": 4, "l": 1, "d": 0 },
+        { "player": "Guy Miscampbell", "faction": "Deathwatch",          "placing": 61,  "w": 4, "l": 1, "d": 0 },
+        { "player": "Nora Tinfou",     "faction": "Adepta Sororitas",    "placing": 62,  "w": 3, "l": 2, "d": 0 },
+        { "player": "Nathan Sears",    "faction": "Space Marines",       "placing": 66,  "w": 4, "l": 1, "d": 0 },
+        { "player": "Cayleb Langhals", "faction": "Thousand Sons",       "placing": 83,  "w": 4, "l": 1, "d": 0 },
+        { "player": "Oscar Luckin",    "faction": "Emperor's Children",  "placing": 85,  "w": 3, "l": 2, "d": 0 },
+        { "player": "Tim Waters",      "faction": "Drukhari",            "placing": 89,  "w": 3, "l": 2, "d": 0 },
+        { "player": "Samuel Francis",  "faction": "Chaos Daemons",       "placing": 90,  "w": 3, "l": 2, "d": 0 },
+        { "player": "Harvey R",        "faction": "Emperor's Children",  "placing": 105, "w": 2, "l": 3, "d": 0 },
+        { "player": "Robert Briden",   "faction": "Necrons",             "placing": 121, "w": 4, "l": 1, "d": 0 },
+        { "player": "Anthony Keen",    "faction": "Astra Militarum",     "placing": 127, "w": 2, "l": 3, "d": 0 },
+        { "player": "Spencer James",   "faction": "Emperor's Children",  "placing": 155, "w": 4, "l": 1, "d": 0 },
+        { "player": "Paul Looker",     "faction": "Drukhari",            "placing": 168, "w": 3, "l": 2, "d": 0 },
+        { "player": "Ben Adams",       "faction": "Adeptus Custodes",    "placing": 212, "w": 1, "l": 4, "d": 0 },
+        { "player": "Joshua Nevins",   "faction": "Adeptus Mechanicus",  "placing": 227, "w": 1, "l": 2, "d": 0 }
+      ]
+    }
+  ]
+}
+</script>
+<!-- ════════════════════════════════════════ -->
+
+<!-- ════════════════════════════════════════ -->
+
+<header class="site-header">
+  <div class="header-eyebrow">Warhammer 40,000 — Season Stats</div>
+  <h1 class="header-title" id="team-title"></h1>
+  <div class="header-meta" id="header-meta"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:1rem;">
+    <div class="tab-bar" style="margin-top:0;border-bottom:none;">
+      <button class="tab-btn active" onclick="switchTab('stats')">Season Stats</button>
+      <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
+      <button class="tab-btn" onclick="switchTab('club')">Club</button>
+      <button class="tab-btn" onclick="switchTab('more')">More</button>
+      <button class="tab-btn" onclick="switchTab('submit')">Submit Result</button>
+    </div>
+    <div id="edition-toggle" style="display:flex;background:var(--surface2);border-radius:6px;padding:3px;gap:2px;border:1px solid var(--border);">
+      <button id="ed-10" onclick="switchEdition(10)" style="font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:500;padding:5px 12px;border:none;border-radius:4px;cursor:pointer;transition:all 0.15s;">10th Ed</button>
+      <button id="ed-11" onclick="switchEdition(11)" style="font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:500;padding:5px 12px;border:none;border-radius:4px;cursor:pointer;transition:all 0.15s;">11th Ed</button>
+    </div>
+  </div>
+</header>
+
+<!-- ── STATS TAB ── -->
+<main class="page" id="tab-stats">
+
+  <div class="section-head" onclick="toggleSection('sec-gt')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+    <div class="section-title">Grand Tournaments</div>
+    <div class="section-rule"></div>
+    <span id="sec-gt-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+  </div>
+  <div id="sec-gt" style="display:none;">
+    <div class="summary-block"><div class="summary-strip" id="summary-gt"></div></div>
+  </div>
+
+  <div class="section-head" onclick="toggleSection('sec-rtt')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+    <div class="section-title">RTTs</div>
+    <div class="section-rule"></div>
+    <span id="sec-rtt-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+  </div>
+  <div id="sec-rtt" style="display:none;">
+    <div class="summary-block"><div class="summary-strip" id="summary-rtt"></div></div>
+  </div>
+
+  <div class="section-head" onclick="toggleSection('sec-teams')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+    <div class="section-title">Teams Events</div>
+    <div class="section-rule"></div>
+    <span id="sec-teams-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+  </div>
+  <div id="sec-teams" style="display:none;">
+    <div class="summary-block"><div class="summary-strip" id="summary-teams"></div></div>
+  </div>
+
+  <div class="section-head" onclick="toggleSection('sec-leaderboard')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+    <div class="section-title">Champions of Shame</div>
+    <div class="section-rule"></div>
+    <span id="sec-leaderboard-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
+  </div>
+  <div id="sec-leaderboard">
+    <div id="lb-filters" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;margin-top:8px;"></div>
+    <div class="leaderboard" id="leaderboard"></div>
+  </div>
+
+  <div class="section-head" onclick="toggleSection('sec-results')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+    <div class="section-title">Tournament Results</div>
+    <div class="section-rule"></div>
+    <span id="sec-results-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+  </div>
+  <div id="sec-results" style="display:none;">
+    <div id="format-groups"></div>
+  </div>
+
+  <div class="section-head" style="margin-top:2rem;" onclick="toggleSection('sec-highlights')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+    <div class="section-title">Season Highlights</div>
+    <div class="section-rule"></div>
+    <span id="sec-highlights-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+  </div>
+  <div id="sec-highlights" style="display:none;">
+    <div id="highlights"></div>
+  </div>
+
+  <div class="section-head" style="margin-top:2rem;" onclick="toggleSection('sec-factions')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+    <div class="section-title">Faction Win Rates</div>
+    <div class="section-rule"></div>
+    <span id="sec-factions-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+  </div>
+  <div id="sec-factions" style="display:none;">
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">How each army is performing across PSSN this season. Bayesian weighted — more games = more reliable.</div>
+    <div id="faction-stats"></div>
+  </div>
+
+</main>
+
+<!-- ── CALENDAR TAB ── -->
+<main class="page" id="tab-calendar" style="display:none;">
+  <div class="section-head" style="margin-top:0;">
+    <div class="section-title">UKTC Season Calendar</div>
+    <div class="section-rule"></div>
+  </div>
+  <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Full UKTC calendar from May 2025. Events your team attended are highlighted.</div>
+  <div id="calendar-grid"></div>
+</main>
+
+<!-- ── CLUB TAB ── -->
+<main class="page" id="tab-club" style="display:none;">
+
+  <!-- Event Countdown -->
+  <div class="section-head" style="margin-top:0;">
+    <div class="section-title">Next Event</div>
+    <div class="section-rule"></div>
+  </div>
+  <div id="event-countdown" style="margin-bottom:2rem;"></div>
+
+  <!-- Season Timeline -->
+  <div class="section-head" onclick="toggleSection('sec-timeline')" style="cursor:pointer;">
+    <div class="section-title">Season Timeline</div>
+    <div class="section-rule"></div>
+    <span id="sec-timeline-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
+  </div>
+  <div id="sec-timeline">
+    <div id="season-timeline" style="margin-bottom:2rem;"></div>
+  </div>
+
+  <!-- Who's Going -->
+  <div class="section-head" onclick="toggleSection('sec-whos-going')" style="cursor:pointer;">
+    <div class="section-title">Who's Going?</div>
+    <div class="section-rule"></div>
+    <span id="sec-whos-going-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
+  </div>
+  <div id="sec-whos-going">
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">Mark yourself as going to upcoming events. PIN required.</div>
+    <div id="whos-going-gate">
+      <input type="password" id="whos-going-pin" maxlength="4" placeholder="Enter PIN"
+        style="width:100px;text-align:center;font-size:1.2rem;letter-spacing:0.3em;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);outline:none;"
+        oninput="checkWhosGoingPin(this.value)"/>
+      <div id="whos-going-pin-error" style="font-size:0.78rem;color:var(--loss);display:none;margin-top:6px;">Incorrect PIN</div>
+    </div>
+    <div id="whos-going-content" style="display:none;">
+      <div id="whos-going-grid"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── MORE TAB ── -->
+<main class="page" id="tab-more" style="display:none;">
+
+  <div class="section-head" style="margin-top:0;cursor:pointer;" onclick="toggleSection('sec-awards')">
+    <div class="section-title">Season Awards</div>
+    <div class="section-rule"></div>
+    <span id="sec-awards-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
+  </div>
+  <div id="sec-awards">
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.25rem;margin-top:8px;">Auto-calculated from this season's data. Click any winner to view their profile.</div>
+    <div id="awards-grid"></div>
+    <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Ready to archive this edition? Generate the JSON and paste it into the <code style="font-family:monospace;font-size:0.78rem;background:var(--surface2);padding:1px 5px;border-radius:3px;">awardsArchive</code> array.</div>
+      <button onclick="generateArchiveJSON()" style="font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">📋 Generate Archive JSON</button>
+      <div id="archive-json-output" style="display:none;margin-top:1rem;">
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:6px;">Copy this and add it to the <code style="font-family:monospace;background:var(--surface2);padding:1px 4px;border-radius:3px;">awardsArchive</code> array in your JSON data block:</div>
+        <textarea id="archive-json-text" readonly style="width:100%;height:200px;font-family:monospace;font-size:0.75rem;background:var(--surface2);border:1px solid var(--accent);border-radius:4px;padding:10px;color:var(--text);resize:vertical;"></textarea>
+        <button onclick="copyArchiveJSON()" style="margin-top:6px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;padding:6px 14px;background:var(--accent);border:none;border-radius:4px;color:#fff;cursor:pointer;">Copy to clipboard</button>
+        <span id="archive-copy-confirm" style="display:none;font-size:0.75rem;color:var(--win);margin-left:8px;">✓ Copied!</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-head" style="margin-top:2rem;cursor:pointer;" onclick="toggleSection('sec-milestones')">
+    <div class="section-title">Milestones</div>
+    <div class="section-rule"></div>
+    <span id="sec-milestones-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+  </div>
+  <div id="sec-milestones" style="display:none;">
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">Season achievements unlocked by each player. Greyed out = not yet achieved.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.25rem;">
+      <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">🎮 First Event</div>
+      <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">🗺️ 5 Events</div>
+      <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">✅ First Win</div>
+      <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">🥈 25 Wins</div>
+      <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">🥇 50 Wins</div>
+      <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">💯 Centurion</div>
+      <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">⭐ Perfect Score</div>
+      <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">🎯 All Formats</div>
+    </div>
+    <div id="milestones-grid"></div>
+  </div>
+
+  <div class="section-head" style="margin-top:2rem;cursor:pointer;" onclick="toggleSection('sec-archive')">
+    <div class="section-title">Awards Archive</div>
+    <div class="section-rule"></div>
+    <span id="sec-archive-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+  </div>
+  <div id="sec-archive" style="display:none;">
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.25rem;margin-top:8px;">Past season award winners. Add completed seasons to the <code style="font-family:monospace;font-size:0.78rem;background:var(--surface2);padding:1px 5px;border-radius:3px;">awardsArchive</code> array in the JSON.</div>
+    <div id="archive-grid"></div>
+  </div>
+
+</main>
+
+<!-- ── SUBMIT TAB ── -->
+<main class="page" id="tab-submit" style="display:none;">
+
+  <!-- PIN gate -->
+  <div id="pin-gate" style="max-width:400px;margin:3rem auto 0;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2rem;text-align:center;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:0.06em;color:var(--text);margin-bottom:0.5rem;">Team Access</div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Enter your 4-digit team PIN to submit a result</div>
+      <input type="password" id="pin-input" maxlength="4" placeholder="••••"
+        style="width:120px;text-align:center;font-size:1.4rem;letter-spacing:0.3em;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);outline:none;margin-bottom:1rem;display:block;margin-left:auto;margin-right:auto;"
+        oninput="checkPin(this.value)"/>
+      <div id="pin-error" style="font-size:0.78rem;color:var(--loss);display:none;margin-top:0.5rem;">Incorrect PIN</div>
+    </div>
+  </div>
+
+  <!-- Form (shown after correct PIN) -->
+  <div id="submit-form" style="display:none;">
+    <div class="section-head" style="margin-top:0;">
+      <div class="section-title">Submit a result</div>
+      <div class="section-rule"></div>
+    </div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Fill in your result below. It will appear on the stats page after the next page load once approved. If the form doesn't load, <a href="https://docs.google.com/forms/d/e/1FAIpQLSfLTPxtOKci_OHM9jEXva-ntWsTZwNmOw077AGXwRWBNjcclg/viewform" target="_blank" rel="noopener" style="color:var(--accent);">open it directly ↗</a></div>
+    <iframe
+      src="https://docs.google.com/forms/d/e/1FAIpQLSfLTPxtOKci_OHM9jEXva-ntWsTZwNmOw077AGXwRWBNjcclg/viewform?embedded=true"
+      width="100%" height="900" frameborder="0" marginheight="0" marginwidth="0"
+      style="border-radius:6px;background:var(--surface);">
+      Loading form…
+    </iframe>
+
+    <div class="section-head" style="margin-top:2rem;">
+      <div class="section-title">Recent submissions</div>
+      <div class="section-rule"></div>
+    </div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Submissions from the Google Sheet — pending approval before they appear on the leaderboard.</div>
+    <div id="sheet-submissions"></div>
+  </div>
+
+</main>
+
+<div class="panel-overlay" id="panel-overlay" onclick="closePanel()"></div>
+<div class="player-panel" id="player-panel">
+  <div class="panel-header">
+    <div>
+      <div class="p-name" id="panel-name"></div>
+      <div class="p-faction" id="panel-factions"></div>
+    </div>
+    <button class="panel-close" onclick="closePanel()">✕</button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+
+<footer class="site-footer">
+  <span id="footer-team"></span>
+  <span id="footer-updated"></span>
+  <span>Results link to Best Coast Pairings · Submit results via the Submit tab</span>
+</footer>
+
+
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+// ── edition state ──
+let ACTIVE_EDITION = D.currentEdition || 10;
+
+function switchEdition(ed) {
+  ACTIVE_EDITION = ed;
+  document.getElementById('ed-10').style.background = ed === 10 ? 'var(--accent)' : 'transparent';
+  document.getElementById('ed-10').style.color = ed === 10 ? '#fff' : 'var(--muted)';
+  document.getElementById('ed-11').style.background = ed === 11 ? 'var(--accent)' : 'transparent';
+  document.getElementById('ed-11').style.color = ed === 11 ? '#fff' : 'var(--muted)';
+  rebuildStats();
+}
+
+function getActiveEvents() {
+  return D.events.filter(ev => (ev.edition || 10) === ACTIVE_EDITION);
+}
+
+function rebuildStats() {
+  // clear and rebuild all stats maps
+  Object.keys(allStats).forEach(k => delete allStats[k]);
+  FORMATS.forEach(f => Object.keys(fmtStats[f]).forEach(k => delete fmtStats[f][k]));
+  Object.keys(singlesStats).forEach(k => delete singlesStats[k]);
+
+  D.players.forEach(p => {
+    ensurePlayer(allStats, p.name, p.factions);
+    FORMATS.forEach(f => ensurePlayer(fmtStats[f], p.name, p.factions));
+    ensurePlayer(singlesStats, p.name, p.factions);
+  });
+
+  getActiveEvents().forEach(ev => {
+    const fmt = ev.format;
+    ev.results.forEach(r => {
+      if (r.dropped) return;
+      ensurePlayer(allStats, r.player, []);
+      if (fmt && fmtStats[fmt]) ensurePlayer(fmtStats[fmt], r.player, []);
+      if (fmt !== 'Teams') ensurePlayer(singlesStats, r.player, []);
+      [allStats, fmtStats[fmt]].forEach(map => {
+        if (!map) return;
+        const s = map[r.player];
+        s.factions.add(r.faction);
+        const w = r.shadow ? r.w : r.w;
+        const l = r.shadow ? 0 : r.l;
+        const dv = r.shadow ? 0 : r.d;
+        s.w += w; s.l += l; s.d += dv;
+        s.games += w + l + dv;
+      });
+      if (fmt !== 'Teams') {
+        const s = singlesStats[r.player];
+        if (s) {
+          s.factions.add(r.faction);
+          const w = r.shadow ? r.w : r.w;
+          const l = r.shadow ? 0 : r.l;
+          const dv = r.shadow ? 0 : r.d;
+          s.w += w; s.l += l; s.d += dv;
+          s.games += w + l + dv;
+        }
+      }
+    });
+  });
+
+  // rebuild summary strips
+  ['summary-gt','summary-rtt','summary-teams'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+  buildStrip('summary-gt',    fmtStats['GT'],    'GT');
+  buildStrip('summary-rtt',   fmtStats['RTT'],   'RTT');
+  buildStrip('summary-teams', fmtStats['Teams'], 'Teams');
+
+  // rebuild leaderboard
+  renderLeaderboard(activeFilter);
+
+  // rebuild format groups
+  const fmtGroupEl = document.getElementById('format-groups');
+  fmtGroupEl.innerHTML = '';
+  teamsCardCount = 0;
+  buildFormatGroups();
+
+  // rebuild highlights
+  const hlEl = document.getElementById('highlights');
+  if (hlEl) { hlEl.innerHTML = ''; buildHighlights(); }
+
+  // rebuild faction stats
+  buildFactionStats();
+
+  // reset awards so they rebuild on next visit
+  awardsBuilt = false;
+  if (document.getElementById('awards-grid')) document.getElementById('awards-grid').innerHTML = '';
+  if (document.getElementById('milestones-grid')) document.getElementById('milestones-grid').innerHTML = '';
+
+  // update header meta
+  const activeEvs = getActiveEvents();
+  const playerCount = Object.values(allStats).filter(s => s.games > 0).length;
+  document.getElementById('header-meta').innerHTML =
+    `<span>${D.season}</span><span>${D.game}</span><span>${activeEvs.length} event${activeEvs.length !== 1 ? 's' : ''}</span><span>${playerCount} players with results</span><span style="color:var(--accent);font-weight:500;">${ACTIVE_EDITION}th Edition</span>`;
+}
+const FORMATS = ['GT', 'RTT', 'Teams'];
+
+// ── build per-format and overall stats ──
+const mkStats = () => ({});
+const allStats     = mkStats();
+const fmtStats     = { GT: mkStats(), RTT: mkStats(), Teams: mkStats() };
+const singlesStats = {};
+
+function ensurePlayer(map, name, factions) {
+  if (!map[name]) map[name] = { name, factions: new Set(factions || []), w: 0, l: 0, d: 0, games: 0 };
+}
+
+D.players.forEach(p => {
+  ensurePlayer(allStats, p.name, p.factions);
+  FORMATS.forEach(f => ensurePlayer(fmtStats[f], p.name, p.factions));
+  ensurePlayer(singlesStats, p.name, p.factions);
+});
+
+getActiveEvents().forEach(ev => {
+  const fmt = ev.format;
+  ev.results.forEach(r => {
+    if (r.dropped) return;
+    ensurePlayer(allStats, r.player, []);
+    if (fmt && fmtStats[fmt]) ensurePlayer(fmtStats[fmt], r.player, []);
+    if (fmt !== 'Teams') ensurePlayer(singlesStats, r.player, []);
+    [allStats, fmtStats[fmt]].forEach(map => {
+      if (!map) return;
+      const s = map[r.player];
+      s.factions.add(r.faction);
+      const w = r.shadow ? r.w : r.w;
+      const l = r.shadow ? 0 : r.l;
+      const d = r.shadow ? 0 : r.d;
+      s.w += w; s.l += l; s.d += d;
+      s.games += w + l + d;
+    });
+    if (fmt !== 'Teams') {
+      const s = singlesStats[r.player];
+      if (s) {
+        s.factions.add(r.faction);
+        const w = r.shadow ? r.w : r.w;
+        const l = r.shadow ? 0 : r.l;
+        const dv = r.shadow ? 0 : r.d;
+        s.w += w; s.l += l; s.d += dv;
+        s.games += w + l + dv;
+      }
+    }
+  });
+});
+
+// ── header ──
+document.getElementById('team-title').textContent = D.team;
+const evCount = getActiveEvents().length;
+const playerCount = Object.values(allStats).filter(s => s.games > 0).length;
+document.getElementById('header-meta').innerHTML =
+  `<span>${D.season}</span><span>${D.game}</span><span>${evCount} event${evCount !== 1 ? 's' : ''}</span><span>${playerCount} players with results</span><span style="color:var(--accent);font-weight:500;">10th Edition</span>`;
+document.getElementById('footer-team').textContent = D.team + ' · ' + D.season;
+document.getElementById('footer-updated').textContent = D.lastUpdated ? 'Last updated: ' + D.lastUpdated : '';
+
+// ── summary strips ──
+function buildStrip(containerId, statsMap, label) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  const block = el.closest('.summary-block');
+  if (block) block.style.display = '';
+  const players = Object.values(statsMap).filter(s => s.games > 0);
+  if (!players.length) { if (block) block.style.display = 'none'; return; }
+  const W = players.reduce((a,s)=>a+s.w,0);
+  const L = players.reduce((a,s)=>a+s.l,0);
+  const Dv = players.reduce((a,s)=>a+s.d,0);
+  const G = W+L+Dv;
+  const wr = G ? Math.round((W/G)*100) : 0;
+  const evts = getActiveEvents().filter(e => e.format === label).length;
+  const uniquePlayers = players.length;
+  [
+    { label: 'Events',          val: evts,          cls: '' },
+    { label: 'Players active',  val: uniquePlayers,  cls: '' },
+    { label: 'Total games',     val: G,              cls: '' },
+    { label: 'Wins',            val: W,              cls: 'w' },
+    { label: 'Losses',          val: L,              cls: 'l' },
+    { label: 'Draws',           val: Dv,             cls: 'd' },
+    { label: 'Win rate',        val: wr+'%',         cls: '' },
+  ].forEach(s => {
+    el.innerHTML += `<div class="stat-cell"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls}">${s.val}</div></div>`;
+  });
+}
+buildStrip('summary-gt',    fmtStats['GT'],    'GT');
+buildStrip('summary-rtt',   fmtStats['RTT'],   'RTT');
+buildStrip('summary-teams', fmtStats['Teams'], 'Teams');
+
+// ── leaderboard ──
+let activeFilter = 'Singles';
+const filters = ['Singles', 'GT', 'RTT', 'Teams'];
+
+const BAYES_WEIGHT = 10;
+
+function bayesianWinRate(s, teamAvg) {
+  if (!s.games) return 0;
+  const wr = s.w / s.games;
+  return (s.games / (s.games + BAYES_WEIGHT)) * wr + (BAYES_WEIGHT / (s.games + BAYES_WEIGHT)) * teamAvg;
+}
+
+function getTeamAvg(map) {
+  const players = Object.values(map).filter(s => s.games > 0);
+  const totalW = players.reduce((a,s) => a + s.w, 0);
+  const totalG = players.reduce((a,s) => a + s.games, 0);
+  return totalG ? totalW / totalG : 0.5;
+}
+
+// singles stats — GT and RTT only
+D.players.forEach(p => {
+  if (!singlesStats[p.name]) singlesStats[p.name] = { name: p.name, factions: new Set(p.factions || []), w: 0, l: 0, d: 0, games: 0 };
+});
+getActiveEvents().forEach(ev => {
+  if (ev.format === 'Teams') return;
+  ev.results.forEach(r => {
+    if (r.dropped) return;
+    if (!singlesStats[r.player]) singlesStats[r.player] = { name: r.player, factions: new Set(), w: 0, l: 0, d: 0, games: 0 };
+    const s = singlesStats[r.player];
+    s.factions.add(r.faction);
+    const w = r.shadow ? r.w : r.w;
+    const l = r.shadow ? 0 : r.l;
+    const d = r.shadow ? 0 : r.d;
+    s.w += w; s.l += l; s.d += d;
+    s.games += w + l + d;
+  });
+});
+
+function getRanked(filter) {
+  const map = filter === 'Singles' ? singlesStats : filter === 'All' ? allStats : fmtStats[filter];
+  const teamAvg = getTeamAvg(map);
+  return Object.values(map)
+    .filter(s => s.games > 0)
+    .sort((a,b) => {
+      const bA = bayesianWinRate(a, teamAvg);
+      const bB = bayesianWinRate(b, teamAvg);
+      if (Math.abs(bB - bA) > 0.001) return bB - bA;
+      return b.w - a.w;
+    });
+}
+
+function renderTeamsLeaderboard() {
+  const lbEl = document.getElementById('leaderboard');
+
+  // collect all subteams across all teams events
+  const subteamMap = {};
+  getActiveEvents().filter(ev => ev.format === 'Teams').forEach(ev => {
+    if (!ev.subteams) return;
+    ev.subteams.forEach(st => {
+      const key = st.name;
+      if (!subteamMap[key]) subteamMap[key] = { name: key, events: [], bestPlacing: Infinity, totalW: 0, totalL: 0, totalD: 0, totalGames: 0 };
+      subteamMap[key].events.push({ ev, st });
+      subteamMap[key].totalW += st.w;
+      subteamMap[key].totalL += st.l;
+      subteamMap[key].totalD += st.d;
+      subteamMap[key].totalGames += st.w + st.l + st.d;
+      const pct = st.placing / ev.totalTeams;
+      if (pct < subteamMap[key].bestPlacing) subteamMap[key].bestPlacing = pct;
+    });
+  });
+
+  const ranked = Object.values(subteamMap).sort((a, b) => a.bestPlacing - b.bestPlacing);
+  if (!ranked.length) {
+    lbEl.innerHTML = `<div style="padding:1.5rem;color:var(--muted);font-size:0.85rem;">No teams results yet.</div>`;
+    return;
+  }
+
+  lbEl.innerHTML = ranked.map((st, i) => {
+    const wr = st.totalGames ? Math.round((st.totalW / st.totalGames) * 100) : 0;
+    const wrColor = wr >= 60 ? '#ff6a00' : wr >= 40 ? 'var(--text)' : 'var(--loss)';
+    const topCls = i < 3 ? ' top3' : '';
+    const stId = 'st-lb-' + st.name.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+
+    // per-event blocks for this subteam
+    const eventBlocks = st.events.map(({ ev, st: stMeta }, ei) => {
+      const evId = stId + '-ev-' + ei;
+      const players = ev.results.filter(r => r.subteam === st.name);
+
+      // player rows — each clickable to show their career teams total
+      const playerRows = players.map((r, pi) => {
+        const playerId = evId + '-p-' + pi;
+
+        // career teams total for this player
+        const careerW = getActiveEvents().filter(e => e.format === 'Teams')
+          .flatMap(e => e.results)
+          .filter(x => x.player === r.player)
+          .reduce((a, x) => ({ w: a.w+x.w, l: a.l+x.l, d: a.d+x.d, g: a.g+x.w+x.l+x.d }), { w:0, l:0, d:0, g:0 });
+        const careerWr = careerW.g ? Math.round((careerW.w / careerW.g) * 100) : 0;
+
+        // all teams events for this player
+        const allTeamsEvents = getActiveEvents().filter(e => e.format === 'Teams' && e.results.some(x => x.player === r.player));
+
+        const evDetailRows = allTeamsEvents.map(te => {
+          const tr = te.results.find(x => x.player === r.player);
+          if (!tr) return '';
+          return `<tr style="background:var(--bg);">
+            <td style="padding-left:4rem;font-size:0.75rem;color:var(--muted);">${te.name}</td>
+            <td style="font-size:0.75rem;color:var(--muted);">${tr.subteam}</td>
+            <td style="font-size:0.75rem;color:var(--muted);">${tr.faction}</td>
+            <td style="font-size:0.75rem;color:var(--muted);">${te.date}</td>
+            <td style="text-align:right;">
+              <div style="display:flex;gap:3px;justify-content:flex-end;">
+                <span class="rec-badge rec-w">${tr.w}W</span>
+                <span class="rec-badge rec-l">${tr.l}L</span>
+                ${tr.d > 0 ? `<span class="rec-badge rec-d">${tr.d}D</span>` : ''}
+              </div>
+            </td>
+          </tr>`;
+        }).join('');
+
+        const careerSummaryRow = `<tr style="background:var(--surface2);">
+          <td colspan="4" style="padding-left:4rem;font-size:0.72rem;font-weight:500;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;">Teams career total</td>
+          <td style="text-align:right;">
+            <div style="display:flex;gap:3px;justify-content:flex-end;align-items:center;">
+              <span class="rec-badge rec-w">${careerW.w}W</span>
+              <span class="rec-badge rec-l">${careerW.l}L</span>
+              ${careerW.d > 0 ? `<span class="rec-badge rec-d">${careerW.d}D</span>` : ''}
+              <span style="font-size:0.72rem;color:${careerWr >= 60 ? '#ff6a00' : 'var(--muted)'};margin-left:6px;">${careerWr}%</span>
+            </div>
+          </td>
+        </tr>`;
+
+        return `
+          <tr onclick="toggleLb('${playerId}')" style="cursor:pointer;border-top:1px solid #222;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+            <td style="padding-left:3rem;font-size:0.82rem;color:var(--text);">${r.player}</td>
+            <td style="font-size:0.78rem;color:var(--muted);">${r.faction}</td>
+            <td colspan="2" style="font-size:0.72rem;color:var(--muted);">click for career</td>
+            <td style="text-align:right;">
+              <div style="display:flex;gap:3px;justify-content:flex-end;align-items:center;">
+                <span class="rec-badge rec-w">${r.w}W</span>
+                <span class="rec-badge rec-l">${r.l}L</span>
+                ${r.d > 0 ? `<span class="rec-badge rec-d">${r.d}D</span>` : ''}
+                <span id="${playerId}-arrow" style="color:var(--muted);font-size:0.7rem;margin-left:6px;transition:transform 0.2s;">▼</span>
+              </div>
+            </td>
+          </tr>
+          <tr id="${playerId}" style="display:none;">
+            <td colspan="5" style="padding:0;">
+              <table style="width:100%;border-collapse:collapse;">
+                <thead><tr>
+                  <th style="padding-left:4rem;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding-top:6px;padding-bottom:6px;">Event</th>
+                  <th style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Sub-team</th>
+                  <th style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Faction</th>
+                  <th style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Date</th>
+                  <th style="text-align:right;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">W / L / D</th>
+                </tr></thead>
+                <tbody>${evDetailRows}${careerSummaryRow}</tbody>
+              </table>
+            </td>
+          </tr>`;
+      }).join('');
+
+      const isTop = stMeta.placing <= Math.ceil(ev.totalTeams * 0.15);
+      return `
+        <tr onclick="toggleLb('${evId}')" style="cursor:pointer;background:var(--surface2);border-top:1px solid #2a2a2a;" onmouseover="this.style.background='#2a2a2a'" onmouseout="this.style.background='var(--surface2)'">
+          <td style="padding-left:2rem;font-size:0.82rem;color:var(--text);">${ev.name}</td>
+          <td style="font-size:0.78rem;color:var(--muted);">${ev.date}</td>
+          <td style="display:flex;gap:4px;padding-top:10px;">
+            <span class="rec-badge rec-w">${stMeta.w}W</span>
+            <span class="rec-badge rec-l">${stMeta.l}L</span>
+            ${stMeta.d > 0 ? `<span class="rec-badge rec-d">${stMeta.d}D</span>` : ''}
+          </td>
+          <td style="font-size:0.82rem;color:${isTop ? '#ff6a00' : 'var(--text)'};">${stMeta.placing} / ${ev.totalTeams}</td>
+          <td style="text-align:right;"><span id="${evId}-arrow" style="color:var(--muted);font-size:0.7rem;transition:transform 0.2s;">▼</span></td>
+        </tr>
+        <tr id="${evId}" style="display:none;">
+          <td colspan="5" style="padding:0;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead><tr>
+                <th style="padding-left:3rem;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding-top:6px;padding-bottom:6px;">Player</th>
+                <th style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Faction</th>
+                <th colspan="2" style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);"></th>
+                <th style="text-align:right;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">W / L / D</th>
+              </tr></thead>
+              <tbody>${playerRows}</tbody>
+            </table>
+          </td>
+        </tr>`;
+    }).join('');
+
+    const bestPct = Math.round((1 - st.bestPlacing) * 100);
+    return `
+      <div class="lb-row${topCls}" style="display:block;padding:0;cursor:pointer;" onclick="toggleLb('${stId}')">
+        <div style="display:grid;grid-template-columns:32px 1fr 130px 70px 20px;align-items:center;gap:12px;padding:12px 16px;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+          <div class="lb-rank">${i + 1}</div>
+          <div>
+            <div class="lb-name">${st.name}</div>
+            <div class="lb-faction">${st.events.length} event${st.events.length !== 1 ? 's' : ''}</div>
+          </div>
+          <div class="lb-record">
+            <span class="rec-badge rec-w">${st.totalW}W</span>
+            <span class="rec-badge rec-l">${st.totalL}L</span>
+            ${st.totalD > 0 ? `<span class="rec-badge rec-d">${st.totalD}D</span>` : ''}
+          </div>
+          <div class="lb-winrate" style="color:${wrColor}">${wr}%</div>
+          <div id="${stId}-arrow" style="color:var(--muted);font-size:0.75rem;transition:transform 0.2s;text-align:right;">▼</div>
+        </div>
+        <div id="${stId}" style="display:none;border-top:1px solid #1a1a1a;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead><tr>
+              <th style="padding-left:2rem;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding-top:6px;padding-bottom:6px;">Event</th>
+              <th style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Date</th>
+              <th style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Record</th>
+              <th style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Placing</th>
+              <th></th>
+            </tr></thead>
+            <tbody>${eventBlocks}</tbody>
+          </table>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderLeaderboard(filter) {
+  if (filter === 'Teams') { renderTeamsLeaderboard(); return; }
+  const lbEl = document.getElementById('leaderboard');
+  const ranked = getRanked(filter);
+  if (!ranked.length) {
+    lbEl.innerHTML = `<div style="padding:1.5rem;color:var(--muted);font-size:0.85rem;">No results for this format yet.</div>`;
+    return;
+  }
+
+  const THRESHOLD = 3;
+  const qualified   = ranked.filter(s => s.games >= THRESHOLD);
+  const provisional = ranked.filter(s => s.games < THRESHOLD);
+
+  function buildRow(s, i, isProvisional) {
+    const map = filter === 'Singles' ? singlesStats : filter === 'All' ? allStats : fmtStats[filter];
+    const teamAvg = getTeamAvg(map);
+    const rawWr = s.games ? Math.round((s.w / s.games) * 100) : 0;
+    const weightedWr = Math.round(bayesianWinRate(s, teamAvg) * 100);
+    const factions = [...s.factions].filter(Boolean).join(', ') || '—';
+    const mainFaction = mostPlayedFaction(s.name);
+    const factionDisplay = mainFaction
+      ? mainFaction + (s.factions.size > 1 ? ` <span style="font-size:0.65rem;color:var(--faint);">+${s.factions.size - 1} more</span>` : '')
+      : factions;
+    const topCls = (!isProvisional && i < 3) ? ' top3' : '';
+    const wrColor = isProvisional ? 'var(--muted)' : weightedWr >= 60 ? '#ff6a00' : weightedWr >= 40 ? 'var(--text)' : 'var(--loss)';
+    const cardId = 'lb-' + s.name.replace(/\s+/g, '-').toLowerCase() + '-' + filter;
+    const opacity = isProvisional ? '0.6' : '1';
+
+    const evRows = getActiveEvents().filter(ev => {
+      if (filter !== 'Singles' && filter !== 'All' && ev.format !== filter) return false;
+      return ev.results.some(r => r.player === s.name && !r.dropped);
+    }).map(ev => {
+      const r = ev.results.find(r => r.player === s.name);
+      if (!r) return '';
+      const total = ev.format === 'Teams' ? ev.totalTeams : ev.totalPlayers;
+      const placingStr = r.dropped ? '—' : `${r.placing} / ${total}`;
+      const shadowTag = r.shadow ? ` <span style="font-size:0.62rem;color:var(--accent);border:1px solid var(--accent-muted);padding:1px 5px;border-radius:3px;margin-left:4px;">5-0 shadow</span>` : '';
+      const subteamStr = r.subteam ? `<div style="font-size:0.68rem;color:var(--muted);margin-top:1px;">${r.subteam}</div>` : '';
+      return `<tr>
+        <td style="padding-left:2rem;font-size:0.8rem;color:var(--text);">${ev.name}${shadowTag}${subteamStr}</td>
+        <td style="font-size:0.78rem;color:var(--muted);">${r.faction}</td>
+        <td style="font-size:0.78rem;color:var(--muted);">${ev.date}</td>
+        <td style="font-size:0.78rem;"><span class="format-pill">${ev.format}</span></td>
+        <td style="font-size:0.8rem;color:${r.placing <= Math.ceil(total*0.1) ? '#ff6a00' : 'var(--text)'};">${placingStr}</td>
+        <td style="text-align:right;">
+          <div style="display:flex;gap:4px;justify-content:flex-end;">
+            <span class="rec-badge rec-w">${r.w}W</span>
+            <span class="rec-badge rec-l">${r.l}L</span>
+            ${r.d > 0 ? `<span class="rec-badge rec-d">${r.d}D</span>` : ''}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    // form guide — last 5 individual games across all active events
+    const formGames = [];
+    getActiveEvents().forEach(ev => {
+      const r = ev.results.find(r => r.player === s.name && !r.dropped);
+      if (!r) return;
+      const effectiveL = r.shadow ? 0 : r.l;
+      const effectiveD = r.shadow ? 0 : r.d;
+      for (let i = 0; i < r.w; i++) formGames.push('w');
+      for (let i = 0; i < effectiveL; i++) formGames.push('l');
+      for (let i = 0; i < effectiveD; i++) formGames.push('d');
+    });
+    const last5 = formGames.slice(-5);
+    const dotColor = { w: 'var(--win)', l: 'var(--loss)', d: 'var(--draw)' };
+    const formDots = last5.map(r =>
+      `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dotColor[r]};opacity:0.85;"></span>`
+    ).join('');
+    const formHtml = `<div style="display:flex;gap:3px;align-items:center;margin-top:3px;">${formDots}</div>`;
+
+    return `
+    <div class="lb-row${topCls}" style="display:block;padding:0;cursor:pointer;opacity:${opacity};" onclick="toggleLb('${cardId}')">
+      <div style="display:grid;grid-template-columns:32px 1fr 120px 90px 20px;align-items:center;gap:12px;padding:12px 16px;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+        <div class="lb-rank">${isProvisional ? '—' : i + 1}</div>
+        <div>
+          <div class="lb-name"><span class="player-link" onclick="event.stopPropagation();openPlayerPanel('${s.name}')">${s.name}</span></div>
+          <div class="lb-faction">${factionDisplay}</div>
+          ${formHtml}
+        </div>
+        <div class="lb-record">
+          <span class="rec-badge rec-w">${s.w}W</span>
+          <span class="rec-badge rec-l">${s.l}L</span>
+          ${s.d > 0 ? `<span class="rec-badge rec-d">${s.d}D</span>` : ''}
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.04em;color:${wrColor};">${weightedWr}%</div>
+          <div style="font-size:0.65rem;color:var(--muted);letter-spacing:0.04em;">${s.games} games · ${rawWr}% raw</div>
+        </div>
+        <div id="${cardId}-arrow" style="color:var(--muted);font-size:0.75rem;transition:transform 0.2s;text-align:right;">▼</div>
+      </div>
+      <div id="${cardId}" style="display:none;border-top:1px solid #1a1a1a;">
+        <table class="event-table">
+          <thead><tr>
+            <th style="padding-left:2rem">Event</th>
+            <th>Faction</th>
+            <th>Date</th>
+            <th>Format</th>
+            <th>Placing</th>
+            <th style="text-align:right">W / L / D</th>
+          </tr></thead>
+          <tbody>${evRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  let html = qualified.map((s, i) => buildRow(s, i, false)).join('');
+
+  if (provisional.length) {
+    html += `
+      <div style="margin-top:1rem;padding:8px 0 6px;border-top:1px solid var(--border);">
+        <div style="font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:0 4px 8px;">Provisional — fewer than ${THRESHOLD} games</div>
+        ${provisional.map((s, i) => buildRow(s, i, true)).join('')}
+      </div>`;
+  }
+
+  lbEl.innerHTML = html;
+}
+
+function toggleLb(id) {
+  const el = document.getElementById(id);
+  const arrow = document.getElementById(id + '-arrow');
+  const open = el.style.display === 'block';
+  el.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+// render filter buttons
+const filterEl = document.getElementById('lb-filters');
+filters.forEach(f => {
+  const btn = document.createElement('button');
+  btn.textContent = f;
+  btn.className = 'filter-btn' + (f === 'Singles' ? ' active' : '');
+  btn.onclick = () => {
+    activeFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderLeaderboard(f);
+  };
+  filterEl.appendChild(btn);
+});
+renderLeaderboard('Singles');
+
+// ── format groups with collapsible events ──
+const fmtGroupEl = document.getElementById('format-groups');
+const formatOrder = ['GT', 'RTT', 'Teams'];
+let teamsCardCount = 0;
+
+function buildFormatGroups() {
+formatOrder.forEach(fmt => {
+  const fmtEvents = getActiveEvents().filter(ev => ev.format === fmt);
+  if (!fmtEvents.length) return;
+
+  const groupId = 'fmt-' + fmt.toLowerCase();
+  const fmtLabel = fmt === 'GT' ? 'Grand Tournaments' : fmt === 'RTT' ? 'RTTs' : 'Teams Events';
+
+  let eventsHtml = fmtEvents.map(ev => {
+    const isTeams = ev.format === 'Teams';
+    const evId = 'ev-' + ev.name.replace(/[^a-z0-9]/gi,'-').toLowerCase();
+    const bcpLink = ev.bcpUrl ? `<a href="${ev.bcpUrl}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">View on BCP ↗</a>` : '';
+    const metaCount = isTeams ? `${ev.totalTeams} teams · ${ev.totalPlayers} players` : (ev.totalPlayers ? `${ev.totalPlayers} players` : '');
+
+    let bodyHtml = '';
+
+    if (isTeams && ev.subteams) {
+      const groups = {};
+      ev.subteams.forEach(st => { groups[st.name] = { meta: st, players: [] }; });
+      ev.results.forEach(r => {
+        if (!groups[r.subteam]) groups[r.subteam] = { meta: { name: r.subteam, placing: r.placing, w: 0, l: 0, d: 0 }, players: [] };
+        groups[r.subteam].players.push(r);
+      });
+      bodyHtml = Object.values(groups).sort((a,b) => a.meta.placing - b.meta.placing).map(g => {
+        const st = g.meta;
+        const cardId = 'st-' + (teamsCardCount++);
+        const isTop = st.placing <= Math.ceil(ev.totalTeams * 0.15);
+        const playerRows = g.players.map(r => `
+          <tr>
+            <td class="player-cell" style="padding-left:2rem">${r.player}</td>
+            <td>${r.faction}</td>
+            <td class="wld-cell">
+              <span class="rec-badge rec-w">${r.w}W</span>
+              <span class="rec-badge rec-l">${r.l}L</span>
+              ${r.d > 0 ? `<span class="rec-badge rec-d">${r.d}D</span>` : ''}
+            </td>
+          </tr>`).join('');
+        return `
+          <div style="border-bottom:1px solid #1a1a1a;">
+            <div onclick="toggleSubteam('${cardId}')" style="display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#3a3a3a'" onmouseout="this.style.background='transparent'">
+              <div>
+                <div style="font-size:0.9rem;font-weight:400;color:var(--text);">${st.name}</div>
+                <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">${g.players.length} players</div>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <span class="rec-badge rec-w">${st.w}W</span>
+                <span class="rec-badge rec-l">${st.l}L</span>
+                ${st.d > 0 ? `<span class="rec-badge rec-d">${st.d}D</span>` : ''}
+              </div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.04em;min-width:60px;text-align:right;color:${isTop ? '#ff6a00' : 'var(--text)'};">${st.placing} <span style="font-size:0.7rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:300">/ ${ev.totalTeams}</span></div>
+              <div id="${cardId}-arrow" style="color:var(--muted);font-size:0.8rem;transition:transform 0.2s;min-width:16px;text-align:right;">▼</div>
+            </div>
+            <div id="${cardId}" style="display:none;border-top:1px solid #1a1a1a;">
+              <table class="event-table">
+                <thead><tr><th style="padding-left:2rem">Player</th><th>Faction</th><th style="text-align:right">W / L / D</th></tr></thead>
+                <tbody>${playerRows}</tbody>
+              </table>
+            </div>
+          </div>`;
+      }).join('');
+    } else {
+      const sorted = [...ev.results].sort((a,b) => a.placing - b.placing);
+      const rows = sorted.map(r => {
+        if (r.dropped) return `<tr>
+          <td class="player-cell">${r.player}</td>
+          <td>${r.faction}</td>
+          <td class="placing-cell" style="color:var(--muted)">—</td>
+          <td class="wld-cell"><span style="font-size:0.72rem;color:var(--muted)">Dropped</span></td>
+        </tr>`;
+        const isTop = r.placing <= Math.ceil(ev.totalPlayers * 0.1);
+        const placingCls = isTop ? ' placing-top' : '';
+        const outOf = ev.totalPlayers ? ` <span style="font-size:0.7rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:300">/ ${ev.totalPlayers}</span>` : '';
+        const shadowTag = r.shadow ? ` <span style="font-size:0.62rem;color:var(--accent);border:1px solid var(--accent-muted);padding:1px 5px;border-radius:3px;letter-spacing:0.04em;margin-left:6px;">5-0 shadow</span>` : '';
+        return `<tr>
+          <td class="player-cell"><span class="player-link" onclick="openPlayerPanel('${r.player}')">${r.player}</span>${shadowTag}</td>
+          <td>${r.faction}</td>
+          <td class="placing-cell${placingCls}">${r.placing}${outOf}</td>
+          <td class="wld-cell">
+            <span class="rec-badge rec-w">${r.w}W</span>
+            <span class="rec-badge rec-l">${r.l}L</span>
+            ${r.d > 0 ? `<span class="rec-badge rec-d">${r.d}D</span>` : ''}
+          </td>
+        </tr>`;
+      }).join('');
+      bodyHtml = `<table class="event-table">
+        <thead><tr><th>Player</th><th>Faction</th><th>Placing</th><th style="text-align:right">W / L / D</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    }
+
+    return `
+      <div class="event-card" style="border-radius:0;border-left:none;border-right:none;border-top:none;border-bottom:1px solid var(--border);">
+        <div class="event-header" onclick="toggleEvt('${evId}')" style="cursor:pointer;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+          <div>
+            <div class="event-name">${ev.name}</div>
+            <div class="event-meta">
+              <span>${ev.date}</span>
+              ${metaCount ? `<span>${metaCount}</span>` : ''}
+              ${bcpLink}
+            </div>
+          </div>
+          <div id="${evId}-arrow" style="color:var(--muted);font-size:0.8rem;transition:transform 0.2s;margin-left:12px;">▼</div>
+        </div>
+        <div id="${evId}" style="display:none;border-top:1px solid var(--border);">
+          ${bodyHtml}
+        </div>
+      </div>`;
+  }).join('');
+
+  fmtGroupEl.innerHTML += `
+    <div class="fmt-group">
+      <div class="fmt-group-head" onclick="toggleFmtGroup('${groupId}')">
+        <div>
+          <span class="fmt-group-title">${fmtLabel}</span>
+          <span class="fmt-group-meta" style="margin-left:12px;">${fmtEvents.length} event${fmtEvents.length !== 1 ? 's' : ''}</span>
+        </div>
+        <span id="${groupId}-arrow" style="color:var(--muted);font-size:0.8rem;transition:transform 0.2s;">▼</span>
+      </div>
+      <div id="${groupId}" class="fmt-group-body open">
+        ${eventsHtml}
+      </div>
+    </div>`;
+});
+} // end buildFormatGroups
+buildFormatGroups();
+
+// ── toggle helpers ──
+function toggleSection(id) {
+  const el = document.getElementById(id);
+  const arrow = document.getElementById(id + '-arrow');
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : '';
+  if (arrow) arrow.style.transform = open ? 'rotate(-90deg)' : '';
+}
+
+function toggleFmtGroup(id) {
+  const el = document.getElementById(id);
+  const arrow = document.getElementById(id + '-arrow');
+  el.classList.toggle('open');
+  arrow.style.transform = el.classList.contains('open') ? '' : 'rotate(-90deg)';
+}
+function toggleEvt(id) {
+  const el = document.getElementById(id);
+  const arrow = document.getElementById(id + '-arrow');
+  const open = el.style.display === 'block';
+  el.style.display = open ? 'none' : 'block';
+  arrow.style.transform = open ? '' : 'rotate(180deg)';
+}
+function toggleSubteam(id) {
+  const el = document.getElementById(id);
+  const arrow = document.getElementById(id + '-arrow');
+  const open = el.style.display === 'block';
+  el.style.display = open ? 'none' : 'block';
+  arrow.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+// ── tab switching ──
+function switchTab(tab) {
+  const tabs = ['stats','calendar','club','more','submit'];
+  tabs.forEach(t => {
+    const el = document.getElementById('tab-' + t);
+    if (el) el.style.display = t === tab ? '' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+  if (tab === 'calendar') renderCalendar();
+  if (tab === 'club') renderClub();
+  if (tab === 'more') { buildAwards(); buildMilestones(); }
+}
+
+// ── PIN gate ──
+function checkPin(val) {
+  if (val.length < 4) return;
+  if (val === '1719') {
+    document.getElementById('pin-gate').style.display = 'none';
+    document.getElementById('submit-form').style.display = 'block';
+    loadSheetSubmissions();
+  } else {
+    document.getElementById('pin-error').style.display = 'block';
+    document.getElementById('pin-input').value = '';
+    setTimeout(() => { document.getElementById('pin-error').style.display = 'none'; }, 2000);
+  }
+}
+
+// ── calendar ──
+const CALENDAR = [
+  { name: "Winter ITT",        dates: "1–2 Feb 2025",       type: "Teams", attended: true,  sortDate: 20250201 },
+  { name: "Spring ITT",        dates: "3–4 May 2025",       type: "Teams", attended: true,  sortDate: 20250503 },
+  { name: "Bristol GT",        dates: "7–8 Jun 2025",       type: "GT",    attended: true,  sortDate: 20250607 },
+  { name: "Leeds GT",          dates: "5–6 Jul 2025",       type: "GT",    attended: false, sortDate: 20250705 },
+  { name: "Summer ITT",        dates: "2–3 Aug 2025",       type: "Teams", attended: true,  sortDate: 20250802 },
+  { name: "LGT",               dates: "26–28 Sep 2025",     type: "GT",    attended: true,  sortDate: 20250926 },
+  { name: "Coventry GT",       dates: "24–26 Oct 2025",     type: "GT",    attended: true,  sortDate: 20251024 },
+  { name: "Autumn ITT",        dates: "15–16 Nov 2025",     type: "Teams", attended: true,  sortDate: 20251115 },
+  { name: "Leicester GT",      dates: "6–7 Dec 2025",       type: "GT",    attended: false, sortDate: 20251206 },
+  { name: "Nottingham GT",     dates: "10–11 Jan 2026",     type: "GT",    attended: true,  sortDate: 20260110 },
+  { name: "Shaming in the New Year RTT", dates: "24 Jan 2026", type: "RTT", attended: true, sortDate: 20260124 },
+  { name: "Winter ITT",        dates: "31 Jan–1 Feb 2026",  type: "Teams", attended: true,  sortDate: 20260131 },
+  { name: "Manchester GT",     dates: "21–22 Feb 2026",     type: "GT",    attended: false, sortDate: 20260221 },
+  { name: "Windsor Super Major", dates: "7–8 Mar 2026",     type: "GT",    attended: true,  sortDate: 20260307 },
+  { name: "Sheffield GT",      dates: "28–29 Mar 2026",     type: "GT",    attended: false, sortDate: 20260328 },
+  { name: "South Coast GT",    dates: "11–12 Apr 2026",     type: "GT",    attended: false, sortDate: 20260411 },
+  { name: "Spring ITT",        dates: "2–3 May 2026",       type: "Teams", attended: false, sortDate: 20260502 },
+  { name: "Bristol GT",        dates: "23–24 May 2026",     type: "GT",    attended: false, sortDate: 20260523 },
+  { name: "Leeds GT",          dates: "13–14 Jun 2026",     type: "GT",    attended: false, sortDate: 20260613 },
+  { name: "Birmingham GT",     dates: "4–5 Jul 2026",       type: "GT",    attended: false, sortDate: 20260704 },
+  { name: "Edinburgh GT",      dates: "25–26 Jul 2026",     type: "GT",    attended: false, sortDate: 20260725 },
+  { name: "Summer ITT",        dates: "8–9 Aug 2026",       type: "Teams", attended: false, sortDate: 20260808 },
+  { name: "LGT",               dates: "25–28 Sep 2026",     type: "GT",    attended: false, sortDate: 20260925 },
+  { name: "Coventry GT",       dates: "23–25 Oct 2026",     type: "GT",    attended: false, sortDate: 20261023 },
+  { name: "Autumn ITT",        dates: "14–15 Nov 2026",     type: "Teams", attended: false, sortDate: 20261114 },
+  { name: "Bedfordshire Super Major", dates: "5–6 Dec 2026", type: "GT",   attended: false, sortDate: 20261205 },
+];
+
+const TODAY = 20260331;
+
+function renderCalendar() {
+  const el = document.getElementById('calendar-grid');
+  el.innerHTML = '';
+
+  const typeColor = { GT: 'var(--accent)', Teams: 'var(--draw)', RTT: 'var(--win)' };
+  const typeBg    = { GT: 'var(--accent-bg)', Teams: 'var(--draw-bg)', RTT: 'var(--win-bg)' };
+
+  // group by year-month
+  const groups = {};
+  CALENDAR.forEach(ev => {
+    const yr = Math.floor(ev.sortDate / 10000);
+    const mo = Math.floor((ev.sortDate % 10000) / 100);
+    const key = `${yr}-${String(mo).padStart(2,'0')}`;
+    if (!groups[key]) groups[key] = { label: new Date(yr, mo-1, 1).toLocaleString('en-GB', {month:'long', year:'numeric'}), events: [] };
+    groups[key].events.push(ev);
+  });
+
+  let html = '';
+  Object.values(groups).forEach(g => {
+    html += `<div style="margin-bottom:1.5rem;">
+      <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);">${g.label}</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">`;
+
+    g.events.forEach(ev => {
+      const isPast = ev.sortDate < TODAY;
+      const isFuture = ev.sortDate > TODAY;
+      const attended = ev.attended;
+
+      const borderCol = attended ? 'var(--accent)' : 'var(--border)';
+      const borderW   = attended ? '2px' : '1px';
+      const opacity   = isPast && !attended ? '0.45' : '1';
+
+      const statusTag = attended
+        ? `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--accent-bg);color:var(--accent);letter-spacing:0.04em;">PSSN attended</span>`
+        : isFuture
+          ? `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--surface2);color:var(--muted);letter-spacing:0.04em;">Upcoming</span>`
+          : `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--surface2);color:var(--muted);letter-spacing:0.04em;">Past</span>`;
+
+      const typeTag = `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:${typeBg[ev.type] || 'var(--surface2)'};color:${typeColor[ev.type] || 'var(--muted)'};">${ev.type}</span>`;
+
+      html += `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:var(--surface);border:${borderW} solid ${borderCol};border-radius:4px;opacity:${opacity};">
+          <div>
+            <div style="font-size:0.9rem;font-weight:400;color:var(--text);">${ev.name}</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">${ev.dates}</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+            ${typeTag}
+            ${statusTag}
+          </div>
+        </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+// ── club tab ──
+let clubRendered = false;
+function renderClub() {
+  renderCountdown();
+  if (!clubRendered) { renderTimeline(); clubRendered = true; }
+}
+
+function renderCountdown() {
+  const el = document.getElementById('event-countdown');
+  if (!el) return;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const upcoming = CALENDAR.filter(ev => {
+    const y = Math.floor(ev.sortDate/10000);
+    const mo = Math.floor((ev.sortDate%10000)/100)-1;
+    const d = ev.sortDate%100;
+    return new Date(y,mo,d) >= today;
+  }).sort((a,b) => a.sortDate - b.sortDate);
+
+  if (!upcoming.length) { el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">No upcoming events found.</div>`; return; }
+
+  const next = upcoming[0];
+  const y = Math.floor(next.sortDate/10000);
+  const mo = Math.floor((next.sortDate%10000)/100)-1;
+  const d = next.sortDate%100;
+  const diffMs = new Date(y,mo,d) - today;
+  const days = Math.ceil(diffMs / (1000*60*60*24));
+  const typeColor = { GT:'var(--accent)', Teams:'var(--draw)', RTT:'var(--win)' };
+
+  el.innerHTML = `
+    <div style="background:${next.attended?'var(--accent-bg)':'var(--surface)'};border:${next.attended?'2px solid var(--accent-muted)':'1px solid var(--border)'};border-radius:6px;padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:1rem;">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:0.04em;color:var(--text);">${next.name}</div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-top:3px;">${next.dates} · <span style="color:${typeColor[next.type]}">${next.type}</span>${next.attended?' · <span style="color:var(--accent);">PSSN attending</span>':''}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;line-height:1;color:${days<=7?'#ff6a00':'var(--text)'};">${days}</div>
+        <div style="font-size:0.72rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">day${days!==1?'s':''} to go</div>
+      </div>
+    </div>
+    ${upcoming.length>1?`<div style="font-size:0.75rem;color:var(--muted);margin-top:8px;">After that: ${upcoming.slice(1,4).map(e=>`${e.name} (${e.dates})`).join(' · ')}</div>`:''}`;
+}
+
+function renderTimeline() {
+  const el = document.getElementById('season-timeline');
+  if (!el) return;
+  const today = 20260331;
+  const typeColor = { GT:'var(--accent)', Teams:'var(--draw)', RTT:'var(--win)' };
+
+  el.innerHTML = `
+    <div style="overflow-x:auto;padding-bottom:1rem;margin-top:1rem;">
+      <div style="display:flex;align-items:flex-start;min-width:max-content;padding:1rem 0 0.5rem;">
+        ${CALENDAR.map((ev,i) => {
+          const isPast = ev.sortDate < today;
+          const attended = ev.attended;
+          const opacity = isPast && !attended ? '0.4' : '1';
+          const borderCol = attended ? 'var(--accent)' : 'var(--border)';
+          const connector = i < CALENDAR.length-1 ? `<div style="width:20px;height:2px;background:var(--border);flex-shrink:0;margin-top:22px;"></div>` : '';
+          return `<div style="display:flex;align-items:flex-start;">
+            <div style="display:flex;flex-direction:column;align-items:center;width:110px;opacity:${opacity};">
+              <div style="width:12px;height:12px;border-radius:50%;background:${attended?'var(--accent)':isPast?'var(--faint)':'var(--surface2)'};border:2px solid ${borderCol};margin-bottom:5px;"></div>
+              <div style="background:var(--surface);border:${attended?'2px':'1px'} solid ${borderCol};border-radius:4px;padding:5px 7px;width:100%;text-align:center;">
+                <div style="font-size:0.65rem;font-weight:500;color:${typeColor[ev.type]};">${ev.type}</div>
+                <div style="font-size:0.68rem;color:var(--text);margin-top:1px;line-height:1.3;">${ev.name}</div>
+                <div style="font-size:0.58rem;color:var(--muted);margin-top:2px;">${ev.dates.split('–')[0].trim()}</div>
+              </div>
+            </div>${connector}
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:4px;display:flex;gap:12px;flex-wrap:wrap;">
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block;"></span>PSSN attending</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--faint);display:inline-block;"></span>Past</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);display:inline-block;"></span>Upcoming</span>
+      </div>
+    </div>`;
+}
+
+function checkWhosGoingPin(val) {
+  if (val.length < 4) return;
+  if (val === '1719') {
+    document.getElementById('whos-going-gate').style.display = 'none';
+    document.getElementById('whos-going-content').style.display = 'block';
+    renderWhosGoing();
+  } else {
+    document.getElementById('whos-going-pin-error').style.display = 'block';
+    document.getElementById('whos-going-pin').value = '';
+    setTimeout(() => { document.getElementById('whos-going-pin-error').style.display = 'none'; }, 2000);
+  }
+}
+
+function renderWhosGoing() {
+  const el = document.getElementById('whos-going-grid');
+  if (!el) return;
+  const today = 20260331;
+  const upcoming = CALENDAR.filter(ev => ev.sortDate >= today).slice(0,6);
+  const players = D.players.map(p => p.name).filter(Boolean).sort();
+
+  el.innerHTML = `<div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+      <thead><tr>
+        <th style="text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:500;font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;min-width:130px;">Player</th>
+        ${upcoming.map(ev=>`<th style="text-align:center;padding:8px 6px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:400;font-size:0.65rem;min-width:80px;">${ev.name}<br><span style="opacity:0.6;">${ev.dates.split('–')[0]}</span></th>`).join('')}
+      </tr></thead>
+      <tbody>
+        ${players.map(name=>`
+          <tr onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+            <td style="padding:7px 12px;border-bottom:1px solid var(--border);color:var(--text);">${name}</td>
+            ${upcoming.map(ev=>{
+              const key=`going_${name.replace(/\s+/g,'_')}_${ev.sortDate}`;
+              const stored=localStorage.getItem(key);
+              const going=stored==='yes', maybe=stored==='maybe';
+              return `<td style="text-align:center;padding:5px;border-bottom:1px solid var(--border);">
+                <div style="display:flex;gap:3px;justify-content:center;">
+                  <button onclick="setGoing('${name.replace(/'/g,"\\'")}',${ev.sortDate},'yes')" title="Going" style="width:26px;height:26px;border-radius:4px;border:1px solid ${going?'var(--win)':'var(--border)'};background:${going?'var(--win-bg)':'transparent'};cursor:pointer;font-size:0.85rem;color:${going?'var(--win)':'var(--muted)'};transition:all 0.15s;">✓</button>
+                  <button onclick="setGoing('${name.replace(/'/g,"\\'")}',${ev.sortDate},'maybe')" title="Maybe" style="width:26px;height:26px;border-radius:4px;border:1px solid ${maybe?'#f0c040':'var(--border)'};background:${maybe?'#2a2000':'transparent'};cursor:pointer;font-size:0.85rem;color:${maybe?'#f0c040':'var(--muted)'};transition:all 0.15s;">?</button>
+                </div>
+              </td>`;
+            }).join('')}
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+  <div style="font-size:0.75rem;color:var(--muted);margin-top:10px;">✓ = Going &nbsp;·&nbsp; ? = Maybe &nbsp;·&nbsp; Saved in this browser only.</div>`;
+}
+
+function setGoing(name, sortDate, status) {
+  const key = `going_${name.replace(/\s+/g,'_')}_${sortDate}`;
+  const current = localStorage.getItem(key);
+  if (current === status) localStorage.removeItem(key); else localStorage.setItem(key, status);
+  renderWhosGoing();
+}
+
+const SHEET_ID = '1NF_j4uIDAWOhzNB8dRsbAUpBg2P09Vs9kc-o3ngBMUA';
+
+async function loadSheetSubmissions() {
+  const el = document.getElementById('sheet-submissions');
+  el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">Loading submissions…</div>`;
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+    const res = await fetch(url);
+    const text = await res.text();
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const rows = json.table.rows;
+    if (!rows || !rows.length) {
+      el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">No submissions yet.</div>`;
+      return;
+    }
+    const cols = ['Timestamp','Name','Event','Format','Faction','Placing','Total','W','L','D','Sub-team'];
+    let html = `<table class="event-table">
+      <thead><tr>
+        <th>When</th><th>Player</th><th>Event</th><th>Format</th><th>Faction</th><th>Placing</th><th style="text-align:right">W/L/D</th>
+      </tr></thead><tbody>`;
+    rows.forEach(row => {
+      const c = row.c;
+      const ts    = c[0]?.v ? new Date(c[0].v).toLocaleDateString('en-GB') : '—';
+      const name  = c[1]?.v || '—';
+      const event = c[2]?.v || '—';
+      const fmt   = c[3]?.v || '—';
+      const fac   = c[4]?.v || '—';
+      const place = c[5]?.v || '—';
+      const total = c[6]?.v || '—';
+      const w     = c[7]?.v ?? '—';
+      const l     = c[8]?.v ?? '—';
+      const d     = c[9]?.v ?? '—';
+      html += `<tr>
+        <td style="font-size:0.75rem;color:var(--muted);">${ts}</td>
+        <td class="player-cell">${name}</td>
+        <td style="font-size:0.78rem;color:var(--muted);">${event}</td>
+        <td><span class="format-pill">${fmt}</span></td>
+        <td style="font-size:0.78rem;color:var(--muted);">${fac}</td>
+        <td style="font-size:0.82rem;">${place} <span style="font-size:0.7rem;color:var(--muted);">/ ${total}</span></td>
+        <td class="wld-cell">
+          <span class="rec-badge rec-w">${w}W</span>
+          <span class="rec-badge rec-l">${l}L</span>
+          ${d !== '—' && d > 0 ? `<span class="rec-badge rec-d">${d}D</span>` : ''}
+        </td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">Could not load submissions — make sure the sheet is set to "Anyone with link can view".</div>`;
+  }
+}
+
+// ── season highlights ──
+function buildHighlights() {
+  const hlEl = document.getElementById('highlights');
+  if (!hlEl) return;
+  const cards = [];
+  const activeEvs = getActiveEvents();
+
+  // 1. Best team result across all ITTs (by placing percentile)
+  const ittEvents = activeEvs.filter(ev => ev.format === 'Teams' && ev.subteams);
+  let bestTeam = null;
+  ittEvents.forEach(ev => {
+    ev.subteams.forEach(st => {
+      const pct = st.placing / ev.totalTeams;
+      if (!bestTeam || pct < bestTeam.pct) {
+        bestTeam = { pct, name: st.name, placing: st.placing, total: ev.totalTeams, event: ev.name, date: ev.date, w: st.w, l: st.l, d: st.d };
+      }
+    });
+  });
+  if (bestTeam) {
+    cards.push({ gold: true, label: 'Best team result', name: bestTeam.name, player: null,
+      detail: `${bestTeam.placing} of ${bestTeam.total} teams · ${bestTeam.event} · ${bestTeam.date}<br>${bestTeam.w}W ${bestTeam.l}L ${bestTeam.d}D` });
+  }
+
+  // 2. Perfect scores — split by format
+  const perfects = [];
+  activeEvs.forEach(ev => {
+    ev.results.forEach(r => {
+      if (r.dropped) return;
+      const effectiveL = r.shadow ? 0 : r.l;
+      const effectiveD = r.shadow ? 0 : r.d;
+      const effectiveGames = r.w + effectiveL + effectiveD;
+      if (effectiveL === 0 && effectiveD === 0 && effectiveGames >= 3) {
+        perfects.push({ player: r.player, event: ev.name, date: ev.date, w: r.w, format: ev.format, faction: r.faction, shadow: r.shadow });
+      }
+    });
+  });
+
+  const gtPerfects  = perfects.filter(p => p.format === 'GT');
+  const rttPerfects = perfects.filter(p => p.format === 'RTT');
+
+  if (gtPerfects.length) {
+    const list = gtPerfects.map(p => `${p.player} — ${p.w}-0${p.shadow ? ' (shadow)' : ''} · ${p.event}`).join('<br>');
+    const displayName = gtPerfects.length === 1 ? gtPerfects[0].player
+      : gtPerfects.map(p => p.player).filter((v,i,a) => a.indexOf(v) === i).join(', ');
+    cards.push({ gold: true, label: `GT perfect scores (${gtPerfects.length})`, name: displayName,
+      player: gtPerfects.length === 1 ? gtPerfects[0].player : null, detail: list });
+  }
+
+  if (rttPerfects.length) {
+    const list = rttPerfects.map(p => `${p.player} — ${p.w}-0 · ${p.event}`).join('<br>');
+    const displayName = rttPerfects.length === 1 ? rttPerfects[0].player
+      : rttPerfects.map(p => p.player).filter((v,i,a) => a.indexOf(v) === i).join(', ');
+    cards.push({ gold: false, label: `RTT perfect scores (${rttPerfects.length})`, name: displayName,
+      player: rttPerfects.length === 1 ? rttPerfects[0].player : null, detail: list });
+  }
+
+  // 3. Most active player — most events attended
+  const attendance = {};
+  activeEvs.forEach(ev => {
+    ev.results.forEach(r => {
+      if (!r.dropped) attendance[r.player] = (attendance[r.player] || 0) + 1;
+    });
+  });
+  const mostActive = Object.entries(attendance).sort((a,b) => b[1]-a[1])[0];
+  if (mostActive) {
+    const [name, count] = mostActive;
+    const tied = Object.entries(attendance).filter(([,v]) => v === count).map(([k]) => k);
+    cards.push({ gold: false, label: 'Most active player', name: tied.length > 1 ? tied.join(' & ') : name, player: tied.length === 1 ? name : null,
+      detail: `${count} events attended this season` });
+  }
+
+  // 4. Army collector — most unique factions used
+  const factionCounts = {};
+  activeEvs.forEach(ev => {
+    ev.results.forEach(r => {
+      if (!r.dropped) {
+        if (!factionCounts[r.player]) factionCounts[r.player] = new Set();
+        factionCounts[r.player].add(r.faction);
+      }
+    });
+  });
+  const mostFactions = Object.entries(factionCounts).sort((a,b) => b[1].size - a[1].size)[0];
+  if (mostFactions) {
+    const [name, factions] = mostFactions;
+    cards.push({ gold: false, label: 'Army collector', name, player: name,
+      detail: `${factions.size} factions played: ${[...factions].join(', ')}` });
+  }
+
+  hlEl.innerHTML = cards.length ? `<div class="highlights-grid">${cards.map(c => `
+    <div class="highlight-card${c.gold ? ' gold' : ''}">
+      <div class="highlight-label">${c.label}</div>
+      <div class="highlight-name" onclick="${c.player ? `openPlayerPanel('${c.player}')` : ''}">${c.name}</div>
+      <div class="highlight-detail">${c.detail}</div>
+    </div>`).join('')}</div>`
+    : `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No highlights yet for this edition.</div>`;
+}
+buildHighlights();
+
+// ── faction win rates ──
+function buildFactionStats() {
+  const el = document.getElementById('faction-stats');
+  if (!el) return;
+  el.innerHTML = '';
+
+  const fmtLabels = { GT: 'Grand Tournaments', RTT: 'RTTs', Teams: 'Teams Events' };
+
+  ['GT','RTT','Teams'].forEach(fmt => {
+    const factions = {};
+    getActiveEvents().filter(ev => ev.format === fmt).forEach(ev => {
+      ev.results.forEach(r => {
+        if (r.dropped) return;
+        if (!factions[r.faction]) factions[r.faction] = { w:0, l:0, d:0, games:0, players: new Set() };
+        const f = factions[r.faction];
+        const w = r.w;
+        const l = r.shadow ? 0 : r.l;
+        const d = r.shadow ? 0 : r.d;
+        f.w += w; f.l += l; f.d += d;
+        f.games += w + l + d;
+        f.players.add(r.player);
+      });
+    });
+
+    const entries = Object.entries(factions).filter(([,f]) => f.games > 0);
+    if (!entries.length) return;
+
+    const totalW = entries.reduce((a,[,f]) => a + f.w, 0);
+    const totalG = entries.reduce((a,[,f]) => a + f.games, 0);
+    const teamAvg = totalG ? totalW / totalG : 0.5;
+    const WEIGHT = 5;
+
+    const ranked = entries.map(([name, f]) => {
+      const rawWr = f.w / f.games;
+      const score = (f.games / (f.games + WEIGHT)) * rawWr + (WEIGHT / (f.games + WEIGHT)) * teamAvg;
+      return { name, ...f, score, rawWr };
+    }).sort((a,b) => b.score - a.score);
+
+    const groupId = 'faction-' + fmt.toLowerCase();
+    const rows = ranked.map((f, i) => {
+      const wr = Math.round(f.score * 100);
+      const rawWr = Math.round(f.rawWr * 100);
+      const wrColor = wr >= 60 ? '#ff6a00' : wr >= 40 ? 'var(--text)' : 'var(--loss)';
+      return `
+        <tr>
+          <td style="padding-left:1rem;font-size:0.85rem;color:var(--text);font-weight:400;">${i+1}. ${f.name}</td>
+          <td style="font-size:0.75rem;color:var(--muted);">${f.players.size} player${f.players.size !== 1 ? 's' : ''}</td>
+          <td style="font-size:0.78rem;">
+            <span class="rec-badge rec-w">${f.w}W</span>
+            <span class="rec-badge rec-l">${f.l}L</span>
+            ${f.d > 0 ? `<span class="rec-badge rec-d">${f.d}D</span>` : ''}
+          </td>
+          <td style="text-align:right;padding-right:1rem;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:${wrColor};">${wr}%</div>
+            <div style="font-size:0.62rem;color:var(--muted);">${f.games} games · ${rawWr}% raw</div>
+          </td>
+        </tr>`;
+    }).join('');
+
+    el.innerHTML += `
+      <div class="fmt-group" style="margin-bottom:10px;">
+        <div class="fmt-group-head" onclick="toggleFmtGroup('${groupId}')">
+          <div>
+            <span class="fmt-group-title">${fmtLabels[fmt]}</span>
+            <span class="fmt-group-meta" style="margin-left:12px;">${ranked.length} faction${ranked.length !== 1 ? 's' : ''}</span>
+          </div>
+          <span id="${groupId}-arrow" style="color:var(--muted);font-size:0.8rem;transition:transform 0.2s;">▼</span>
+        </div>
+        <div id="${groupId}" class="fmt-group-body open">
+          <table class="event-table" style="width:100%;">
+            <thead><tr>
+              <th style="padding-left:1rem;">Faction</th>
+              <th>Players</th>
+              <th>Record</th>
+              <th style="text-align:right;padding-right:1rem;">Win rate</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>`;
+  });
+}
+buildFactionStats();
+
+// ── season awards ──
+let awardsBuilt = false;
+function buildAwards() {
+  if (awardsBuilt) return;
+  awardsBuilt = true;
+  const el = document.getElementById('awards-grid');
+  if (!el) return;
+
+  const activeEvs = getActiveEvents();
+  const awards = [];
+
+  // helper — get all results for a player
+  function playerResults(name) {
+    return activeEvs.map(ev => {
+      const r = ev.results.find(r => r.player === name && !r.dropped);
+      return r ? { ...r, format: ev.format, date: ev.date, eventName: ev.name, totalPlayers: ev.totalPlayers, totalTeams: ev.totalTeams, sortDate: ev.sortDate } : null;
+    }).filter(Boolean);
+  }
+
+  const allPlayers = [...new Set(activeEvs.flatMap(ev => ev.results.filter(r => !r.dropped).map(r => r.player)))];
+
+  // 1. MVP — highest Bayesian weighted singles win rate (5+ games)
+  const singlesPlayers = allPlayers.map(name => {
+    const res = playerResults(name).filter(r => r.format !== 'Teams');
+    const w = res.reduce((a,r) => a + r.w, 0);
+    const l = res.reduce((a,r) => a + (r.shadow ? 0 : r.l), 0);
+    const d = res.reduce((a,r) => a + (r.shadow ? 0 : r.d), 0);
+    const g = w + l + d;
+    return { name, w, l, d, g };
+  }).filter(p => p.g >= 5);
+  const teamAvgSingles = singlesPlayers.reduce((a,p) => a + p.w, 0) / Math.max(1, singlesPlayers.reduce((a,p) => a + p.g, 0));
+  const mvp = singlesPlayers.map(p => ({ ...p, score: (p.g/(p.g+10)) * (p.w/p.g) + (10/(p.g+10)) * teamAvgSingles })).sort((a,b) => b.score - a.score)[0];
+  if (mvp) awards.push({ icon: '👑', title: 'MVP', winner: mvp.name, detail: `${Math.round(mvp.score*100)}% weighted win rate · ${mvp.w}W ${mvp.l}L in singles` });
+
+  // 2. Iron Man — most individual games played
+  const ironMan = allPlayers.map(name => {
+    const res = playerResults(name);
+    const g = res.reduce((a,r) => { const l=r.shadow?0:r.l; const d=r.shadow?0:r.d; return a+r.w+l+d; }, 0);
+    return { name, g };
+  }).sort((a,b) => b.g - a.g)[0];
+  if (ironMan) awards.push({ icon: '🦾', title: 'Iron Man', winner: ironMan.name, detail: `${ironMan.g} individual games played` });
+
+  // 3. Journeyman — most events attended
+  const journeyman = allPlayers.map(name => ({ name, ev: playerResults(name).length })).sort((a,b) => b.ev - a.ev)[0];
+  if (journeyman) awards.push({ icon: '🧭', title: 'Journeyman', winner: journeyman.name, detail: `${journeyman.ev} events attended` });
+
+  // 4. Best Debut — highest win rate at first event (min 3 games)
+  const debuts = allPlayers.map(name => {
+    const res = playerResults(name);
+    if (!res.length) return null;
+    const first = res[0];
+    const l = first.shadow ? 0 : first.l;
+    const d = first.shadow ? 0 : first.d;
+    const g = first.w + l + d;
+    if (g < 3) return null;
+    return { name, wr: first.w / g, w: first.w, g, event: first.eventName };
+  }).filter(Boolean).sort((a,b) => b.wr - a.wr)[0];
+  if (debuts) awards.push({ icon: '🌟', title: 'Best Debut', winner: debuts.name, detail: `${debuts.w}W from ${debuts.g} games at ${debuts.event}` });
+
+  // 5. Faction Champion — best win rate with a single faction (min 5 games)
+  const factionMap = {};
+  activeEvs.forEach(ev => {
+    ev.results.forEach(r => {
+      if (r.dropped) return;
+      const key = `${r.player}|${r.faction}`;
+      if (!factionMap[key]) factionMap[key] = { player: r.player, faction: r.faction, w:0, l:0, d:0, g:0 };
+      const f = factionMap[key];
+      f.w += r.w; f.l += r.shadow?0:r.l; f.d += r.shadow?0:r.d;
+      f.g += r.w + (r.shadow?0:r.l) + (r.shadow?0:r.d);
+    });
+  });
+  const factionChamp = Object.values(factionMap).filter(f => f.g >= 5).sort((a,b) => (b.w/b.g) - (a.w/a.g))[0];
+  if (factionChamp) awards.push({ icon: '⚜️', title: 'Faction Champion', winner: factionChamp.player, detail: `${Math.round(factionChamp.w/factionChamp.g*100)}% win rate with ${factionChamp.faction} (${factionChamp.g} games)` });
+
+  // 6. Team Player — best win rate in Teams events (min 5 games)
+  const teamPlayers = allPlayers.map(name => {
+    const res = playerResults(name).filter(r => r.format === 'Teams');
+    const w = res.reduce((a,r) => a + r.w, 0);
+    const l = res.reduce((a,r) => a + r.l, 0);
+    const d = res.reduce((a,r) => a + r.d, 0);
+    const g = w + l + d;
+    return { name, w, l, d, g };
+  }).filter(p => p.g >= 5).sort((a,b) => (b.w/b.g) - (a.w/a.g))[0];
+  if (teamPlayers) awards.push({ icon: '🤝', title: 'Team Player', winner: teamPlayers.name, detail: `${Math.round(teamPlayers.w/teamPlayers.g*100)}% win rate in Teams events · ${teamPlayers.w}W ${teamPlayers.l}L` });
+
+  // 7. Most Improved — biggest win rate improvement (first half vs second half of events)
+  const improved = allPlayers.map(name => {
+    const res = playerResults(name).filter(r => r.format !== 'Teams');
+    if (res.length < 4) return null;
+    const mid = Math.floor(res.length / 2);
+    const first = res.slice(0, mid);
+    const second = res.slice(mid);
+    const wr1 = first.reduce((a,r) => a+r.w,0) / Math.max(1, first.reduce((a,r) => a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0));
+    const wr2 = second.reduce((a,r) => a+r.w,0) / Math.max(1, second.reduce((a,r) => a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0));
+    return { name, improvement: wr2 - wr1, wr1: Math.round(wr1*100), wr2: Math.round(wr2*100) };
+  }).filter(Boolean).sort((a,b) => b.improvement - a.improvement)[0];
+  if (improved && improved.improvement > 0) awards.push({ icon: '📈', title: 'Most Improved', winner: improved.name, detail: `${improved.wr1}% → ${improved.wr2}% win rate across the season` });
+
+  // 8. Comeback Kid — worst first event, best improvement
+  const comeback = allPlayers.map(name => {
+    const res = playerResults(name).filter(r => r.format !== 'Teams');
+    if (res.length < 4) return null;
+    const mid = Math.floor(res.length / 2);
+    const firstHalfW = res.slice(0,mid).reduce((a,r)=>a+r.w,0);
+    const firstHalfG = res.slice(0,mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0);
+    const secondHalfW = res.slice(mid).reduce((a,r)=>a+r.w,0);
+    const secondHalfG = res.slice(mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0);
+    if (!firstHalfG || !secondHalfG) return null;
+    const improvement = (secondHalfW/secondHalfG) - (firstHalfW/firstHalfG);
+    return { name, improvement, wr1: Math.round(firstHalfW/firstHalfG*100), wr2: Math.round(secondHalfW/secondHalfG*100) };
+  }).filter(p => p && p.wr1 < 50 && p.improvement > 0).sort((a,b) => b.improvement - a.improvement)[0];
+  if (comeback) awards.push({ icon: '💪', title: 'Comeback Kid', winner: comeback.name, detail: `Started at ${comeback.wr1}%, finished at ${comeback.wr2}% win rate` });
+
+  el.innerHTML = `<div class="highlights-grid">${awards.map(a => `
+    <div class="highlight-card">
+      <div style="font-size:1.8rem;margin-bottom:6px;">${a.icon}</div>
+      <div class="highlight-label">${a.title}</div>
+      <div class="highlight-name" onclick="openPlayerPanel('${a.winner}');setTimeout(()=>switchTab('stats'),0);" style="cursor:pointer;">${a.winner}</div>
+      <div class="highlight-detail">${a.detail}</div>
+    </div>`).join('')}</div>`;
+
+  // build archive
+  buildArchive();
+}
+
+function generateArchiveJSON() {
+  // re-run award calculation to get current winners
+  const activeEvs = getActiveEvents();
+  const awards = [];
+
+  function playerResults(name) {
+    return activeEvs.map(ev => {
+      const r = ev.results.find(r => r.player === name && !r.dropped);
+      return r ? { ...r, format: ev.format } : null;
+    }).filter(Boolean);
+  }
+
+  const allPlayers = [...new Set(activeEvs.flatMap(ev => ev.results.filter(r => !r.dropped).map(r => r.player)))];
+
+  const singlesPlayers = allPlayers.map(name => {
+    const res = playerResults(name).filter(r => r.format !== 'Teams');
+    const w = res.reduce((a,r) => a+r.w, 0);
+    const l = res.reduce((a,r) => a+(r.shadow?0:r.l), 0);
+    const d = res.reduce((a,r) => a+(r.shadow?0:r.d), 0);
+    const g = w+l+d;
+    return { name, w, l, d, g };
+  }).filter(p => p.g >= 5);
+  const teamAvgS = singlesPlayers.reduce((a,p)=>a+p.w,0) / Math.max(1, singlesPlayers.reduce((a,p)=>a+p.g,0));
+  const mvp = singlesPlayers.map(p => ({...p, score:(p.g/(p.g+10))*(p.w/p.g)+(10/(p.g+10))*teamAvgS})).sort((a,b)=>b.score-a.score)[0];
+  if (mvp) awards.push({ icon:'👑', title:'MVP', winner:mvp.name, detail:`${Math.round(mvp.score*100)}% weighted win rate · ${mvp.w}W ${mvp.l}L in singles` });
+
+  const ironMan = allPlayers.map(name => { const res=playerResults(name); const g=res.reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0); return {name,g}; }).sort((a,b)=>b.g-a.g)[0];
+  if (ironMan) awards.push({ icon:'🦾', title:'Iron Man', winner:ironMan.name, detail:`${ironMan.g} individual games played` });
+
+  const journeyman = allPlayers.map(name=>({name,ev:playerResults(name).length})).sort((a,b)=>b.ev-a.ev)[0];
+  if (journeyman) awards.push({ icon:'🧭', title:'Journeyman', winner:journeyman.name, detail:`${journeyman.ev} events attended` });
+
+  const debuts = allPlayers.map(name => { const res=playerResults(name); if(!res.length) return null; const first=res[0]; const l=first.shadow?0:first.l; const d=first.shadow?0:first.d; const g=first.w+l+d; if(g<3) return null; return {name,wr:first.w/g,w:first.w,g,event:first.eventName||'first event'}; }).filter(Boolean).sort((a,b)=>b.wr-a.wr)[0];
+  if (debuts) awards.push({ icon:'🌟', title:'Best Debut', winner:debuts.name, detail:`${debuts.w}W from ${debuts.g} games` });
+
+  const factionMap = {};
+  activeEvs.forEach(ev => { ev.results.forEach(r => { if(r.dropped) return; const key=`${r.player}|${r.faction}`; if(!factionMap[key]) factionMap[key]={player:r.player,faction:r.faction,w:0,g:0}; factionMap[key].w+=r.w; factionMap[key].g+=r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d); }); });
+  const factionChamp = Object.values(factionMap).filter(f=>f.g>=5).sort((a,b)=>(b.w/b.g)-(a.w/a.g))[0];
+  if (factionChamp) awards.push({ icon:'⚜️', title:'Faction Champion', winner:factionChamp.player, detail:`${Math.round(factionChamp.w/factionChamp.g*100)}% win rate with ${factionChamp.faction}` });
+
+  const teamPlayers = allPlayers.map(name => { const res=playerResults(name).filter(r=>r.format==='Teams'); const w=res.reduce((a,r)=>a+r.w,0); const g=res.reduce((a,r)=>a+r.w+r.l+r.d,0); return {name,w,g}; }).filter(p=>p.g>=5).sort((a,b)=>(b.w/b.g)-(a.w/a.g))[0];
+  if (teamPlayers) awards.push({ icon:'🤝', title:'Team Player', winner:teamPlayers.name, detail:`${Math.round(teamPlayers.w/teamPlayers.g*100)}% win rate in Teams events` });
+
+  const improved = allPlayers.map(name => { const res=playerResults(name).filter(r=>r.format!=='Teams'); if(res.length<4) return null; const mid=Math.floor(res.length/2); const wr1=res.slice(0,mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(0,mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0)); const wr2=res.slice(mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0)); return {name,improvement:wr2-wr1,wr1:Math.round(wr1*100),wr2:Math.round(wr2*100)}; }).filter(Boolean).sort((a,b)=>b.improvement-a.improvement)[0];
+  if (improved && improved.improvement > 0) awards.push({ icon:'📈', title:'Most Improved', winner:improved.name, detail:`${improved.wr1}% → ${improved.wr2}% win rate` });
+
+  const comeback = allPlayers.map(name => { const res=playerResults(name).filter(r=>r.format!=='Teams'); if(res.length<4) return null; const mid=Math.floor(res.length/2); const wr1=res.slice(0,mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(0,mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0)); const wr2=res.slice(mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0)); return {name,improvement:wr2-wr1,wr1:Math.round(wr1*100),wr2:Math.round(wr2*100)}; }).filter(p=>p&&p.wr1<50&&p.improvement>0).sort((a,b)=>b.improvement-a.improvement)[0];
+  if (comeback) awards.push({ icon:'💪', title:'Comeback Kid', winner:comeback.name, detail:`${comeback.wr1}% → ${comeback.wr2}% win rate` });
+
+  const editionLabel = `${ACTIVE_EDITION}th Edition — ${D.season}`;
+  const archiveEntry = { label: editionLabel, awards };
+  const json = JSON.stringify(archiveEntry, null, 2);
+
+  const output = document.getElementById('archive-json-output');
+  const text = document.getElementById('archive-json-text');
+  text.value = json;
+  output.style.display = 'block';
+  text.select();
+}
+
+function copyArchiveJSON() {
+  const text = document.getElementById('archive-json-text');
+  text.select();
+  try {
+    document.execCommand('copy');
+    const confirm = document.getElementById('archive-copy-confirm');
+    confirm.style.display = 'inline';
+    setTimeout(() => { confirm.style.display = 'none'; }, 2000);
+  } catch(e) {}
+}
+
+function buildMilestones() {
+  const el = document.getElementById('milestones-grid');
+  if (!el) return;
+  el.innerHTML = '';
+
+  const activeEvs = getActiveEvents();
+  const allPlayers = [...new Set(activeEvs.flatMap(ev =>
+    ev.results.filter(r => !r.dropped).map(r => r.player)
+  ))].sort();
+
+  const MILESTONES = [
+    { id: 'first-event',   icon: '🎮', label: 'First Event',      desc: 'Attended their first event',             check: (res, evs) => evs.length >= 1 },
+    { id: 'five-events',   icon: '🗺️', label: '5 Events',         desc: 'Attended 5 or more events',              check: (res, evs) => evs.length >= 5 },
+    { id: 'first-win',     icon: '✅', label: 'First Win',         desc: 'Won their first game',                   check: (res) => res.reduce((a,r) => a+r.w, 0) >= 1 },
+    { id: 'win-25',        icon: '🥈', label: '25 Wins',           desc: 'Accumulated 25 wins',                    check: (res) => res.reduce((a,r) => a+r.w, 0) >= 25 },
+    { id: 'win-50',        icon: '🥇', label: '50 Wins',           desc: 'Accumulated 50 wins',                    check: (res) => res.reduce((a,r) => a+r.w, 0) >= 50 },
+    { id: 'centurion',     icon: '💯', label: 'Centurion',         desc: '100 games played',                       check: (res) => res.reduce((a,r) => a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d), 0) >= 100 },
+    { id: 'perfect',       icon: '⭐', label: 'Perfect Score',     desc: 'Went undefeated at an event (3-0/5-0)',  check: (res) => res.some(r => r.w >= 3 && (r.shadow?0:r.l) === 0 && (r.shadow?0:r.d) === 0) },
+    { id: 'all-formats',   icon: '🎯', label: 'All Formats',       desc: 'Played GT, RTT and Teams events',        check: (res) => ['GT','RTT','Teams'].every(fmt => res.some(r => r.format === fmt)) },
+  ];
+
+  const rows = allPlayers.map(name => {
+    const evs = activeEvs.filter(ev => ev.results.some(r => r.player === name && !r.dropped));
+    if (!evs.length) return '';
+
+    const res = activeEvs.map(ev => {
+      const r = ev.results.find(r => r.player === name && !r.dropped);
+      return r ? { ...r, format: ev.format } : null;
+    }).filter(Boolean);
+
+    const unlockedCount = MILESTONES.filter(m => m.check(res, evs)).length;
+
+    const dots = MILESTONES.map(m => {
+      const unlocked = m.check(res, evs);
+      return `<span title="${m.label}: ${m.desc}" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:4px;background:${unlocked ? 'var(--accent-bg)' : 'var(--surface2)'};border:1px solid ${unlocked ? 'var(--accent-muted)' : 'var(--border)'};font-size:0.85rem;opacity:${unlocked ? '1' : '0.35'};cursor:default;">${m.icon}</span>`;
+    }).join('');
+
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="width:140px;flex-shrink:0;">
+          <div style="font-size:0.85rem;color:var(--text);cursor:pointer;" onclick="openPlayerPanel('${name}')" class="player-link">${name}</div>
+          <div style="font-size:0.68rem;color:var(--muted);margin-top:1px;">${unlockedCount} / ${MILESTONES.length} unlocked</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">${dots}</div>
+      </div>`;
+  }).filter(Boolean).join('');
+
+  el.innerHTML = rows || '<div style="font-size:0.85rem;color:var(--muted);">No data yet.</div>';
+}
+
+function buildArchive() {
+  const el = document.getElementById('archive-grid');
+  if (!el) return;
+  const archive = D.awardsArchive || [];
+  if (!archive.length) {
+    el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No archived seasons yet. When a season ends, save the awards to the <code style="font-family:monospace;background:var(--surface2);padding:1px 5px;border-radius:3px;">awardsArchive</code> array in the JSON.</div>`;
+    return;
+  }
+
+  el.innerHTML = archive.map((season, si) => {
+    const groupId = `archive-season-${si}`;
+    const awardCards = season.awards.map(a => `
+      <div class="highlight-card">
+        <div style="font-size:1.5rem;margin-bottom:4px;">${a.icon}</div>
+        <div class="highlight-label">${a.title}</div>
+        <div class="highlight-name" style="cursor:pointer;" onclick="openPlayerPanel('${a.winner}');switchTab('stats');">${a.winner}</div>
+        <div class="highlight-detail">${a.detail}</div>
+      </div>`).join('');
+
+    return `
+      <div class="fmt-group" style="margin-bottom:10px;">
+        <div class="fmt-group-head" onclick="toggleFmtGroup('${groupId}')">
+          <div>
+            <span class="fmt-group-title">${season.label}</span>
+            <span class="fmt-group-meta" style="margin-left:12px;">${season.awards.length} awards</span>
+          </div>
+          <span id="${groupId}-arrow" style="color:var(--muted);font-size:0.8rem;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+        </div>
+        <div id="${groupId}" class="fmt-group-body" style="display:none;padding:1rem;">
+          <div class="highlights-grid">${awardCards}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── most played faction helper ──
+function mostPlayedFaction(name) {
+  const counts = {};
+  getActiveEvents().forEach(ev => {
+    const r = ev.results.find(r => r.player === name && !r.dropped);
+    if (r) counts[r.faction] = (counts[r.faction] || 0) + 1;
+  });
+  const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+  return sorted.length ? sorted[0][0] : null;
+}
+function openPlayerPanel(name) {
+  const panel = document.getElementById('player-panel');
+  const overlay = document.getElementById('panel-overlay');
+  const s = allStats[name];
+  if (!s) return;
+
+  const mainFaction = mostPlayedFaction(name);
+  const allFactions = [...s.factions].filter(Boolean).join(' · ') || 'No faction data';
+  document.getElementById('panel-name').textContent = name;
+  document.getElementById('panel-factions').innerHTML = mainFaction
+    ? `<span style="color:var(--accent);">${mainFaction}</span>${s.factions.size > 1 ? ` <span style="color:var(--muted);font-size:0.72rem;">· also: ${[...s.factions].filter(f => f !== mainFaction).join(', ')}</span>` : ''}`
+    : allFactions;
+
+  const wr = s.games ? Math.round((s.w / s.games) * 100) : 0;
+  const wrColor = wr >= 60 ? '#ff6a00' : wr >= 40 ? 'var(--text)' : 'var(--loss)';
+
+  const fmtBreakdown = FORMATS.map(fmt => {
+    const fs = fmtStats[fmt][name];
+    if (!fs || !fs.games) return '';
+    const fwr = Math.round((fs.w / fs.games) * 100);
+    return `<div class="panel-stat">
+      <div class="panel-stat-label">${fmt} win rate</div>
+      <div class="panel-stat-value" style="color:${fwr >= 60 ? '#ff6a00' : fwr >= 40 ? 'var(--text)' : 'var(--loss)'}">${fwr}%</div>
+      <div style="font-size:0.65rem;color:var(--muted);margin-top:2px;">${fs.w}W ${fs.l}L ${fs.d}D · ${fs.games} games</div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  const playerEvents = getActiveEvents().filter(ev =>
+    ev.results.some(r => r.player === name && !r.dropped)
+  );
+
+  const eventRows = playerEvents.map(ev => {
+    const r = ev.results.find(r => r.player === name);
+    if (!r) return '';
+    const total = ev.format === 'Teams' ? ev.totalTeams : ev.totalPlayers;
+    const isTop = r.placing <= Math.ceil(total * 0.1);
+    const shadowTag = r.shadow ? `<span style="font-size:0.6rem;color:var(--accent);border:1px solid var(--accent-muted);padding:1px 4px;border-radius:3px;margin-left:5px;">5-0</span>` : '';
+    const bcpLink = ev.bcpUrl ? `<a href="${ev.bcpUrl}" target="_blank" rel="noopener" style="color:var(--accent);font-size:0.68rem;text-decoration:none;">BCP ↗</a>` : '';
+    return `
+      <div class="p-event-row">
+        <div style="flex:1;min-width:0;">
+          <div class="p-event-name">${ev.name}${shadowTag}</div>
+          <div class="p-event-meta">${ev.date} · <span class="format-pill">${ev.format}</span> · ${r.faction}${r.subteam ? ' · ' + r.subteam : ''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <div style="text-align:right;">
+            <div style="font-size:0.8rem;color:${isTop ? '#ff6a00' : 'var(--muted)'};">${r.placing} / ${total}</div>
+            <div style="display:flex;gap:3px;margin-top:3px;">
+              <span class="rec-badge rec-w">${r.w}W</span>
+              <span class="rec-badge rec-l">${r.l}L</span>
+              ${r.d > 0 ? `<span class="rec-badge rec-d">${r.d}D</span>` : ''}
+            </div>
+          </div>
+          ${bcpLink}
+        </div>
+      </div>`;
+  }).join('');
+
+  // best result — lowest percentile placing across all events
+  const bestResult = getActiveEvents().reduce((best, ev) => {
+    const r = ev.results.find(r => r.player === name);
+    if (!r || r.dropped) return best;
+    const total = ev.format === 'Teams' ? ev.totalTeams : ev.totalPlayers;
+    const pct = r.placing / total;
+    if (!best || pct < best.pct) return { pct, placing: r.placing, total, event: ev.name, date: ev.date, format: ev.format, faction: r.faction, w: r.w, l: r.l, d: r.d };
+    return best;
+  }, null);
+
+  const bestResultHtml = bestResult ? `
+    <div style="background:var(--accent-bg);border:1px solid var(--accent-muted);border-radius:4px;padding:10px 14px;margin-bottom:1.25rem;">
+      <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">Best result</div>
+      <div style="font-size:0.9rem;font-weight:400;color:var(--text);">${bestResult.event}</div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">${bestResult.date} · ${bestResult.faction}</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);letter-spacing:0.04em;">${bestResult.placing}<span style="font-size:0.8rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:300;"> / ${bestResult.total}</span></span>
+        <div style="display:flex;gap:4px;">
+          <span class="rec-badge rec-w">${bestResult.w}W</span>
+          <span class="rec-badge rec-l">${bestResult.l}L</span>
+          ${bestResult.d > 0 ? `<span class="rec-badge rec-d">${bestResult.d}D</span>` : ''}
+        </div>
+        <span class="format-pill">${bestResult.format}</span>
+      </div>
+    </div>` : '';
+
+  // cumulative wins chart — singles only (GT + RTT)
+  const singlesEvents = getActiveEvents()
+    .filter(ev => ev.format !== 'Teams')
+    .filter(ev => ev.results.some(r => r.player === name && !r.dropped));
+
+  let chartHtml = '';
+  if (singlesEvents.length >= 2) {
+    let cumW = 0, cumG = 0;
+    const points = [{ x: 0, w: 0, g: 0, label: 'Start' }];
+    singlesEvents.forEach(ev => {
+      const r = ev.results.find(r => r.player === name);
+      if (!r || r.dropped) return;
+      const w = r.w;
+      const l = r.shadow ? 0 : r.l;
+      const d = r.shadow ? 0 : r.d;
+      cumW += w; cumG += w + l + d;
+      points.push({ x: cumG, w: cumW, label: ev.name.replace(/ — .*/, '').replace(' Grand Tournament', ' GT').replace('London Grand Tournament - 40k Main Event', 'LGT') });
+    });
+
+    const maxG = points[points.length - 1].x;
+    const maxW = Math.max(...points.map(p => p.w));
+    if (maxG > 0 && maxW > 0) {
+      const W = 400, H = 120, PAD = 20;
+      const cx = g => PAD + (g / maxG) * (W - PAD * 2);
+      const cy = w => H - PAD - (w / (maxW + 1)) * (H - PAD * 2);
+
+      // grid lines
+      let gridLines = '';
+      for (let i = 0; i <= 4; i++) {
+        const y = PAD + (i / 4) * (H - PAD * 2);
+        gridLines += `<line x1="${PAD}" y1="${y}" x2="${W - PAD}" y2="${y}" stroke="var(--border)" stroke-width="0.5"/>`;
+      }
+
+      // path
+      const pathD = points.map((p, i) =>
+        `${i === 0 ? 'M' : 'L'} ${cx(p.x)} ${cy(p.w)}`
+      ).join(' ');
+
+      // fill area
+      const fillD = `${pathD} L ${cx(maxG)} ${cy(0)} L ${PAD} ${cy(0)} Z`;
+
+      // dots
+      const dots = points.slice(1).map(p =>
+        `<circle cx="${cx(p.x)}" cy="${cy(p.w)}" r="3" fill="var(--accent)" stroke="var(--bg)" stroke-width="1.5">
+          <title>${p.label}: ${p.w} wins</title>
+        </circle>`
+      ).join('');
+
+      chartHtml = `
+        <div class="p-section-label" style="margin-top:1.25rem;">Cumulative wins (singles)</div>
+        <div style="margin-top:8px;background:var(--surface2);border-radius:4px;padding:8px;overflow:hidden;">
+          <svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block;">
+            ${gridLines}
+            <defs>
+              <linearGradient id="chartFill-${name.replace(/\s+/g,'')}" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="${fillD}" fill="url(#chartFill-${name.replace(/\s+/g,'')})" />
+            <path d="${pathD}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            ${dots}
+            <text x="${PAD}" y="${H - 4}" font-size="9" fill="var(--muted)" font-family="DM Sans,sans-serif">0 games</text>
+            <text x="${W - PAD}" y="${H - 4}" font-size="9" fill="var(--muted)" font-family="DM Sans,sans-serif" text-anchor="end">${maxG} games</text>
+            <text x="${PAD}" y="${PAD - 4}" font-size="9" fill="var(--muted)" font-family="DM Sans,sans-serif">${maxW}W</text>
+          </svg>
+        </div>`;
+    }
+  }
+
+  // ── badges ──
+  function calcBadges(playerName, playerEvs, allStats) {
+    const badges = [];
+    const evResults = getActiveEvents().map(ev => {
+      const r = ev.results.find(r => r.player === playerName && !r.dropped);
+      return r ? { ...r, format: ev.format, totalPlayers: ev.totalPlayers, totalTeams: ev.totalTeams } : null;
+    }).filter(Boolean);
+
+    // 5-0 Club — undefeated at a GT (shadow counts)
+    if (evResults.some(r => r.format === 'GT' && r.w >= 5 && (r.shadow ? 0 : r.l) === 0 && (r.shadow ? 0 : r.d) === 0))
+      badges.push({ icon: '⚔️', label: '5-0 Club', desc: 'Went undefeated at a GT' });
+
+    // Podium — top 3 at any event
+    if (evResults.some(r => r.placing <= 3))
+      badges.push({ icon: '🏆', label: 'Podium', desc: 'Top 3 finish at an event' });
+
+    // Road Warrior — 5+ events
+    if (playerEvs.length >= 5)
+      badges.push({ icon: '🚗', label: 'Road Warrior', desc: `Attended ${playerEvs.length} events` });
+
+    // Century — 100+ games
+    const totalGames = evResults.reduce((a, r) => {
+      const l = r.shadow ? 0 : r.l;
+      const d = r.shadow ? 0 : r.d;
+      return a + r.w + l + d;
+    }, 0);
+    if (totalGames >= 100)
+      badges.push({ icon: '💯', label: 'Century', desc: `${totalGames} games played` });
+
+    // Collector — 4+ factions
+    const factions = new Set(evResults.map(r => r.faction));
+    if (factions.size >= 4)
+      badges.push({ icon: '🎨', label: 'Collector', desc: `${factions.size} factions played` });
+
+    // Hat-trick — 3+ wins in a row across all rounds
+    const allRounds = [];
+    getActiveEvents().forEach(ev => {
+      const r = ev.results.find(r => r.player === playerName && !r.dropped);
+      if (!r) return;
+      for (let i = 0; i < r.w; i++) allRounds.push('w');
+      const l = r.shadow ? 0 : r.l;
+      const d = r.shadow ? 0 : r.d;
+      for (let i = 0; i < l; i++) allRounds.push('l');
+      for (let i = 0; i < d; i++) allRounds.push('d');
+    });
+    let streak = 0, maxStreak = 0;
+    allRounds.forEach(r => { if (r === 'w') { streak++; maxStreak = Math.max(maxStreak, streak); } else streak = 0; });
+    if (maxStreak >= 3)
+      badges.push({ icon: '🔥', label: 'Hat-trick', desc: `${maxStreak} win streak` });
+
+    // Consistent — never below 50% at any attended event (min 3 games)
+    const inconsistent = evResults.some(r => {
+      const l = r.shadow ? 0 : r.l;
+      const d = r.shadow ? 0 : r.d;
+      const g = r.w + l + d;
+      return g >= 3 && (r.w / g) < 0.5;
+    });
+    if (!inconsistent && evResults.length >= 3)
+      badges.push({ icon: '🛡️', label: 'Consistent', desc: 'Never below 50% at any event' });
+
+    return badges;
+  }
+
+  const playerBadges = calcBadges(name, playerEvents, allStats);
+  const badgesHtml = playerBadges.length ? `
+    <div class="p-section-label" style="margin-top:1rem;">Badges</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+      ${playerBadges.map(b => `
+        <div title="${b.desc}" style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:5px 10px;font-size:0.75rem;color:var(--text);display:flex;align-items:center;gap:5px;cursor:default;">
+          <span>${b.icon}</span><span>${b.label}</span>
+        </div>`).join('')}
+    </div>` : '';
+
+  // rival tracker — teammate attended most events with
+  const coAttendance = {};
+  getActiveEvents().forEach(ev => {
+    const attendees = ev.results.filter(r => !r.dropped).map(r => r.player);
+    if (!attendees.includes(name)) return;
+    attendees.forEach(other => {
+      if (other === name) return;
+      coAttendance[other] = (coAttendance[other] || 0) + 1;
+    });
+  });
+  const rival = Object.entries(coAttendance).sort((a,b) => b[1] - a[1])[0];
+  const rivalHtml = rival ? `
+    <div style="background:var(--surface2);border-radius:4px;padding:10px 14px;margin-top:8px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;">Most frequent teammate</div>
+        <div style="font-size:0.9rem;color:var(--text);cursor:pointer;" onclick="openPlayerPanel('${rival[0]}')" class="player-link">${rival[0]}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--text);">${rival[1]}</div>
+        <div style="font-size:0.65rem;color:var(--muted);">shared event${rival[1] !== 1 ? 's' : ''}</div>
+      </div>
+    </div>` : '';
+
+  document.getElementById('panel-body').innerHTML = `
+    ${bestResultHtml}
+    <div class="panel-stat-grid">
+      <div class="panel-stat">
+        <div class="panel-stat-label">Overall win rate</div>
+        <div class="panel-stat-value" style="color:${wrColor}">${wr}%</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:2px;">${s.games} games</div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-label">Total wins</div>
+        <div class="panel-stat-value" style="color:var(--win)">${s.w}</div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-label">Events attended</div>
+        <div class="panel-stat-value">${playerEvents.length}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:2px;">${
+          ['GT','RTT','Teams'].map(fmt => {
+            const n = playerEvents.filter(ev => ev.format === fmt).length;
+            return n ? `${n} ${fmt}` : '';
+          }).filter(Boolean).join(' · ')
+        }</div>
+      </div>
+    </div>
+    ${badgesHtml}
+    ${rivalHtml}
+    ${fmtBreakdown ? `<div class="p-section-label">By format</div><div class="panel-stat-grid">${fmtBreakdown}</div>` : ''}
+    ${chartHtml}
+    <div class="p-section-label" style="margin-top:1.25rem;cursor:pointer;" onclick="toggleSection('panel-event-history')">
+      Event history <span id="panel-event-history-arrow" style="float:right;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+    </div>
+    <div id="panel-event-history" style="display:none;">
+      ${eventRows || '<div style="font-size:0.82rem;color:var(--muted);">No results recorded yet.</div>'}
+    </div>
+  `;
+
+  panel.classList.add('open');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePanel() {
+  document.getElementById('player-panel').classList.remove('open');
+  document.getElementById('panel-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── apply initial edition toggle styling ──
+(function() {
+  const ed = ACTIVE_EDITION;
+  document.getElementById('ed-10').style.background = ed === 10 ? 'var(--accent)' : 'transparent';
+  document.getElementById('ed-10').style.color = ed === 10 ? '#fff' : 'var(--muted)';
+  document.getElementById('ed-11').style.background = ed === 11 ? 'var(--accent)' : 'transparent';
+  document.getElementById('ed-11').style.color = ed === 11 ? '#fff' : 'var(--muted)';
+})();
+</script>
+</body>
+</html>
