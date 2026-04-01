@@ -968,189 +968,247 @@
     </div>
   </div>
 
-  <!-- Form (shown after correct PIN) -->
+  <!-- Main content (shown after PIN) -->
   <div id="submit-form" style="display:none;">
+
+    <!-- WIZARD -->
     <div class="section-head" style="margin-top:0;">
-      <div class="section-title">Submit a result</div>
+      <div class="section-title">Submit a Result</div>
       <div class="section-rule"></div>
     </div>
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Fill in your result below. It will appear on the stats page once approved.</div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Start by searching for the event. We'll check if it already exists before adding it.</div>
 
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;max-width:500px;">
-      <div style="display:grid;gap:14px;">
-        <div>
-          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your name</label>
-          <select id="sub-player" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-            <option value="">Select player...</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event name</label>
-          <input id="sub-event" type="text" placeholder="e.g. Sheffield GT" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-        </div>
-        <div>
-          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Format</label>
-          <select id="sub-format" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-            <option value="">Select format...</option>
-            <option value="GT">GT</option>
-            <option value="RTT">RTT</option>
-            <option value="Teams">Teams</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Faction played</label>
-          <input id="sub-faction" type="text" placeholder="e.g. Death Guard" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Placing</label>
-            <input id="sub-place" type="number" min="1" placeholder="e.g. 42" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+    <!-- Step 1: Event search -->
+    <div id="wizard-step1" style="max-width:500px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;">
+        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Step 1 — Find or create event</div>
+        <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event name</label>
+        <input id="wiz-event-search" type="text" placeholder="e.g. Sheffield GT"
+          oninput="wizardSearchEvent(this.value)"
+          style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;margin-bottom:10px;"/>
+        <div id="wiz-search-results" style="display:none;margin-bottom:12px;"></div>
+        <div id="wiz-new-event-fields" style="display:none;">
+          <div style="font-size:0.75rem;color:#f0c040;margin-bottom:12px;padding:8px 10px;background:#2a2000;border:1px solid #f0c040;border-radius:4px;">
+            No existing event found — fill in the details to create it.
           </div>
-          <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Total players</label>
-            <input id="sub-total" type="number" min="1" placeholder="e.g. 180" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div>
+              <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Display date</label>
+              <input id="wiz-ev-date" type="text" placeholder="Mar 2026"
+                style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+            </div>
+            <div>
+              <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Sort date (YYYYMMDD)</label>
+              <input id="wiz-ev-sortdate" type="number" placeholder="20260328"
+                style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+            </div>
           </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-          <div>
-            <label style="font-size:0.75rem;color:var(--win);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Wins</label>
-            <input id="sub-wins" type="number" min="0" value="0" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Format</label>
+              <select id="wiz-ev-format"
+                style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
+                <option value="">Select...</option>
+                <option value="GT">GT</option>
+                <option value="RTT">RTT</option>
+                <option value="Teams">Teams / ITT</option>
+                <option value="Club">Club Event</option>
+                <option value="Championship">Championship</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Total players</label>
+              <input id="wiz-ev-players" type="number" placeholder="e.g. 180"
+                style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+            </div>
+            <div>
+              <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">BCP URL</label>
+              <input id="wiz-ev-bcp" type="text" placeholder="Optional"
+                style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+            </div>
           </div>
-          <div>
-            <label style="font-size:0.75rem;color:var(--loss);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Losses</label>
-            <input id="sub-losses" type="number" min="0" value="0" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-          </div>
-          <div>
-            <label style="font-size:0.75rem;color:var(--draw);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Draws</label>
-            <input id="sub-draws" type="number" min="0" value="0" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-          </div>
-        </div>
-        <div>
-          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Sub-team (Teams events only)</label>
-          <input id="sub-subteam" type="text" placeholder="e.g. The Sh[a]meful Suspects" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-        </div>
-        <div>
-          <button onclick="submitResult()" style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;transition:opacity 0.15s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Submit Result</button>
-          <div id="sub-message" style="margin-top:8px;font-size:0.82rem;display:none;"></div>
+          <button onclick="wizardCreateAndContinue()"
+            style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;">
+            Create event &amp; add my result →
+          </button>
         </div>
       </div>
     </div>
 
-    <div class="section-head" style="margin-top:2rem;">
-      <div class="section-title">Recent submissions</div>
-      <div class="section-rule"></div>
-    </div>
-    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Pending approval before they appear on the leaderboard. Use Approve / Reject to manage.</div>
-    <div id="sheet-submissions"></div>
-
-    <div class="section-head" style="margin-top:3rem;">
-      <div class="section-title">Add Event</div>
-      <div class="section-rule"></div>
-    </div>
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Add a completed event and all PSSN results directly to the database. This will appear in the stats immediately.</div>
-
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;max-width:600px;">
-
-      <!-- Event details -->
-      <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Event Details</div>
-      <div style="display:grid;gap:12px;margin-bottom:1.5rem;">
-
-        <div>
-          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event name</label>
-          <input id="ev-name" type="text" placeholder="e.g. Sheffield GT" oninput="checkEventDuplicate(this.value)"
-            style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-          <div id="ev-duplicate-warning" style="display:none;font-size:0.75rem;color:#f0c040;margin-top:5px;"></div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <!-- Step 2: Add result -->
+    <div id="wizard-step2" style="display:none;max-width:500px;margin-top:1rem;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
           <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Date (e.g. Mar 2026)</label>
-            <input id="ev-date" type="text" placeholder="Mar 2026"
-              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);">Step 2 — Your result</div>
+            <div id="wiz-event-label" style="font-size:1rem;font-weight:400;color:var(--text);margin-top:3px;"></div>
           </div>
-          <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Sort date (YYYYMMDD)</label>
-            <input id="ev-sortdate" type="number" placeholder="20260328"
-              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-          </div>
+          <button onclick="wizardReset()" style="font-size:0.72rem;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;">← Change event</button>
         </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="display:grid;gap:12px;">
           <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Format</label>
-            <select id="ev-format"
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your name</label>
+            <select id="wiz-player"
               style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-              <option value="">Select...</option>
-              <option value="GT">GT</option>
-              <option value="RTT">RTT</option>
-              <option value="Teams">Teams / ITT</option>
-              <option value="Club">Club Event</option>
-              <option value="Championship">Championship</option>
+              <option value="">Select player...</option>
             </select>
           </div>
           <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Edition</label>
-            <select id="ev-edition"
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Faction played</label>
+            <select id="wiz-faction"
               style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-              <option value="10">10th Edition</option>
-              <option value="11">11th Edition</option>
+              <option value="">Select faction...</option>
             </select>
           </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Placing</label>
+              <input id="wiz-placing" type="number" min="1" placeholder="e.g. 42"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            </div>
+            <div>
+              <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Total players</label>
+              <input id="wiz-total" type="number" min="1" placeholder="e.g. 180"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <div>
+              <label style="font-size:0.75rem;color:var(--win);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Wins</label>
+              <input id="wiz-wins" type="number" min="0" value="0"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            </div>
+            <div>
+              <label style="font-size:0.75rem;color:var(--loss);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Losses</label>
+              <input id="wiz-losses" type="number" min="0" value="0"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            </div>
+            <div>
+              <label style="font-size:0.75rem;color:var(--draw);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Draws</label>
+              <input id="wiz-draws" type="number" min="0" value="0"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Sub-team (Teams events only)</label>
+            <input id="wiz-subteam" type="text" placeholder="e.g. The Sh[a]meful Suspects"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <button onclick="wizardSubmitResult()"
+            style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;"
+            onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+            Submit Result
+          </button>
+          <div id="wiz-message" style="font-size:0.82rem;display:none;"></div>
         </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-          <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Total players</label>
-            <input id="ev-total-players" type="number" min="1" placeholder="e.g. 180"
-              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-          </div>
-          <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Total teams</label>
-            <input id="ev-total-teams" type="number" min="0" placeholder="Teams only" value="0"
-              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-          </div>
-          <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">BCP URL</label>
-            <input id="ev-bcp-url" type="text" placeholder="Optional"
-              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-          </div>
-        </div>
-
       </div>
-
-      <!-- Results -->
-      <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;padding-top:1rem;border-top:1px solid var(--border);">PSSN Results</div>
-      <div id="ev-results-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
-      <button onclick="addResultRow()"
-        style="width:100%;padding:8px;background:transparent;border:1px dashed var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;transition:all 0.15s;"
-        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-        + Add player result
-      </button>
-
-      <!-- Submit -->
-      <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
-        <button onclick="submitEvent()"
-          style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;transition:opacity 0.15s;"
-          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-          Save Event to Database
-        </button>
-        <div id="ev-message" style="margin-top:8px;font-size:0.82rem;display:none;"></div>
-      </div>
-
     </div>
 
-    <!-- Existing DB events -->
-    <div class="section-head" style="margin-top:2rem;">
-      <div class="section-title">Events in Database</div>
-      <div class="section-rule"></div>
+    <!-- ADMIN SECTION -->
+    <div style="margin-top:3rem;padding-top:2rem;border-top:2px solid var(--border);">
+      <div style="font-size:0.72rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Admin Access</div>
+      <div id="admin-gate">
+        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Enter admin PIN to manage submissions and events.</div>
+        <input type="password" id="admin-pin-input" maxlength="8" placeholder="Admin PIN"
+          style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;width:160px;letter-spacing:0.2em;outline:none;"
+          oninput="checkAdminPin(this.value)"/>
+        <div id="admin-pin-error" style="font-size:0.75rem;color:var(--loss);display:none;margin-top:6px;">Incorrect admin PIN</div>
+      </div>
+      <div id="admin-content" style="display:none;">
+
+        <!-- Pending approvals -->
+        <div class="section-head" style="margin-top:1.5rem;">
+          <div class="section-title">Pending Approvals</div>
+          <div class="section-rule"></div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Results submitted by team members waiting for your approval.</div>
+        <div id="sheet-submissions"></div>
+
+        <!-- Add event -->
+        <div class="section-head" style="margin-top:2.5rem;">
+          <div class="section-title">Add Full Event</div>
+          <div class="section-rule"></div>
+        </div>
+        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Add a completed event with all PSSN results at once. Goes live immediately.</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;max-width:600px;">
+          <div style="display:grid;gap:12px;margin-bottom:1.5rem;">
+            <div>
+              <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event name</label>
+              <input id="ev-name" type="text" placeholder="e.g. Sheffield GT" oninput="checkEventDuplicate(this.value)"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+              <div id="ev-duplicate-warning" style="display:none;font-size:0.75rem;color:#f0c040;margin-top:5px;"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Display date</label>
+                <input id="ev-date" type="text" placeholder="Mar 2026"
+                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+              </div>
+              <div>
+                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Sort date (YYYYMMDD)</label>
+                <input id="ev-sortdate" type="number" placeholder="20260328"
+                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+              <div>
+                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Format</label>
+                <select id="ev-format"
+                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+                  <option value="">Select...</option>
+                  <option value="GT">GT</option>
+                  <option value="RTT">RTT</option>
+                  <option value="Teams">Teams / ITT</option>
+                  <option value="Club">Club Event</option>
+                  <option value="Championship">Championship</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Total players</label>
+                <input id="ev-total-players" type="number" min="1" placeholder="e.g. 180"
+                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+              </div>
+              <div>
+                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">BCP URL</label>
+                <input id="ev-bcp-url" type="text" placeholder="Optional"
+                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-top:1rem;border-top:1px solid var(--border);">PSSN Results</div>
+          <div id="ev-results-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+          <button onclick="addResultRow()"
+            style="width:100%;padding:8px;background:transparent;border:1px dashed var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;"
+            onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+            + Add player result
+          </button>
+          <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
+            <button onclick="submitEvent()"
+              style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;"
+              onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+              Save Event to Database
+            </button>
+            <div id="ev-message" style="margin-top:8px;font-size:0.82rem;display:none;"></div>
+          </div>
+        </div>
+
+        <!-- Events in DB -->
+        <div class="section-head" style="margin-top:2rem;">
+          <div class="section-title">Events in Database</div>
+          <div class="section-rule"></div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Events added via this form. Click Delete to remove.</div>
+        <div id="ev-db-list"></div>
+
+      </div>
     </div>
-    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Events added via this form. Click Delete to remove.</div>
-    <div id="ev-db-list"></div>
 
   </div>
 
 </main>
+
+
 
 <div class="panel-overlay" id="panel-overlay" onclick="closePanel()"></div>
 <div class="player-panel" id="player-panel">
@@ -2010,16 +2068,7 @@ function checkPin(val) {
   if (val === '1719') {
     document.getElementById('pin-gate').style.display = 'none';
     document.getElementById('submit-form').style.display = 'block';
-    // populate player dropdown
-    const sel = document.getElementById('sub-player');
-    if (sel && sel.options.length === 1) {
-      D.players.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.name; opt.textContent = p.name;
-        sel.appendChild(opt);
-      });
-    }
-    loadSheetSubmissions();
+    // load db events for wizard search
     loadDbEvents();
   } else {
     document.getElementById('pin-error').style.display = 'block';
@@ -2903,6 +2952,223 @@ function buildMilestones() {
   }).filter(Boolean).join('');
 
   el.innerHTML = rows || '<div style="font-size:0.85rem;color:var(--muted);">No data yet.</div>';
+}
+
+// ── wizard state ──
+let wizardEventName = '';
+let wizardEventFormat = '';
+let wizardIsNewEvent = false;
+let wizardNewEventData = null;
+
+function wizardSearchEvent(val) {
+  const resultsEl = document.getElementById('wiz-search-results');
+  const newFieldsEl = document.getElementById('wiz-new-event-fields');
+  if (!val.trim() || val.length < 2) {
+    resultsEl.style.display = 'none';
+    newFieldsEl.style.display = 'none';
+    return;
+  }
+
+  // search JSON events + DB events
+  const allEvents = [
+    ...D.events.map(e => ({ name: e.name, format: e.format, date: e.date, source: 'existing' })),
+    ...dbEvents.map(e => ({ name: e.name, format: e.format, date: e.event_date, source: 'db' }))
+  ];
+
+  const matches = allEvents.filter(e =>
+    e.name.toLowerCase().includes(val.toLowerCase().trim())
+  ).slice(0, 5);
+
+  if (matches.length) {
+    resultsEl.style.display = 'block';
+    newFieldsEl.style.display = 'none';
+    resultsEl.innerHTML = `
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;">Matching events — click to select:</div>
+      ${matches.map(e => `
+        <div onclick="wizardSelectEvent('${e.name.replace(/'/g,"\\'")}','${e.format}')"
+          style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;cursor:pointer;margin-bottom:4px;transition:border-color 0.15s;"
+          onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:0.85rem;color:var(--text);">${e.name}</div>
+          <div style="font-size:0.7rem;color:var(--muted);">${e.date} · ${e.format}</div>
+        </div>`).join('')}
+      <div onclick="wizardShowNewEventFields()"
+        style="padding:8px 12px;background:transparent;border:1px dashed var(--border);border-radius:4px;cursor:pointer;margin-bottom:4px;font-size:0.82rem;color:var(--muted);text-align:center;"
+        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+        + None of these — create new event
+      </div>`;
+  } else {
+    resultsEl.style.display = 'none';
+    newFieldsEl.style.display = 'block';
+  }
+}
+
+function wizardSelectEvent(name, format) {
+  wizardEventName = name;
+  wizardEventFormat = format;
+  wizardIsNewEvent = false;
+  wizardShowStep2();
+}
+
+function wizardShowNewEventFields() {
+  document.getElementById('wiz-search-results').style.display = 'none';
+  document.getElementById('wiz-new-event-fields').style.display = 'block';
+}
+
+async function wizardCreateAndContinue() {
+  const name = document.getElementById('wiz-event-search').value.trim();
+  const date = document.getElementById('wiz-ev-date').value.trim();
+  const sortDate = parseInt(document.getElementById('wiz-ev-sortdate').value) || 0;
+  const format = document.getElementById('wiz-ev-format').value;
+  const players = parseInt(document.getElementById('wiz-ev-players').value) || 0;
+  const bcp = document.getElementById('wiz-ev-bcp').value.trim();
+
+  if (!name || !date || !sortDate || !format) {
+    alert('Please fill in event name, date, sort date and format.');
+    return;
+  }
+
+  wizardEventName = name;
+  wizardEventFormat = format;
+  wizardIsNewEvent = true;
+  wizardNewEventData = { name, event_date: date, sort_date: sortDate, format, total_players: players, bcp_url: bcp };
+  wizardShowStep2();
+}
+
+function wizardShowStep2() {
+  document.getElementById('wizard-step1').style.display = 'none';
+  document.getElementById('wizard-step2').style.display = 'block';
+  document.getElementById('wiz-event-label').textContent = wizardEventName + (wizardEventFormat ? ' · ' + wizardEventFormat : '');
+
+  // populate player dropdown
+  const playerSel = document.getElementById('wiz-player');
+  if (playerSel.options.length === 1) {
+    D.players.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.name; opt.textContent = p.name;
+      playerSel.appendChild(opt);
+    });
+  }
+
+  // populate faction dropdown
+  const factionSel = document.getElementById('wiz-faction');
+  if (factionSel.options.length === 1) {
+    ALL_FACTIONS.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f; opt.textContent = f;
+      factionSel.appendChild(opt);
+    });
+  }
+}
+
+function wizardReset() {
+  wizardEventName = '';
+  wizardEventFormat = '';
+  wizardIsNewEvent = false;
+  wizardNewEventData = null;
+  document.getElementById('wizard-step1').style.display = 'block';
+  document.getElementById('wizard-step2').style.display = 'none';
+  document.getElementById('wiz-event-search').value = '';
+  document.getElementById('wiz-search-results').style.display = 'none';
+  document.getElementById('wiz-new-event-fields').style.display = 'none';
+  document.getElementById('wiz-message').style.display = 'none';
+}
+
+async function wizardSubmitResult() {
+  const msg = document.getElementById('wiz-message');
+  const player = document.getElementById('wiz-player').value;
+  const faction = document.getElementById('wiz-faction').value;
+  const placing = parseInt(document.getElementById('wiz-placing').value) || null;
+  const total = parseInt(document.getElementById('wiz-total').value) || null;
+  const wins = parseInt(document.getElementById('wiz-wins').value) || 0;
+  const losses = parseInt(document.getElementById('wiz-losses').value) || 0;
+  const draws = parseInt(document.getElementById('wiz-draws').value) || 0;
+  const subteam = document.getElementById('wiz-subteam').value.trim() || null;
+
+  if (!player || !faction) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Please select your name and faction.';
+    return;
+  }
+
+  msg.style.display = 'block'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Submitting...';
+
+  try {
+    // If new event, create it first via admin API then add result
+    // Otherwise submit to approval queue
+    if (wizardIsNewEvent) {
+      const evRes = await fetch(`${API}/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pin: '1719',
+          event: wizardNewEventData,
+          results: [{ player_name: player, faction, placing, wins, losses, draws, subteam }]
+        })
+      });
+      const evData = await evRes.json();
+      if (evData.success) {
+        msg.style.color = 'var(--win)';
+        msg.textContent = '✓ Event created and your result saved! Reload to see it in stats.';
+        setTimeout(wizardReset, 3000);
+      } else {
+        msg.style.color = 'var(--loss)';
+        msg.textContent = 'Error: ' + (evData.error || 'Unknown error');
+      }
+    } else {
+      // submit to approval queue
+      const subRes = await fetch(`${API}/submissions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          player_name: player,
+          event_name: wizardEventName,
+          event_format: wizardEventFormat,
+          faction, place: placing,
+          total_players: total,
+          wins, losses, draws, subteam
+        })
+      });
+      const subData = await subRes.json();
+      if (subData.success) {
+        msg.style.color = 'var(--win)';
+        msg.textContent = '✓ Result submitted! It will appear in the stats once approved.';
+        setTimeout(wizardReset, 3000);
+      } else {
+        msg.style.color = 'var(--loss)';
+        msg.textContent = 'Error: ' + (subData.error || 'Unknown error');
+      }
+    }
+  } catch(e) {
+    msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error — try again.';
+  }
+}
+
+// ── admin PIN ──
+function checkAdminPin(val) {
+  if (val.length < 4) return;
+  const errEl = document.getElementById('admin-pin-error');
+  // check against server
+  fetch(`${API}/submissions?pin=${val}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.submissions !== undefined) {
+        document.getElementById('admin-gate').style.display = 'none';
+        document.getElementById('admin-content').style.display = 'block';
+        loadSheetSubmissions();
+        loadDbEvents();
+      } else {
+        errEl.style.display = 'block';
+        document.getElementById('admin-pin-input').value = '';
+        setTimeout(() => { errEl.style.display = 'none'; }, 2000);
+      }
+    })
+    .catch(() => {
+      errEl.style.display = 'block';
+      document.getElementById('admin-pin-input').value = '';
+      setTimeout(() => { errEl.style.display = 'none'; }, 2000);
+    });
 }
 
 // ── event entry ──
