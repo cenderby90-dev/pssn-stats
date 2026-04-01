@@ -415,8 +415,9 @@
   "team": "Pile of Shame Support Network",
   "season": "2025–26 Season",
   "game": "Warhammer 40,000",
+  "version": "1.2.0",
   "currentEdition": 10,
-  "lastUpdated": "31 Mar 2026",
+  "lastUpdated": "01 Apr 2026",
   "awardsArchive": [],
 
   "players": [
@@ -907,14 +908,10 @@
     <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.25rem;margin-top:8px;">Auto-calculated from this season's data. Click any winner to view their profile.</div>
     <div id="awards-grid"></div>
     <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
-      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Ready to archive this edition? Generate the JSON and paste it into the <code style="font-family:monospace;font-size:0.78rem;background:var(--surface2);padding:1px 5px;border-radius:3px;">awardsArchive</code> array.</div>
-      <button onclick="generateArchiveJSON()" style="font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">📋 Generate Archive JSON</button>
-      <div id="archive-json-output" style="display:none;margin-top:1rem;">
-        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:6px;">Copy this and add it to the <code style="font-family:monospace;background:var(--surface2);padding:1px 4px;border-radius:3px;">awardsArchive</code> array in your JSON data block:</div>
-        <textarea id="archive-json-text" readonly style="width:100%;height:200px;font-family:monospace;font-size:0.75rem;background:var(--surface2);border:1px solid var(--accent);border-radius:4px;padding:10px;color:var(--text);resize:vertical;"></textarea>
-        <button onclick="copyArchiveJSON()" style="margin-top:6px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;padding:6px 14px;background:var(--accent);border:none;border-radius:4px;color:#fff;cursor:pointer;">Copy to clipboard</button>
-        <span id="archive-copy-confirm" style="display:none;font-size:0.75rem;color:var(--win);margin-left:8px;">✓ Copied!</span>
-      </div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Ready to archive this edition? Click below to save the current awards to the database.</div>
+      <button onclick="saveAwardsToArchive()" style="font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">💾 Save to Archive</button>
+      <span id="archive-save-confirm" style="display:none;font-size:0.75rem;color:var(--win);margin-left:8px;">✓ Saved!</span>
+      <span id="archive-save-error" style="display:none;font-size:0.75rem;color:var(--loss);margin-left:8px;"></span>
     </div>
   </div>
 
@@ -929,8 +926,8 @@
       <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">🎮 First Event</div>
       <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">🗺️ 5 Events</div>
       <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">✅ First Win</div>
-      <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">🥈 25 Wins</div>
-      <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">🥇 50 Wins</div>
+      <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">🥈 10 Wins</div>
+      <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">🥇 25 Wins</div>
       <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">💯 Centurion</div>
       <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">⭐ Perfect Score</div>
       <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:0.72rem;color:var(--muted);">🎯 All Formats</div>
@@ -944,7 +941,7 @@
     <span id="sec-archive-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
   </div>
   <div id="sec-archive" style="display:none;">
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.25rem;margin-top:8px;">Past season award winners. Add completed seasons to the <code style="font-family:monospace;font-size:0.78rem;background:var(--surface2);padding:1px 5px;border-radius:3px;">awardsArchive</code> array in the JSON.</div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.25rem;margin-top:8px;">Past season award winners stored in the database. Use the Save to Archive button above when a season ends.</div>
     <div id="archive-grid"></div>
   </div>
 
@@ -1058,6 +1055,7 @@
 <footer class="site-footer">
   <span id="footer-team"></span>
   <span id="footer-updated"></span>
+  <span id="footer-version" style="color:var(--faint);"></span>
   <span>Results link to Best Coast Pairings · Submit results via the Submit tab</span>
 </footer>
 
@@ -1216,6 +1214,10 @@ document.getElementById('header-meta').innerHTML =
   `<span>${D.season}</span><span>${D.game}</span><span>${evCount} event${evCount !== 1 ? 's' : ''}</span><span>${playerCount} players with results</span><span style="color:var(--accent);font-weight:500;">10th Edition</span>`;
 document.getElementById('footer-team').textContent = D.team + ' · ' + D.season;
 document.getElementById('footer-updated').textContent = D.lastUpdated ? 'Last updated: ' + D.lastUpdated : '';
+if (D.version) {
+  const vEl = document.getElementById('footer-version');
+  if (vEl) vEl.textContent = 'v' + D.version;
+}
 
 // ── summary strips ──
 function buildStrip(containerId, statsMap, label) {
@@ -1893,9 +1895,10 @@ const CALENDAR = [
   { name: "Bristol GT",        dates: "23–24 May 2026",     type: "GT",    attended: false, sortDate: 20260523 },
   { name: "Leeds GT",          dates: "13–14 Jun 2026",     type: "GT",    attended: false, sortDate: 20260613 },
   { name: "Birmingham GT",     dates: "4–5 Jul 2026",       type: "GT",    attended: false, sortDate: 20260704 },
-  { name: "Edinburgh GT",      dates: "25–26 Jul 2026",     type: "GT",    attended: false, sortDate: 20260725 },
-  { name: "Summer ITT",        dates: "8–9 Aug 2026",       type: "Teams", attended: false, sortDate: 20260808 },
-  { name: "LGT",               dates: "25–28 Sep 2026",     type: "GT",    attended: false, sortDate: 20260925 },
+  { name: "Edinburgh Super Major", dates: "18–19 Jul 2026", type: "GT",    attended: false, sortDate: 20260718 },
+  { name: "Manchester GT: Summer", dates: "8–9 Aug 2026",   type: "GT",    attended: false, sortDate: 20260808 },
+  { name: "Summer ITT",        dates: "29–30 Aug 2026",     type: "Teams", attended: false, sortDate: 20260829 },
+  { name: "LGT",               dates: "25–27 Sep 2026",     type: "GT",    attended: false, sortDate: 20260925 },
   { name: "Coventry GT",       dates: "23–25 Oct 2026",     type: "GT",    attended: false, sortDate: 20261023 },
   { name: "Autumn ITT",        dates: "14–15 Nov 2026",     type: "Teams", attended: false, sortDate: 20261114 },
   { name: "Bedfordshire Super Major", dates: "5–6 Dec 2026", type: "GT",   attended: false, sortDate: 20261205 },
@@ -2494,12 +2497,34 @@ function buildAwards() {
   buildArchive();
 }
 
-function generateArchiveJSON() {
-  // re-run award calculation to get current winners
+async function saveAwardsToArchive() {
+  const confirm = document.getElementById('archive-save-confirm');
+  const error = document.getElementById('archive-save-error');
+  confirm.style.display = 'none';
+  error.style.display = 'none';
+
+  const pin = prompt('Enter admin PIN to archive these awards:');
+  if (!pin) return;
+  if (pin !== '1719') {
+    error.style.display = 'inline';
+    error.textContent = 'Incorrect PIN.';
+    setTimeout(() => { error.style.display = 'none'; }, 2000);
+    return;
+  }
+
+  // collect current awards from the grid
+  const awardsEl = document.getElementById('awards-grid');
+  if (!awardsEl || !awardsEl.innerHTML) {
+    error.style.display = 'inline';
+    error.textContent = 'No awards to save — open the More tab first.';
+    return;
+  }
+
+  // re-calculate awards to get clean data
   const activeEvs = getActiveEvents();
   const awards = [];
 
-  function playerResults(name) {
+  function pRes(name) {
     return activeEvs.map(ev => {
       const r = ev.results.find(r => r.player === name && !r.dropped);
       return r ? { ...r, format: ev.format } : null;
@@ -2507,62 +2532,98 @@ function generateArchiveJSON() {
   }
 
   const allPlayers = [...new Set(activeEvs.flatMap(ev => ev.results.filter(r => !r.dropped).map(r => r.player)))];
+  const sp = allPlayers.map(name => { const res=pRes(name).filter(r=>r.format!=='Teams'); const w=res.reduce((a,r)=>a+r.w,0); const l=res.reduce((a,r)=>a+(r.shadow?0:r.l),0); const d=res.reduce((a,r)=>a+(r.shadow?0:r.d),0); const g=w+l+d; return{name,w,l,d,g}; }).filter(p=>p.g>=5);
+  const ta = sp.reduce((a,p)=>a+p.w,0)/Math.max(1,sp.reduce((a,p)=>a+p.g,0));
+  const mvp = sp.map(p=>({...p,score:(p.g/(p.g+10))*(p.w/p.g)+(10/(p.g+10))*ta})).sort((a,b)=>b.score-a.score)[0];
+  if (mvp) awards.push({icon:'👑',title:'MVP',winner:mvp.name,detail:`${Math.round(mvp.score*100)}% weighted win rate · ${mvp.w}W ${mvp.l}L`});
 
-  const singlesPlayers = allPlayers.map(name => {
-    const res = playerResults(name).filter(r => r.format !== 'Teams');
-    const w = res.reduce((a,r) => a+r.w, 0);
-    const l = res.reduce((a,r) => a+(r.shadow?0:r.l), 0);
-    const d = res.reduce((a,r) => a+(r.shadow?0:r.d), 0);
-    const g = w+l+d;
-    return { name, w, l, d, g };
-  }).filter(p => p.g >= 5);
-  const teamAvgS = singlesPlayers.reduce((a,p)=>a+p.w,0) / Math.max(1, singlesPlayers.reduce((a,p)=>a+p.g,0));
-  const mvp = singlesPlayers.map(p => ({...p, score:(p.g/(p.g+10))*(p.w/p.g)+(10/(p.g+10))*teamAvgS})).sort((a,b)=>b.score-a.score)[0];
-  if (mvp) awards.push({ icon:'👑', title:'MVP', winner:mvp.name, detail:`${Math.round(mvp.score*100)}% weighted win rate · ${mvp.w}W ${mvp.l}L in singles` });
+  const ironMan = allPlayers.map(name=>{const res=pRes(name);const g=res.reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0);return{name,g};}).sort((a,b)=>b.g-a.g)[0];
+  if (ironMan) awards.push({icon:'🦾',title:'Iron Man',winner:ironMan.name,detail:`${ironMan.g} games played`});
 
-  const ironMan = allPlayers.map(name => { const res=playerResults(name); const g=res.reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0); return {name,g}; }).sort((a,b)=>b.g-a.g)[0];
-  if (ironMan) awards.push({ icon:'🦾', title:'Iron Man', winner:ironMan.name, detail:`${ironMan.g} individual games played` });
+  const journeyman = allPlayers.map(name=>({name,ev:pRes(name).length})).sort((a,b)=>b.ev-a.ev)[0];
+  if (journeyman) awards.push({icon:'🧭',title:'Journeyman',winner:journeyman.name,detail:`${journeyman.ev} events attended`});
 
-  const journeyman = allPlayers.map(name=>({name,ev:playerResults(name).length})).sort((a,b)=>b.ev-a.ev)[0];
-  if (journeyman) awards.push({ icon:'🧭', title:'Journeyman', winner:journeyman.name, detail:`${journeyman.ev} events attended` });
+  const debuts = allPlayers.map(name=>{const res=pRes(name);if(!res.length)return null;const f=res[0];const l=f.shadow?0:f.l;const d=f.shadow?0:f.d;const g=f.w+l+d;if(g<3)return null;return{name,wr:f.w/g,w:f.w,g};}).filter(Boolean).sort((a,b)=>b.wr-a.wr)[0];
+  if (debuts) awards.push({icon:'🌟',title:'Best Debut',winner:debuts.name,detail:`${debuts.w}W from ${debuts.g} games`});
 
-  const debuts = allPlayers.map(name => { const res=playerResults(name); if(!res.length) return null; const first=res[0]; const l=first.shadow?0:first.l; const d=first.shadow?0:first.d; const g=first.w+l+d; if(g<3) return null; return {name,wr:first.w/g,w:first.w,g,event:first.eventName||'first event'}; }).filter(Boolean).sort((a,b)=>b.wr-a.wr)[0];
-  if (debuts) awards.push({ icon:'🌟', title:'Best Debut', winner:debuts.name, detail:`${debuts.w}W from ${debuts.g} games` });
+  const factionMap={};
+  activeEvs.forEach(ev=>{ev.results.forEach(r=>{if(r.dropped)return;const k=`${r.player}|${r.faction}`;if(!factionMap[k])factionMap[k]={player:r.player,faction:r.faction,w:0,g:0};factionMap[k].w+=r.w;factionMap[k].g+=r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d);});});
+  const fc=Object.values(factionMap).filter(f=>f.g>=5).sort((a,b)=>(b.w/b.g)-(a.w/a.g))[0];
+  if (fc) awards.push({icon:'⚜️',title:'Faction Champion',winner:fc.player,detail:`${Math.round(fc.w/fc.g*100)}% with ${fc.faction}`});
 
-  const factionMap = {};
-  activeEvs.forEach(ev => { ev.results.forEach(r => { if(r.dropped) return; const key=`${r.player}|${r.faction}`; if(!factionMap[key]) factionMap[key]={player:r.player,faction:r.faction,w:0,g:0}; factionMap[key].w+=r.w; factionMap[key].g+=r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d); }); });
-  const factionChamp = Object.values(factionMap).filter(f=>f.g>=5).sort((a,b)=>(b.w/b.g)-(a.w/a.g))[0];
-  if (factionChamp) awards.push({ icon:'⚜️', title:'Faction Champion', winner:factionChamp.player, detail:`${Math.round(factionChamp.w/factionChamp.g*100)}% win rate with ${factionChamp.faction}` });
+  const tp=allPlayers.map(name=>{const res=pRes(name).filter(r=>r.format==='Teams');const w=res.reduce((a,r)=>a+r.w,0);const g=res.reduce((a,r)=>a+r.w+r.l+r.d,0);return{name,w,g};}).filter(p=>p.g>=5).sort((a,b)=>(b.w/b.g)-(a.w/a.g))[0];
+  if (tp) awards.push({icon:'🤝',title:'Team Player',winner:tp.name,detail:`${Math.round(tp.w/tp.g*100)}% win rate in Teams`});
 
-  const teamPlayers = allPlayers.map(name => { const res=playerResults(name).filter(r=>r.format==='Teams'); const w=res.reduce((a,r)=>a+r.w,0); const g=res.reduce((a,r)=>a+r.w+r.l+r.d,0); return {name,w,g}; }).filter(p=>p.g>=5).sort((a,b)=>(b.w/b.g)-(a.w/a.g))[0];
-  if (teamPlayers) awards.push({ icon:'🤝', title:'Team Player', winner:teamPlayers.name, detail:`${Math.round(teamPlayers.w/teamPlayers.g*100)}% win rate in Teams events` });
+  const imp=allPlayers.map(name=>{const res=pRes(name).filter(r=>r.format!=='Teams');if(res.length<4)return null;const mid=Math.floor(res.length/2);const wr1=res.slice(0,mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(0,mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0));const wr2=res.slice(mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0));return{name,improvement:wr2-wr1,wr1:Math.round(wr1*100),wr2:Math.round(wr2*100)};}).filter(Boolean).sort((a,b)=>b.improvement-a.improvement)[0];
+  if (imp&&imp.improvement>0) awards.push({icon:'📈',title:'Most Improved',winner:imp.name,detail:`${imp.wr1}% → ${imp.wr2}%`});
 
-  const improved = allPlayers.map(name => { const res=playerResults(name).filter(r=>r.format!=='Teams'); if(res.length<4) return null; const mid=Math.floor(res.length/2); const wr1=res.slice(0,mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(0,mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0)); const wr2=res.slice(mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0)); return {name,improvement:wr2-wr1,wr1:Math.round(wr1*100),wr2:Math.round(wr2*100)}; }).filter(Boolean).sort((a,b)=>b.improvement-a.improvement)[0];
-  if (improved && improved.improvement > 0) awards.push({ icon:'📈', title:'Most Improved', winner:improved.name, detail:`${improved.wr1}% → ${improved.wr2}% win rate` });
+  const cb=allPlayers.map(name=>{const res=pRes(name).filter(r=>r.format!=='Teams');if(res.length<4)return null;const mid=Math.floor(res.length/2);const wr1=res.slice(0,mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(0,mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0));const wr2=res.slice(mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0));return{name,improvement:wr2-wr1,wr1:Math.round(wr1*100),wr2:Math.round(wr2*100)};}).filter(p=>p&&p.wr1<50&&p.improvement>0).sort((a,b)=>b.improvement-a.improvement)[0];
+  if (cb) awards.push({icon:'💪',title:'Comeback Kid',winner:cb.name,detail:`${cb.wr1}% → ${cb.wr2}%`});
 
-  const comeback = allPlayers.map(name => { const res=playerResults(name).filter(r=>r.format!=='Teams'); if(res.length<4) return null; const mid=Math.floor(res.length/2); const wr1=res.slice(0,mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(0,mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0)); const wr2=res.slice(mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0)); return {name,improvement:wr2-wr1,wr1:Math.round(wr1*100),wr2:Math.round(wr2*100)}; }).filter(p=>p&&p.wr1<50&&p.improvement>0).sort((a,b)=>b.improvement-a.improvement)[0];
-  if (comeback) awards.push({ icon:'💪', title:'Comeback Kid', winner:comeback.name, detail:`${comeback.wr1}% → ${comeback.wr2}% win rate` });
+  const label = `${ACTIVE_EDITION}th Edition — ${D.season}`;
 
-  const editionLabel = `${ACTIVE_EDITION}th Edition — ${D.season}`;
-  const archiveEntry = { label: editionLabel, awards };
-  const json = JSON.stringify(archiveEntry, null, 2);
-
-  const output = document.getElementById('archive-json-output');
-  const text = document.getElementById('archive-json-text');
-  text.value = json;
-  output.style.display = 'block';
-  text.select();
+  try {
+    const res = await fetch(`${API}/awards`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin, label, awards })
+    });
+    const data = await res.json();
+    if (data.success) {
+      confirm.style.display = 'inline';
+      setTimeout(() => { confirm.style.display = 'none'; }, 3000);
+      awardsBuilt = false;
+      buildAwards();
+    } else {
+      error.style.display = 'inline';
+      error.textContent = data.error || 'Failed to save';
+    }
+  } catch(e) {
+    error.style.display = 'inline';
+    error.textContent = 'Network error — try again';
+  }
 }
 
-function copyArchiveJSON() {
-  const text = document.getElementById('archive-json-text');
-  text.select();
+async function buildArchive() {
+  const el = document.getElementById('archive-grid');
+  if (!el) return;
+  el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:0.5rem 0;">Loading archive...</div>`;
   try {
-    document.execCommand('copy');
-    const confirm = document.getElementById('archive-copy-confirm');
-    confirm.style.display = 'inline';
-    setTimeout(() => { confirm.style.display = 'none'; }, 2000);
-  } catch(e) {}
+    const res = await fetch(`${API}/awards`);
+    const data = await res.json();
+    const archive = data.archive || [];
+    if (!archive.length) {
+      el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No archived seasons yet. Use the Save to Archive button when a season ends.</div>`;
+      return;
+    }
+    el.innerHTML = archive.map((season, si) => {
+      const groupId = `archive-season-${si}`;
+      const awards = typeof season.awards === 'string' ? JSON.parse(season.awards) : season.awards;
+      const awardCards = awards.map(a => `
+        <div class="highlight-card">
+          <div style="font-size:1.5rem;margin-bottom:4px;">${a.icon}</div>
+          <div class="highlight-label">${a.title}</div>
+          <div class="highlight-name" style="cursor:pointer;" onclick="openPlayerPanel('${a.winner}');setTimeout(()=>switchTab('stats'),0);">${a.winner}</div>
+          <div class="highlight-detail">${a.detail}</div>
+        </div>`).join('');
+      const saved = season.created_at ? new Date(season.created_at).toLocaleDateString('en-GB') : '';
+      return `
+        <div class="fmt-group" style="margin-bottom:10px;">
+          <div class="fmt-group-head" onclick="toggleFmtGroup('${groupId}')">
+            <div>
+              <span class="fmt-group-title">${season.label}</span>
+              <span class="fmt-group-meta" style="margin-left:12px;">${awards.length} awards${saved ? ' · saved ' + saved : ''}</span>
+            </div>
+            <span id="${groupId}-arrow" style="color:var(--muted);font-size:0.8rem;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+          </div>
+          <div id="${groupId}" class="fmt-group-body" style="display:none;padding:1rem;">
+            <div class="highlights-grid">${awardCards}</div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">Could not load archive.</div>`;
+  }
 }
 
 function buildMilestones() {
@@ -2579,8 +2640,8 @@ function buildMilestones() {
     { id: 'first-event',   icon: '🎮', label: 'First Event',      desc: 'Attended their first event',             check: (res, evs) => evs.length >= 1 },
     { id: 'five-events',   icon: '🗺️', label: '5 Events',         desc: 'Attended 5 or more events',              check: (res, evs) => evs.length >= 5 },
     { id: 'first-win',     icon: '✅', label: 'First Win',         desc: 'Won their first game',                   check: (res) => res.reduce((a,r) => a+r.w, 0) >= 1 },
-    { id: 'win-25',        icon: '🥈', label: '25 Wins',           desc: 'Accumulated 25 wins',                    check: (res) => res.reduce((a,r) => a+r.w, 0) >= 25 },
-    { id: 'win-50',        icon: '🥇', label: '50 Wins',           desc: 'Accumulated 50 wins',                    check: (res) => res.reduce((a,r) => a+r.w, 0) >= 50 },
+    { id: 'win-10',        icon: '🥈', label: '10 Wins',           desc: 'Accumulated 10 wins',                    check: (res) => res.reduce((a,r) => a+r.w, 0) >= 10 },
+    { id: 'win-25',        icon: '🥇', label: '25 Wins',           desc: 'Accumulated 25 wins',                    check: (res) => res.reduce((a,r) => a+r.w, 0) >= 25 },
     { id: 'centurion',     icon: '💯', label: 'Centurion',         desc: '100 games played',                       check: (res) => res.reduce((a,r) => a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d), 0) >= 100 },
     { id: 'perfect',       icon: '⭐', label: 'Perfect Score',     desc: 'Went undefeated at an event (3-0/5-0)',  check: (res) => res.some(r => r.w >= 3 && (r.shadow?0:r.l) === 0 && (r.shadow?0:r.d) === 0) },
     { id: 'all-formats',   icon: '🎯', label: 'All Formats',       desc: 'Played GT, RTT and Teams events',        check: (res) => ['GT','RTT','Teams'].every(fmt => res.some(r => r.format === fmt)) },
