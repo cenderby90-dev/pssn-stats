@@ -418,7 +418,6 @@
   "version": "1.2.0",
   "currentEdition": 10,
   "lastUpdated": "01 Apr 2026",
-  "awardsArchive": [],
 
   "players": [
     { "name": "Aidan Bell",         "factions": [] },
@@ -1065,6 +1064,58 @@ const D = JSON.parse(document.getElementById('data').textContent);
 // ── edition state ──
 let ACTIVE_EDITION = D.currentEdition || 10;
 
+// ── approved submissions merged into events ──
+async function loadApprovedSubmissions() {
+  try {
+    const res = await fetch('/api/submissions');
+    const data = await res.json();
+    if (!data.submissions || !data.submissions.length) return;
+    data.submissions.forEach(sub => {
+      // find existing event or create a virtual one
+      let ev = D.events.find(e =>
+        e.name.toLowerCase() === sub.event_name.toLowerCase() &&
+        e.format === sub.event_format
+      );
+      if (!ev) {
+        ev = {
+          name: sub.event_name,
+          date: new Date(sub.submitted_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
+          format: sub.event_format,
+          edition: ACTIVE_EDITION,
+          totalPlayers: sub.total_players || 0,
+          bcpUrl: '',
+          results: [],
+          _fromSubmission: true
+        };
+        D.events.push(ev);
+      }
+      // avoid duplicates — don't add if player already has result in this event
+      const exists = ev.results.some(r => r.player === sub.player_name);
+      if (!exists) {
+        ev.results.push({
+          player: sub.player_name,
+          faction: sub.faction,
+          placing: sub.place || 0,
+          w: sub.wins || 0,
+          l: sub.losses || 0,
+          d: sub.draws || 0,
+          subteam: sub.subteam || null,
+          _fromSubmission: true
+        });
+      }
+    });
+  } catch(e) {
+    console.warn('Could not load approved submissions:', e);
+  }
+}
+
+async function initSite() {
+  await loadApprovedSubmissions();
+  buildSite();
+}
+
+function buildSite() {
+
 function switchEdition(ed) {
   ACTIVE_EDITION = ed;
   document.getElementById('ed-10').style.background = ed === 10 ? 'var(--accent)' : 'transparent';
@@ -1211,7 +1262,7 @@ document.getElementById('team-title').textContent = D.team;
 const evCount = getActiveEvents().length;
 const playerCount = Object.values(allStats).filter(s => s.games > 0).length;
 document.getElementById('header-meta').innerHTML =
-  `<span>${D.season}</span><span>${D.game}</span><span>${evCount} event${evCount !== 1 ? 's' : ''}</span><span>${playerCount} players with results</span><span style="color:var(--accent);font-weight:500;">10th Edition</span>`;
+  `<span>${D.season}</span><span>${D.game}</span><span>${evCount} event${evCount !== 1 ? 's' : ''}</span><span>${playerCount} players with results</span><span style="color:var(--accent);font-weight:500;">${ACTIVE_EDITION}th Edition</span>`;
 document.getElementById('footer-team').textContent = D.team + ' · ' + D.season;
 document.getElementById('footer-updated').textContent = D.lastUpdated ? 'Last updated: ' + D.lastUpdated : '';
 if (D.version) {
@@ -2010,7 +2061,8 @@ function renderCountdown() {
 function renderTimeline() {
   const el = document.getElementById('season-timeline');
   if (!el) return;
-  const today = 20260331;
+  const now = new Date(); now.setHours(0,0,0,0);
+  const today = now.getFullYear()*10000 + (now.getMonth()+1)*100 + now.getDate();
   const typeColor = { GT:'var(--accent)', Teams:'var(--draw)', RTT:'var(--win)' };
 
   el.innerHTML = `
@@ -2077,7 +2129,8 @@ async function renderWhosGoing() {
   if (!el) return;
   el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">Loading attendance...</div>`;
   await loadAttendance();
-  const today = 20260331;
+  const now = new Date(); now.setHours(0,0,0,0);
+  const today = now.getFullYear()*10000 + (now.getMonth()+1)*100 + now.getDate();
   const upcoming = CALENDAR.filter(ev => ev.sortDate >= today).slice(0,6);
   const players = D.players.map(p => p.name).filter(Boolean).sort();
 
@@ -2131,8 +2184,6 @@ async function setGoing(name, sortDate, status) {
     console.error('Failed to update attendance', e);
   }
 }
-
-const SHEET_ID = '1NF_j4uIDAWOhzNB8dRsbAUpBg2P09Vs9kc-o3ngBMUA';
 
 async function loadSheetSubmissions() {
   const el = document.getElementById('sheet-submissions');
@@ -3025,6 +3076,10 @@ function closePanel() {
   document.getElementById('ed-11').style.background = ed === 11 ? 'var(--accent)' : 'transparent';
   document.getElementById('ed-11').style.color = ed === 11 ? '#fff' : 'var(--muted)';
 })();
+
+} // end buildSite
+
+initSite();
 </script>
 </body>
 </html>
