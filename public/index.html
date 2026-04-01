@@ -767,6 +767,7 @@
     <div class="tab-bar" style="margin-top:0;border-bottom:none;">
       <button class="tab-btn active" onclick="switchTab('stats')">Season Stats</button>
       <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
+      <button class="tab-btn" onclick="switchTab('league')">League</button>
       <button class="tab-btn" onclick="switchTab('submit')">Submit Result</button>
     </div>
     <div id="edition-toggle" style="display:flex;background:var(--surface2);border-radius:6px;padding:3px;gap:2px;border:1px solid var(--border);">
@@ -950,6 +951,30 @@
     <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.25rem;margin-top:8px;">Past season award winners stored in the database. Use the Save to Archive button above when a season ends.</div>
     <div id="archive-grid"></div>
   </div>
+
+</main>
+
+<!-- ── LEAGUE TAB ── -->
+<main class="page" id="tab-league" style="display:none;">
+
+  <div class="section-head" style="margin-top:0;">
+    <div class="section-title">PSSN League — Season 1</div>
+    <div class="section-rule"></div>
+  </div>
+  <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Round-robin pods. 2 points for a win. Top 2 from each pod qualify for the playoffs.</div>
+
+  <!-- Pod tab bar -->
+  <div style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:1.5rem;flex-wrap:wrap;">
+    <button id="pod-btn-0" class="tab-btn active" onclick="switchPod(0)">Pod 1</button>
+    <button id="pod-btn-1" class="tab-btn" onclick="switchPod(1)">Pod 2</button>
+    <button id="pod-btn-2" class="tab-btn" onclick="switchPod(2)">Pod 3</button>
+    <button id="pod-btn-3" class="tab-btn" onclick="switchPod(3)">Pod 4</button>
+    <button id="pod-btn-4" class="tab-btn" onclick="switchPod(4)">Pod 5</button>
+    <button id="pod-btn-5" class="tab-btn" onclick="switchPod(5)">Pod 6</button>
+    <button id="pod-btn-6" class="tab-btn" onclick="switchPod(6)">🏆 Playoffs</button>
+  </div>
+
+  <div id="league-content"></div>
 
 </main>
 
@@ -2049,7 +2074,7 @@ function toggleSubteam(id) {
 
 // ── tab switching ──
 function switchTab(tab) {
-  const tabs = ['stats','calendar','club','more','submit'];
+  const tabs = ['stats','calendar','league','club','more','submit'];
   tabs.forEach(t => {
     const el = document.getElementById('tab-' + t);
     if (el) el.style.display = t === tab ? '' : 'none';
@@ -2059,6 +2084,7 @@ function switchTab(tab) {
   if (activeBtn) activeBtn.classList.add('active');
   if (tab === 'calendar') renderCalendar();
   if (tab === 'club') renderClub();
+  if (tab === 'league') renderLeague();
   if (tab === 'more') { buildAwards(); buildMilestones(); }
 }
 
@@ -2410,6 +2436,242 @@ async function setGoing(name, sortDate, status) {
   } catch(e) {
     console.error('Failed to update attendance', e);
   }
+}
+
+// ── league ──
+const LEAGUE_PODS = [
+  {
+    name: 'Pod 1',
+    players: [
+      { name: 'Tom D',          played: 2, pts: 4,  bp: 173 },
+      { name: 'Jack',           played: 4, pts: 4,  bp: 304 },
+      { name: 'Michael',        played: 2, pts: 2,  bp: 137 },
+      { name: 'Cayleb',         played: 1, pts: 0,  bp: 54  },
+      { name: 'Dan hates PSSN', played: 1, pts: 2,  bp: 84  },
+      { name: 'Ben',            played: 2, pts: 0,  bp: 102 },
+    ],
+    matrix: {
+      'Tom D':          { 'Jack': 82, 'Ben': 91 },
+      'Jack':           { 'Tom D': 74, 'Michael': 84, 'Cayleb': 58, 'Ben': 88 },
+      'Michael':        { 'Jack': 59, 'Dan hates PSSN': 78 },
+      'Cayleb':         { 'Jack': 54 },
+      'Dan hates PSSN': { 'Michael': 84 },
+      'Ben':            { 'Tom D': 59, 'Jack': 43 },
+    }
+  },
+  {
+    name: 'Pod 2',
+    players: [
+      { name: 'Christian', played: 3, pts: 4, bp: 224 },
+      { name: 'Nathan',    played: 2, pts: 0, bp: 128 },
+      { name: 'Jamie',     played: 2, pts: 0, bp: 81  },
+      { name: 'Joe',       played: 3, pts: 6, bp: 256 },
+      { name: 'Fintan',    played: 1, pts: 0, bp: 55  },
+      { name: 'Alex H',    played: 1, pts: 2, bp: 62  },
+    ],
+    matrix: {
+      'Christian': { 'Nathan': 78, 'Jamie': 80, 'Joe': 66 },
+      'Nathan':    { 'Christian': 59, 'Jamie': 69 },
+      'Jamie':     { 'Christian': 27, 'Nathan': 54 },
+      'Joe':       { 'Christian': 85, 'Jamie': 86, 'Alex H': 85 },
+      'Fintan':    { 'Joe': 55 },
+      'Alex H':    { 'Joe': 62 },
+    }
+  },
+  {
+    name: 'Pod 3',
+    players: [
+      { name: 'Alex C',   played: 2, pts: 0, bp: 91  },
+      { name: 'Rob',      played: 3, pts: 4, bp: 230 },
+      { name: 'Samuel H', played: 2, pts: 0, bp: 70  },
+      { name: 'Nora',     played: 4, pts: 2, bp: 282 },
+      { name: 'Gabe',     played: 5, pts: 8, bp: 429 },
+      { name: 'Tim',      played: 2, pts: 4, bp: 180 },
+      { name: 'Jordan',   played: 2, pts: 2, bp: 140 },
+    ],
+    matrix: {
+      'Alex C':   { 'Rob': 54, 'Nora': 37 },
+      'Rob':      { 'Alex C': 91, 'Samuel H': 91, 'Tim': 48 },
+      'Samuel H': { 'Rob': 39, 'Nora': 31 },
+      'Nora':     { 'Alex C': 77, 'Samuel H': 80, 'Tim': 46, 'Jordan': 79 },
+      'Gabe':     { 'Alex C': 82, 'Rob': 83, 'Samuel H': 100, 'Nora': 73, 'Jordan': 91 },
+      'Tim':      { 'Rob': 100, 'Nora': 80 },
+      'Jordan':   { 'Nora': 85, 'Tim': 55 },
+    }
+  },
+  {
+    name: 'Pod 4',
+    players: [
+      { name: 'Terra',   played: 5, pts: 0,  bp: 246 },
+      { name: 'Harvey',  played: 3, pts: 0,  bp: 124 },
+      { name: 'Matthew', played: 6, pts: 10, bp: 519 },
+      { name: 'Tom McC', played: 4, pts: 6,  bp: 306 },
+      { name: 'Kareem',  played: 4, pts: 4,  bp: 322 },
+      { name: 'James',   played: 5, pts: 8,  bp: 386 },
+      { name: 'Gino',    played: 5, pts: 4,  bp: 308 },
+    ],
+    matrix: {
+      'Terra':   { 'Harvey': 20, 'Matthew': 70, 'Tom McC': 70, 'Kareem': 47, 'James': 39 },
+      'Harvey':  { 'Terra': 26, 'Matthew': 49, 'Tom McC': 49 },
+      'Matthew': { 'Terra': 98, 'Harvey': 100, 'Tom McC': 85, 'Kareem': 85, 'James': 56, 'Gino': 95 },
+      'Tom McC': { 'Terra': 91, 'Harvey': 89, 'Kareem': 29, 'Gino': 97 },
+      'Kareem':  { 'Terra': 96, 'Harvey': 83, 'Tom McC': 65, 'Gino': 78 },
+      'James':   { 'Terra': 94, 'Harvey': 87, 'Kareem': 76, 'Gino': 74, 'Matthew': 55 },
+      'Gino':    { 'Terra': 81, 'Harvey': 42, 'Tom McC': 38, 'Kareem': 69, 'James': 78 },
+    }
+  },
+  {
+    name: 'Pod 5',
+    players: [
+      { name: 'Alex F', played: 3, pts: 2, bp: 221 },
+      { name: 'Chris',  played: 3, pts: 0, bp: 130 },
+      { name: 'Henry',  played: 5, pts: 6, bp: 359 },
+      { name: 'Guy',    played: 5, pts: 8, bp: 399 },
+      { name: 'Artur',  played: 3, pts: 2, bp: 188 },
+      { name: 'John',   played: 3, pts: 4, bp: 171 },
+    ],
+    matrix: {
+      'Alex F': { 'Chris': 98, 'Henry': 64, 'Guy': 59 },
+      'Chris':  { 'Alex F': 30, 'Henry': 25, 'John': 75 },
+      'Henry':  { 'Alex F': 83, 'Chris': 100, 'Artur': 45, 'Guy': 74, 'John': 57 },
+      'Guy':    { 'Alex F': 63, 'Chris': 84, 'Henry': 87, 'Artur': 100, 'John': 65 },
+      'Artur':  { 'Henry': 71, 'Guy': 80, 'John': 37 },
+      'John':   { 'Alex F': 58, 'Chris': 84, 'Artur': 29 },
+    }
+  },
+  {
+    name: 'Pod 6',
+    players: [
+      { name: 'Oscar',    played: 2, pts: 2, bp: 151 },
+      { name: 'Anthony',  played: 4, pts: 4, bp: 309 },
+      { name: 'Spencer',  played: 1, pts: 2, bp: 87  },
+      { name: 'Samuel F', played: 2, pts: 2, bp: 116 },
+      { name: 'Ricky',    played: 2, pts: 0, bp: 104 },
+      { name: 'Harry',    played: 1, pts: 2, bp: 86  },
+    ],
+    matrix: {
+      'Oscar':    { 'Anthony': 88, 'Samuel F': 63 },
+      'Anthony':  { 'Oscar': 56, 'Spencer': 98, 'Samuel F': 97, 'Ricky': 58 },
+      'Spencer':  { 'Anthony': 87 },
+      'Samuel F': { 'Oscar': 43, 'Anthony': 73 },
+      'Ricky':    { 'Anthony': 31, 'Samuel F': 73 },
+      'Harry':    { 'Anthony': 86 },
+    }
+  }
+];
+
+let activePod = 0;
+
+function switchPod(idx) {
+  activePod = idx;
+  for (let i = 0; i <= 6; i++) {
+    const btn = document.getElementById(`pod-btn-${i}`);
+    if (btn) btn.classList.toggle('active', i === idx);
+  }
+  renderLeague();
+}
+
+function renderLeague() {
+  const el = document.getElementById('league-content');
+  if (!el) return;
+  if (activePod === 6) { renderPlayoffs(el); return; }
+
+  const pod = LEAGUE_PODS[activePod];
+  const sorted = [...pod.players].sort((a,b) => b.pts - a.pts || b.bp - a.bp);
+  const names = pod.players.map(p => p.name);
+
+  let html = `
+    <div style="margin-bottom:2rem;">
+      <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">${pod.name} Standings</div>
+      <table class="event-table" style="width:100%;max-width:560px;">
+        <thead><tr>
+          <th style="padding-left:1rem;">Pos</th>
+          <th>Player</th>
+          <th style="text-align:center;">Played</th>
+          <th style="text-align:center;">Points</th>
+          <th style="text-align:right;padding-right:1rem;">Battle Pts</th>
+        </tr></thead>
+        <tbody>
+          ${sorted.map((p,i) => {
+            const q = i < 2;
+            const badge = q ? `<span style="font-size:0.6rem;padding:1px 5px;border-radius:3px;background:var(--accent-bg);color:var(--accent);margin-left:6px;">${i===0?'WINNER':'RUNNER-UP'}</span>` : '';
+            return `<tr>
+              <td style="padding-left:1rem;font-family:'Bebas Neue',sans-serif;font-size:1rem;color:${q?'var(--accent)':'var(--muted)'};">${i+1}</td>
+              <td style="font-size:0.88rem;color:var(--text);">${p.name}${badge}</td>
+              <td style="text-align:center;font-size:0.85rem;color:var(--muted);">${p.played}</td>
+              <td style="text-align:center;"><span style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:${p.pts>0?'var(--win)':'var(--muted)'};">${p.pts}</span></td>
+              <td style="text-align:right;padding-right:1rem;font-size:0.85rem;color:var(--muted);">${p.bp}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Games Matrix — Battle Points scored</div>
+      <div style="overflow-x:auto;">
+        <table class="event-table" style="min-width:400px;">
+          <thead><tr>
+            <th style="padding-left:1rem;">vs</th>
+            ${names.map(n=>`<th style="text-align:center;font-size:0.65rem;">${n}</th>`).join('')}
+          </tr></thead>
+          <tbody>
+            ${names.map(row=>`
+              <tr>
+                <td style="padding-left:1rem;font-size:0.82rem;color:var(--text);white-space:nowrap;">${row}</td>
+                ${names.map(col=>{
+                  if(row===col) return `<td style="text-align:center;background:var(--surface2);"></td>`;
+                  const score = pod.matrix[row]?.[col];
+                  if(score===undefined) return `<td style="text-align:center;color:var(--faint);">—</td>`;
+                  const won = score > (pod.matrix[col]?.[row]??0);
+                  return `<td style="text-align:center;font-size:0.85rem;color:${won?'var(--win)':'var(--loss)'};font-weight:${won?'500':'300'};">${score}</td>`;
+                }).join('')}
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;">
+        <span style="color:var(--win);">Green</span> = won &nbsp;·&nbsp; <span style="color:var(--loss);">Red</span> = lost &nbsp;·&nbsp; — = not yet played
+      </div>
+    </div>`;
+
+  el.innerHTML = html;
+}
+
+function renderPlayoffs(el) {
+  const matchBox = (label, p1, p2, highlight) => `
+    <div style="background:${highlight?'var(--accent-bg)':'var(--surface)'};border:${highlight?'2px solid var(--accent-muted)':'1px solid var(--border)'};border-radius:4px;padding:8px 12px;min-height:58px;margin-bottom:6px;">
+      <div style="font-size:0.62rem;color:${highlight?'var(--accent)':'var(--muted)'};margin-bottom:5px;letter-spacing:0.08em;">${label}</div>
+      <div style="font-size:0.78rem;color:var(--faint);border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:4px;">${p1}</div>
+      <div style="font-size:0.78rem;color:var(--faint);">${p2}</div>
+    </div>`;
+
+  el.innerHTML = `
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Pod winners receive a bye to the semi-finals. Pod runners-up enter at the quarter-final stage. Bracket populates when pods complete.</div>
+    <div style="overflow-x:auto;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;min-width:600px;">
+
+        <div>
+          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);">Quarter Finals</div>
+          ${matchBox('QF 1','Pod 1 Runner-up','Pod 2 Runner-up',false)}
+          ${matchBox('QF 2','Pod 3 Runner-up','Pod 4 Runner-up',false)}
+          ${matchBox('QF 3','Pod 5 Runner-up','Pod 6 Runner-up',false)}
+        </div>
+
+        <div>
+          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);">Semi Finals</div>
+          ${matchBox('SF 1 — Pod 1 Winner gets bye','Pod 1 Winner','QF 1 Winner',false)}
+          ${matchBox('SF 2 — Pod 2 Winner gets bye','Pod 2 Winner','QF 2 Winner',false)}
+          ${matchBox('SF 3 — Pod 3 Winner gets bye','Pod 3 Winner','QF 3 Winner',false)}
+        </div>
+
+        <div>
+          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);">Final</div>
+          ${matchBox('🏆 GRAND FINAL','SF Winner','SF Winner',true)}
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;text-align:center;">Champion crowned here</div>
+        </div>
+
+      </div>
+    </div>`;
 }
 
 async function loadSheetSubmissions() {
