@@ -130,6 +130,10 @@
 
     /* ── LEADERBOARD ── */
     .leaderboard { display: flex; flex-direction: column; gap: 2px; }
+    .leaderboard::-webkit-scrollbar { width: 6px; }
+    .leaderboard::-webkit-scrollbar-track { background: var(--surface2); border-radius: 3px; }
+    .leaderboard::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 3px; }
+    .leaderboard::-webkit-scrollbar-thumb:hover { background: var(--muted); }
     .lb-row {
       display: grid;
       grid-template-columns: 32px 1fr 120px 90px 70px;
@@ -763,8 +767,6 @@
     <div class="tab-bar" style="margin-top:0;border-bottom:none;">
       <button class="tab-btn active" onclick="switchTab('stats')">Season Stats</button>
       <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
-      <button class="tab-btn" onclick="switchTab('club')">Club</button>
-      <button class="tab-btn" onclick="switchTab('more')">More</button>
       <button class="tab-btn" onclick="switchTab('submit')">Submit Result</button>
     </div>
     <div id="edition-toggle" style="display:flex;background:var(--surface2);border-radius:6px;padding:3px;gap:2px;border:1px solid var(--border);">
@@ -810,8 +812,9 @@
     <span id="sec-leaderboard-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
   </div>
   <div id="sec-leaderboard">
-    <div id="lb-filters" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;margin-top:8px;"></div>
-    <div class="leaderboard" id="leaderboard"></div>
+    <div style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;margin-top:8px;line-height:1.5;">A celebration of everyone turning up and rolling dice — not a competitive ranking. Bayesian weighted to reward consistency over cherry-picking events.</div>
+    <div id="lb-filters" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;"></div>
+    <div class="leaderboard" id="leaderboard" style="max-height:600px;overflow-y:auto;border-radius:6px;"></div>
   </div>
 
   <div class="section-head" onclick="toggleSection('sec-results')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
@@ -850,7 +853,11 @@
     <div class="section-title">UKTC Season Calendar</div>
     <div class="section-rule"></div>
   </div>
-  <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Full UKTC calendar from May 2025. Events your team attended are highlighted.</div>
+  <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.25rem;">Full UKTC calendar. Events your team attended are highlighted.</div>
+  <div style="display:flex;gap:2px;margin-bottom:1.5rem;border-bottom:1px solid var(--border);">
+    <button id="cal-btn-upcoming" class="tab-btn active" onclick="switchCalView('upcoming')">Upcoming</button>
+    <button id="cal-btn-past" class="tab-btn" onclick="switchCalView('past')">Past</button>
+  </div>
   <div id="calendar-grid"></div>
 </main>
 
@@ -1035,6 +1042,112 @@
     </div>
     <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Pending approval before they appear on the leaderboard. Use Approve / Reject to manage.</div>
     <div id="sheet-submissions"></div>
+
+    <div class="section-head" style="margin-top:3rem;">
+      <div class="section-title">Add Event</div>
+      <div class="section-rule"></div>
+    </div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Add a completed event and all PSSN results directly to the database. This will appear in the stats immediately.</div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;max-width:600px;">
+
+      <!-- Event details -->
+      <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Event Details</div>
+      <div style="display:grid;gap:12px;margin-bottom:1.5rem;">
+
+        <div>
+          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event name</label>
+          <input id="ev-name" type="text" placeholder="e.g. Sheffield GT" oninput="checkEventDuplicate(this.value)"
+            style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          <div id="ev-duplicate-warning" style="display:none;font-size:0.75rem;color:#f0c040;margin-top:5px;"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Date (e.g. Mar 2026)</label>
+            <input id="ev-date" type="text" placeholder="Mar 2026"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Sort date (YYYYMMDD)</label>
+            <input id="ev-sortdate" type="number" placeholder="20260328"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Format</label>
+            <select id="ev-format"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select...</option>
+              <option value="GT">GT</option>
+              <option value="RTT">RTT</option>
+              <option value="Teams">Teams / ITT</option>
+              <option value="Club">Club Event</option>
+              <option value="Championship">Championship</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Edition</label>
+            <select id="ev-edition"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="10">10th Edition</option>
+              <option value="11">11th Edition</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Total players</label>
+            <input id="ev-total-players" type="number" min="1" placeholder="e.g. 180"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Total teams</label>
+            <input id="ev-total-teams" type="number" min="0" placeholder="Teams only" value="0"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">BCP URL</label>
+            <input id="ev-bcp-url" type="text" placeholder="Optional"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Results -->
+      <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;padding-top:1rem;border-top:1px solid var(--border);">PSSN Results</div>
+      <div id="ev-results-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+      <button onclick="addResultRow()"
+        style="width:100%;padding:8px;background:transparent;border:1px dashed var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;transition:all 0.15s;"
+        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+        + Add player result
+      </button>
+
+      <!-- Submit -->
+      <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
+        <button onclick="submitEvent()"
+          style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;transition:opacity 0.15s;"
+          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+          Save Event to Database
+        </button>
+        <div id="ev-message" style="margin-top:8px;font-size:0.82rem;display:none;"></div>
+      </div>
+
+    </div>
+
+    <!-- Existing DB events -->
+    <div class="section-head" style="margin-top:2rem;">
+      <div class="section-title">Events in Database</div>
+      <div class="section-rule"></div>
+    </div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Events added via this form. Click Delete to remove.</div>
+    <div id="ev-db-list"></div>
+
   </div>
 
 </main>
@@ -1067,50 +1180,93 @@ let ACTIVE_EDITION = D.currentEdition || 10;
 // ── approved submissions merged into events ──
 async function loadApprovedSubmissions() {
   try {
+    // load approved result submissions
     const res = await fetch('/api/submissions');
-    const contentType = res.headers.get('content-type') || '';
-    if (!res.ok || !contentType.includes('application/json')) {
-      console.warn('Submissions API returned non-JSON response');
-      return;
-    }
-    const data = await res.json();
-    if (!data.submissions || !data.submissions.length) return;
-    data.submissions.forEach(sub => {
-      // find existing event or create a virtual one
-      let ev = D.events.find(e =>
-        e.name.toLowerCase() === sub.event_name.toLowerCase() &&
-        e.format === sub.event_format
-      );
-      if (!ev) {
-        ev = {
-          name: sub.event_name,
-          date: new Date(sub.submitted_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
-          format: sub.event_format,
-          edition: ACTIVE_EDITION,
-          totalPlayers: sub.total_players || 0,
-          bcpUrl: '',
-          results: [],
-          _fromSubmission: true
-        };
-        D.events.push(ev);
-      }
-      // avoid duplicates — don't add if player already has result in this event
-      const exists = ev.results.some(r => r.player === sub.player_name);
-      if (!exists) {
-        ev.results.push({
-          player: sub.player_name,
-          faction: sub.faction,
-          placing: sub.place || 0,
-          w: sub.wins || 0,
-          l: sub.losses || 0,
-          d: sub.draws || 0,
-          subteam: sub.subteam || null,
-          _fromSubmission: true
+    const ct = res.headers.get('content-type') || '';
+    if (res.ok && ct.includes('application/json')) {
+      const data = await res.json();
+      if (data.submissions && data.submissions.length) {
+        data.submissions.forEach(sub => {
+          let ev = D.events.find(e =>
+            e.name.toLowerCase() === sub.event_name.toLowerCase() &&
+            e.format === sub.event_format
+          );
+          if (!ev) {
+            ev = {
+              name: sub.event_name,
+              date: new Date(sub.submitted_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
+              format: sub.event_format,
+              edition: ACTIVE_EDITION,
+              totalPlayers: sub.total_players || 0,
+              bcpUrl: '',
+              results: [],
+              _fromSubmission: true
+            };
+            D.events.push(ev);
+          }
+          const exists = ev.results.some(r => r.player === sub.player_name);
+          if (!exists) {
+            ev.results.push({
+              player: sub.player_name,
+              faction: sub.faction,
+              placing: sub.place || 0,
+              w: sub.wins || 0,
+              l: sub.losses || 0,
+              d: sub.draws || 0,
+              subteam: sub.subteam || null,
+              _fromSubmission: true
+            });
+          }
         });
       }
-    });
+    }
   } catch(e) {
     console.warn('Could not load approved submissions:', e);
+  }
+
+  try {
+    // load events added via admin form
+    const evRes = await fetch('/api/events');
+    const evCt = evRes.headers.get('content-type') || '';
+    if (evRes.ok && evCt.includes('application/json')) {
+      const evData = await evRes.json();
+      if (evData.events && evData.events.length) {
+        evData.events.forEach(dbEv => {
+          // skip if event already exists in JSON data
+          const exists = D.events.find(e =>
+            e.name.toLowerCase() === dbEv.name.toLowerCase() &&
+            e.format === dbEv.format
+          );
+          if (!exists) {
+            D.events.push({
+              name: dbEv.name,
+              date: dbEv.event_date,
+              sortDate: dbEv.sort_date,
+              format: dbEv.format,
+              edition: dbEv.edition || 10,
+              totalPlayers: dbEv.total_players || 0,
+              totalTeams: dbEv.total_teams || 0,
+              bcpUrl: dbEv.bcp_url || '',
+              results: (dbEv.results || []).map(r => ({
+                player: r.player_name,
+                faction: r.faction,
+                placing: r.placing || 0,
+                w: r.wins || 0,
+                l: r.losses || 0,
+                d: r.draws || 0,
+                subteam: r.subteam || null,
+                shadow: r.shadow || false,
+                dropped: r.dropped || false,
+                _fromDb: true
+              })),
+              _fromDb: true
+            });
+          }
+        });
+      }
+    }
+  } catch(e) {
+    console.warn('Could not load db events:', e);
   }
 }
 
@@ -1864,6 +2020,7 @@ function checkPin(val) {
       });
     }
     loadSheetSubmissions();
+    loadDbEvents();
   } else {
     document.getElementById('pin-error').style.display = 'block';
     document.getElementById('pin-input').value = '';
@@ -1962,6 +2119,15 @@ function getTodaySortDate() {
   return n.getFullYear()*10000 + (n.getMonth()+1)*100 + n.getDate();
 }
 
+let calView = 'upcoming';
+
+function switchCalView(view) {
+  calView = view;
+  document.getElementById('cal-btn-upcoming').classList.toggle('active', view === 'upcoming');
+  document.getElementById('cal-btn-past').classList.toggle('active', view === 'past');
+  renderCalendar();
+}
+
 function renderCalendar() {
   const el = document.getElementById('calendar-grid');
   el.innerHTML = '';
@@ -1970,9 +2136,19 @@ function renderCalendar() {
   const typeColor = { GT: 'var(--accent)', Teams: 'var(--draw)', RTT: 'var(--win)' };
   const typeBg    = { GT: 'var(--accent-bg)', Teams: 'var(--draw-bg)', RTT: 'var(--win-bg)' };
 
-  // group by year-month
+  // split and sort
+  let events = calView === 'upcoming'
+    ? CALENDAR.filter(ev => ev.sortDate >= TODAY).sort((a,b) => a.sortDate - b.sortDate)
+    : CALENDAR.filter(ev => ev.sortDate < TODAY).sort((a,b) => b.sortDate - a.sortDate);
+
+  if (!events.length) {
+    el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No ${calView} events.</div>`;
+    return;
+  }
+
+  // group by month
   const groups = {};
-  CALENDAR.forEach(ev => {
+  events.forEach(ev => {
     const yr = Math.floor(ev.sortDate / 10000);
     const mo = Math.floor((ev.sortDate % 10000) / 100);
     const key = `${yr}-${String(mo).padStart(2,'0')}`;
@@ -1988,18 +2164,16 @@ function renderCalendar() {
 
     g.events.forEach(ev => {
       const isPast = ev.sortDate < TODAY;
-      const isFuture = ev.sortDate > TODAY;
       const attended = ev.attended;
-
       const borderCol = attended ? 'var(--accent)' : 'var(--border)';
       const borderW   = attended ? '2px' : '1px';
       const opacity   = isPast && !attended ? '0.45' : '1';
 
       const statusTag = attended
         ? `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--accent-bg);color:var(--accent);letter-spacing:0.04em;">PSSN attended</span>`
-        : isFuture
-          ? `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--surface2);color:var(--muted);letter-spacing:0.04em;">Upcoming</span>`
-          : `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--surface2);color:var(--muted);letter-spacing:0.04em;">Past</span>`;
+        : isPast
+          ? `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--surface2);color:var(--muted);letter-spacing:0.04em;">Past</span>`
+          : `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--surface2);color:var(--muted);letter-spacing:0.04em;">Upcoming</span>`;
 
       const typeTag = `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:${typeBg[ev.type] || 'var(--surface2)'};color:${typeColor[ev.type] || 'var(--muted)'};">${ev.type}</span>`;
 
@@ -2731,7 +2905,204 @@ function buildMilestones() {
   el.innerHTML = rows || '<div style="font-size:0.85rem;color:var(--muted);">No data yet.</div>';
 }
 
-// ── most played faction helper ──
+// ── event entry ──
+const ALL_FACTIONS = [
+  'Adepta Sororitas','Adeptus Custodes','Adeptus Mechanicus','Aeldari',
+  'Astra Militarum','Black Templars','Blood Angels','Chaos Daemons',
+  'Chaos Knights','Chaos Space Marines','Dark Angels','Death Guard',
+  'Deathwatch','Drukhari','Emperor\'s Children','Genestealer Cult',
+  'Grey Knights','Imperial Knights','Iron Hands','Leagues of Votann',
+  'Necrons','Orks','Raven Guard','Salamanders','Space Marines',
+  'Space Wolves','T\'au Empire','Thousand Sons','Tyranids',
+  'Ultramarines','White Scars','World Eaters'
+].sort();
+
+let evResultRows = [];
+let dbEvents = [];
+
+async function loadDbEvents() {
+  try {
+    const res = await fetch(`${API}/events`);
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) return;
+    const data = await res.json();
+    dbEvents = data.events || [];
+    renderDbEvents();
+  } catch(e) { console.warn('Could not load db events', e); }
+}
+
+function checkEventDuplicate(name) {
+  const warn = document.getElementById('ev-duplicate-warning');
+  if (!name.trim() || !dbEvents.length) { warn.style.display = 'none'; return; }
+  const match = dbEvents.find(e => e.name.toLowerCase() === name.toLowerCase().trim());
+  if (match) {
+    warn.style.display = 'block';
+    warn.textContent = `⚠️ An event called "${match.name}" (${match.event_date}) already exists in the database. Add another only if this is a genuinely different event.`;
+  } else {
+    warn.style.display = 'none';
+  }
+}
+
+function factionOptions() {
+  return ALL_FACTIONS.map(f => `<option value="${f}">${f}</option>`).join('');
+}
+
+function playerOptions() {
+  return D.players.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+}
+
+function addResultRow() {
+  const id = Date.now();
+  evResultRows.push(id);
+  const list = document.getElementById('ev-results-list');
+  const div = document.createElement('div');
+  div.id = `row-${id}`;
+  div.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;position:relative;';
+  div.innerHTML = `
+    <button onclick="removeResultRow(${id})" style="position:absolute;top:6px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1;">✕</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div>
+        <label style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">Player</label>
+        <select id="row-${id}-player" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
+          <option value="">Select player...</option>
+          ${playerOptions()}
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">Faction</label>
+        <select id="row-${id}-faction" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
+          <option value="">Select faction...</option>
+          ${factionOptions()}
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div>
+        <label style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">Placing</label>
+        <input id="row-${id}-placing" type="number" min="1" placeholder="1" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+      </div>
+      <div>
+        <label style="font-size:0.65rem;color:var(--win);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">W</label>
+        <input id="row-${id}-w" type="number" min="0" value="0" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+      </div>
+      <div>
+        <label style="font-size:0.65rem;color:var(--loss);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">L</label>
+        <input id="row-${id}-l" type="number" min="0" value="0" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+      </div>
+      <div>
+        <label style="font-size:0.65rem;color:var(--draw);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">D</label>
+        <input id="row-${id}-d" type="number" min="0" value="0" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+      </div>
+      <div>
+        <label style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">Shadow?</label>
+        <select id="row-${id}-shadow" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
+          <option value="false">No</option>
+          <option value="true">Yes</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <label style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">Sub-team (Teams events only)</label>
+      <input id="row-${id}-subteam" type="text" placeholder="e.g. The Sh[a]meful Suspects" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+    </div>`;
+  list.appendChild(div);
+}
+
+function removeResultRow(id) {
+  evResultRows = evResultRows.filter(r => r !== id);
+  const el = document.getElementById(`row-${id}`);
+  if (el) el.remove();
+}
+
+async function submitEvent() {
+  const msg = document.getElementById('ev-message');
+  const name = document.getElementById('ev-name').value.trim();
+  const event_date = document.getElementById('ev-date').value.trim();
+  const sort_date = parseInt(document.getElementById('ev-sortdate').value) || 0;
+  const format = document.getElementById('ev-format').value;
+  const edition = parseInt(document.getElementById('ev-edition').value) || 10;
+  const total_players = parseInt(document.getElementById('ev-total-players').value) || 0;
+  const total_teams = parseInt(document.getElementById('ev-total-teams').value) || 0;
+  const bcp_url = document.getElementById('ev-bcp-url').value.trim();
+
+  if (!name || !event_date || !sort_date || !format) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Please fill in event name, date, sort date and format.';
+    return;
+  }
+
+  const results = evResultRows.map(id => ({
+    player_name: document.getElementById(`row-${id}-player`)?.value,
+    faction: document.getElementById(`row-${id}-faction`)?.value,
+    placing: parseInt(document.getElementById(`row-${id}-placing`)?.value) || 0,
+    wins: parseInt(document.getElementById(`row-${id}-w`)?.value) || 0,
+    losses: parseInt(document.getElementById(`row-${id}-l`)?.value) || 0,
+    draws: parseInt(document.getElementById(`row-${id}-d`)?.value) || 0,
+    shadow: document.getElementById(`row-${id}-shadow`)?.value === 'true',
+    subteam: document.getElementById(`row-${id}-subteam`)?.value.trim() || null
+  })).filter(r => r.player_name && r.faction);
+
+  msg.style.display = 'block'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Saving event...';
+
+  try {
+    const res = await fetch(`${API}/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: '1719', event: { name, event_date, sort_date, format, edition, total_players, total_teams, bcp_url }, results })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.style.color = 'var(--win)';
+      msg.textContent = `✓ Event saved with ${results.length} result${results.length !== 1 ? 's' : ''}. Reload the page to see it in the stats.`;
+      // clear form
+      ['ev-name','ev-date','ev-sortdate','ev-bcp-url'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('ev-total-players').value = '';
+      document.getElementById('ev-total-teams').value = '0';
+      document.getElementById('ev-format').value = '';
+      document.getElementById('ev-results-list').innerHTML = '';
+      evResultRows = [];
+      document.getElementById('ev-duplicate-warning').style.display = 'none';
+      await loadDbEvents();
+    } else {
+      msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown error');
+    }
+  } catch(e) {
+    msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error — try again.';
+  }
+}
+
+async function deleteDbEvent(id) {
+  if (!confirm('Delete this event and all its results? This cannot be undone.')) return;
+  try {
+    const res = await fetch(`${API}/events`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: '1719', eventId: id })
+    });
+    const data = await res.json();
+    if (data.success) await loadDbEvents();
+  } catch(e) { console.error('Delete failed', e); }
+}
+
+function renderDbEvents() {
+  const el = document.getElementById('ev-db-list');
+  if (!el) return;
+  if (!dbEvents.length) {
+    el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">No events in database yet.</div>`;
+    return;
+  }
+  el.innerHTML = dbEvents.map(ev => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div>
+        <div style="font-size:0.88rem;color:var(--text);">${ev.name}</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">${ev.event_date} · ${ev.format} · ${ev.results.length} result${ev.results.length !== 1 ? 's' : ''}</div>
+      </div>
+      <button onclick="deleteDbEvent(${ev.id})" style="font-size:0.72rem;padding:4px 10px;background:var(--loss-bg);border:1px solid var(--loss);border-radius:3px;color:var(--loss);cursor:pointer;flex-shrink:0;">Delete</button>
+    </div>`).join('');
+}
 function mostPlayedFaction(name) {
   const counts = {};
   getActiveEvents().forEach(ev => {
