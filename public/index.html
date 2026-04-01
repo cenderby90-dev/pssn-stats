@@ -1957,11 +1957,15 @@ const CALENDAR = [
   { name: "Bedfordshire Super Major", dates: "5–6 Dec 2026", type: "GT",   attended: false, sortDate: 20261205 },
 ];
 
-const TODAY = 20260331;
+function getTodaySortDate() {
+  const n = new Date(); n.setHours(0,0,0,0);
+  return n.getFullYear()*10000 + (n.getMonth()+1)*100 + n.getDate();
+}
 
 function renderCalendar() {
   const el = document.getElementById('calendar-grid');
   el.innerHTML = '';
+  const TODAY = getTodaySortDate();
 
   const typeColor = { GT: 'var(--accent)', Teams: 'var(--draw)', RTT: 'var(--win)' };
   const typeBg    = { GT: 'var(--accent-bg)', Teams: 'var(--draw-bg)', RTT: 'var(--win-bg)' };
@@ -2029,11 +2033,9 @@ function renderCountdown() {
   if (!el) return;
   const today = new Date();
   today.setHours(0,0,0,0);
+  const todaySortDate = getTodaySortDate();
   const upcoming = CALENDAR.filter(ev => {
-    const y = Math.floor(ev.sortDate/10000);
-    const mo = Math.floor((ev.sortDate%10000)/100)-1;
-    const d = ev.sortDate%100;
-    return new Date(y,mo,d) >= today;
+    return ev.sortDate >= todaySortDate;
   }).sort((a,b) => a.sortDate - b.sortDate);
 
   if (!upcoming.length) { el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">No upcoming events found.</div>`; return; }
@@ -2727,41 +2729,6 @@ function buildMilestones() {
   }).filter(Boolean).join('');
 
   el.innerHTML = rows || '<div style="font-size:0.85rem;color:var(--muted);">No data yet.</div>';
-}
-
-function buildArchive() {
-  const el = document.getElementById('archive-grid');
-  if (!el) return;
-  const archive = D.awardsArchive || [];
-  if (!archive.length) {
-    el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No archived seasons yet. When a season ends, save the awards to the <code style="font-family:monospace;background:var(--surface2);padding:1px 5px;border-radius:3px;">awardsArchive</code> array in the JSON.</div>`;
-    return;
-  }
-
-  el.innerHTML = archive.map((season, si) => {
-    const groupId = `archive-season-${si}`;
-    const awardCards = season.awards.map(a => `
-      <div class="highlight-card">
-        <div style="font-size:1.5rem;margin-bottom:4px;">${a.icon}</div>
-        <div class="highlight-label">${a.title}</div>
-        <div class="highlight-name" style="cursor:pointer;" onclick="openPlayerPanel('${a.winner}');switchTab('stats');">${a.winner}</div>
-        <div class="highlight-detail">${a.detail}</div>
-      </div>`).join('');
-
-    return `
-      <div class="fmt-group" style="margin-bottom:10px;">
-        <div class="fmt-group-head" onclick="toggleFmtGroup('${groupId}')">
-          <div>
-            <span class="fmt-group-title">${season.label}</span>
-            <span class="fmt-group-meta" style="margin-left:12px;">${season.awards.length} awards</span>
-          </div>
-          <span id="${groupId}-arrow" style="color:var(--muted);font-size:0.8rem;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
-        </div>
-        <div id="${groupId}" class="fmt-group-body" style="display:none;padding:1rem;">
-          <div class="highlights-grid">${awardCards}</div>
-        </div>
-      </div>`;
-  }).join('');
 }
 
 // ── most played faction helper ──
