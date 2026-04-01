@@ -971,19 +971,73 @@
       <div class="section-title">Submit a result</div>
       <div class="section-rule"></div>
     </div>
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Fill in your result below. It will appear on the stats page after the next page load once approved. If the form doesn't load, <a href="https://docs.google.com/forms/d/e/1FAIpQLSfLTPxtOKci_OHM9jEXva-ntWsTZwNmOw077AGXwRWBNjcclg/viewform" target="_blank" rel="noopener" style="color:var(--accent);">open it directly ↗</a></div>
-    <iframe
-      src="https://docs.google.com/forms/d/e/1FAIpQLSfLTPxtOKci_OHM9jEXva-ntWsTZwNmOw077AGXwRWBNjcclg/viewform?embedded=true"
-      width="100%" height="900" frameborder="0" marginheight="0" marginwidth="0"
-      style="border-radius:6px;background:var(--surface);">
-      Loading form…
-    </iframe>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Fill in your result below. It will appear on the stats page once approved.</div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;max-width:500px;">
+      <div style="display:grid;gap:14px;">
+        <div>
+          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your name</label>
+          <select id="sub-player" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+            <option value="">Select player...</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event name</label>
+          <input id="sub-event" type="text" placeholder="e.g. Sheffield GT" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+        </div>
+        <div>
+          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Format</label>
+          <select id="sub-format" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+            <option value="">Select format...</option>
+            <option value="GT">GT</option>
+            <option value="RTT">RTT</option>
+            <option value="Teams">Teams</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Faction played</label>
+          <input id="sub-faction" type="text" placeholder="e.g. Death Guard" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Placing</label>
+            <input id="sub-place" type="number" min="1" placeholder="e.g. 42" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Total players</label>
+            <input id="sub-total" type="number" min="1" placeholder="e.g. 180" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:0.75rem;color:var(--win);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Wins</label>
+            <input id="sub-wins" type="number" min="0" value="0" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div>
+            <label style="font-size:0.75rem;color:var(--loss);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Losses</label>
+            <input id="sub-losses" type="number" min="0" value="0" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div>
+            <label style="font-size:0.75rem;color:var(--draw);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Draws</label>
+            <input id="sub-draws" type="number" min="0" value="0" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+        </div>
+        <div>
+          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Sub-team (Teams events only)</label>
+          <input id="sub-subteam" type="text" placeholder="e.g. The Sh[a]meful Suspects" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+        </div>
+        <div>
+          <button onclick="submitResult()" style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;transition:opacity 0.15s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Submit Result</button>
+          <div id="sub-message" style="margin-top:8px;font-size:0.82rem;display:none;"></div>
+        </div>
+      </div>
+    </div>
 
     <div class="section-head" style="margin-top:2rem;">
       <div class="section-title">Recent submissions</div>
       <div class="section-rule"></div>
     </div>
-    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Submissions from the Google Sheet — pending approval before they appear on the leaderboard.</div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Pending approval before they appear on the leaderboard. Use Approve / Reject to manage.</div>
     <div id="sheet-submissions"></div>
   </div>
 
@@ -1745,11 +1799,75 @@ function checkPin(val) {
   if (val === '1719') {
     document.getElementById('pin-gate').style.display = 'none';
     document.getElementById('submit-form').style.display = 'block';
+    // populate player dropdown
+    const sel = document.getElementById('sub-player');
+    if (sel && sel.options.length === 1) {
+      D.players.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.name; opt.textContent = p.name;
+        sel.appendChild(opt);
+      });
+    }
     loadSheetSubmissions();
   } else {
     document.getElementById('pin-error').style.display = 'block';
     document.getElementById('pin-input').value = '';
     setTimeout(() => { document.getElementById('pin-error').style.display = 'none'; }, 2000);
+  }
+}
+
+async function submitResult() {
+  const msg = document.getElementById('sub-message');
+  const player_name  = document.getElementById('sub-player').value;
+  const event_name   = document.getElementById('sub-event').value.trim();
+  const event_format = document.getElementById('sub-format').value;
+  const faction      = document.getElementById('sub-faction').value.trim();
+  const place        = parseInt(document.getElementById('sub-place').value) || null;
+  const total_players= parseInt(document.getElementById('sub-total').value) || null;
+  const wins         = parseInt(document.getElementById('sub-wins').value) || 0;
+  const losses       = parseInt(document.getElementById('sub-losses').value) || 0;
+  const draws        = parseInt(document.getElementById('sub-draws').value) || 0;
+  const subteam      = document.getElementById('sub-subteam').value.trim() || null;
+
+  if (!player_name || !event_name || !event_format || !faction) {
+    msg.style.display = 'block';
+    msg.style.color = 'var(--loss)';
+    msg.textContent = 'Please fill in all required fields.';
+    return;
+  }
+
+  try {
+    msg.style.display = 'block';
+    msg.style.color = 'var(--muted)';
+    msg.textContent = 'Submitting...';
+
+    const res = await fetch(`${API}/submissions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ player_name, event_name, event_format, faction, place, total_players, wins, losses, draws, subteam })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.style.color = 'var(--win)';
+      msg.textContent = '✓ Submitted! Pending approval.';
+      document.getElementById('sub-player').value = '';
+      document.getElementById('sub-event').value = '';
+      document.getElementById('sub-format').value = '';
+      document.getElementById('sub-faction').value = '';
+      document.getElementById('sub-place').value = '';
+      document.getElementById('sub-total').value = '';
+      document.getElementById('sub-wins').value = '0';
+      document.getElementById('sub-losses').value = '0';
+      document.getElementById('sub-draws').value = '0';
+      document.getElementById('sub-subteam').value = '';
+      loadSheetSubmissions();
+    } else {
+      msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown error');
+    }
+  } catch(e) {
+    msg.style.color = 'var(--loss)';
+    msg.textContent = 'Failed to submit. Please try again.';
   }
 }
 
@@ -1934,9 +2052,28 @@ function checkWhosGoingPin(val) {
   }
 }
 
-function renderWhosGoing() {
+// ── who's going — API backed ──
+const API = '/api';
+let attendanceData = {};
+
+async function loadAttendance() {
+  try {
+    const res = await fetch(`${API}/attendance`);
+    const data = await res.json();
+    attendanceData = {};
+    data.attendance.forEach(row => {
+      attendanceData[`${row.player_name}_${row.event_sort_date}`] = row.status;
+    });
+  } catch(e) {
+    console.error('Failed to load attendance', e);
+  }
+}
+
+async function renderWhosGoing() {
   const el = document.getElementById('whos-going-grid');
   if (!el) return;
+  el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">Loading attendance...</div>`;
+  await loadAttendance();
   const today = 20260331;
   const upcoming = CALENDAR.filter(ev => ev.sortDate >= today).slice(0,6);
   const players = D.players.map(p => p.name).filter(Boolean).sort();
@@ -1952,8 +2089,8 @@ function renderWhosGoing() {
           <tr onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
             <td style="padding:7px 12px;border-bottom:1px solid var(--border);color:var(--text);">${name}</td>
             ${upcoming.map(ev=>{
-              const key=`going_${name.replace(/\s+/g,'_')}_${ev.sortDate}`;
-              const stored=localStorage.getItem(key);
+              const key=`${name}_${ev.sortDate}`;
+              const stored=attendanceData[key];
               const going=stored==='yes', maybe=stored==='maybe';
               return `<td style="text-align:center;padding:5px;border-bottom:1px solid var(--border);">
                 <div style="display:flex;gap:3px;justify-content:center;">
@@ -1966,14 +2103,30 @@ function renderWhosGoing() {
       </tbody>
     </table>
   </div>
-  <div style="font-size:0.75rem;color:var(--muted);margin-top:10px;">✓ = Going &nbsp;·&nbsp; ? = Maybe &nbsp;·&nbsp; Saved in this browser only.</div>`;
+  <div style="font-size:0.75rem;color:var(--muted);margin-top:10px;">✓ = Going &nbsp;·&nbsp; ? = Maybe &nbsp;·&nbsp; Shared across all devices.</div>`;
 }
 
-function setGoing(name, sortDate, status) {
-  const key = `going_${name.replace(/\s+/g,'_')}_${sortDate}`;
-  const current = localStorage.getItem(key);
-  if (current === status) localStorage.removeItem(key); else localStorage.setItem(key, status);
-  renderWhosGoing();
+async function setGoing(name, sortDate, status) {
+  const key = `${name}_${sortDate}`;
+  const current = attendanceData[key];
+  try {
+    if (current === status) {
+      await fetch(`${API}/attendance`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ player_name: name, event_sort_date: sortDate })
+      });
+    } else {
+      await fetch(`${API}/attendance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ player_name: name, event_sort_date: sortDate, status })
+      });
+    }
+    await renderWhosGoing();
+  } catch(e) {
+    console.error('Failed to update attendance', e);
+  }
 }
 
 const SHEET_ID = '1NF_j4uIDAWOhzNB8dRsbAUpBg2P09Vs9kc-o3ngBMUA';
@@ -1982,50 +2135,55 @@ async function loadSheetSubmissions() {
   const el = document.getElementById('sheet-submissions');
   el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">Loading submissions…</div>`;
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
-    const res = await fetch(url);
-    const text = await res.text();
-    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
-    const rows = json.table.rows;
+    const res = await fetch(`${API}/submissions?pin=1719`);
+    const data = await res.json();
+    const rows = data.submissions;
     if (!rows || !rows.length) {
       el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">No submissions yet.</div>`;
       return;
     }
-    const cols = ['Timestamp','Name','Event','Format','Faction','Placing','Total','W','L','D','Sub-team'];
     let html = `<table class="event-table">
       <thead><tr>
-        <th>When</th><th>Player</th><th>Event</th><th>Format</th><th>Faction</th><th>Placing</th><th style="text-align:right">W/L/D</th>
+        <th>When</th><th>Player</th><th>Event</th><th>Format</th><th>Faction</th><th>Placing</th><th style="text-align:right">W/L/D</th><th>Approved</th>
       </tr></thead><tbody>`;
     rows.forEach(row => {
-      const c = row.c;
-      const ts    = c[0]?.v ? new Date(c[0].v).toLocaleDateString('en-GB') : '—';
-      const name  = c[1]?.v || '—';
-      const event = c[2]?.v || '—';
-      const fmt   = c[3]?.v || '—';
-      const fac   = c[4]?.v || '—';
-      const place = c[5]?.v || '—';
-      const total = c[6]?.v || '—';
-      const w     = c[7]?.v ?? '—';
-      const l     = c[8]?.v ?? '—';
-      const d     = c[9]?.v ?? '—';
+      const ts    = row.submitted_at ? new Date(row.submitted_at).toLocaleDateString('en-GB') : '—';
+      const approved = row.approved
+        ? `<span style="color:var(--win);font-size:0.75rem;">✓ Yes</span>`
+        : `<button onclick="approveSubmission(${row.id},true)" style="font-size:0.72rem;padding:2px 8px;background:var(--win-bg);border:1px solid var(--win);border-radius:3px;color:var(--win);cursor:pointer;">Approve</button>
+           <button onclick="approveSubmission(${row.id},false)" style="font-size:0.72rem;padding:2px 8px;background:var(--loss-bg);border:1px solid var(--loss);border-radius:3px;color:var(--loss);cursor:pointer;margin-left:4px;">Reject</button>`;
       html += `<tr>
         <td style="font-size:0.75rem;color:var(--muted);">${ts}</td>
-        <td class="player-cell">${name}</td>
-        <td style="font-size:0.78rem;color:var(--muted);">${event}</td>
-        <td><span class="format-pill">${fmt}</span></td>
-        <td style="font-size:0.78rem;color:var(--muted);">${fac}</td>
-        <td style="font-size:0.82rem;">${place} <span style="font-size:0.7rem;color:var(--muted);">/ ${total}</span></td>
+        <td class="player-cell">${row.player_name}</td>
+        <td style="font-size:0.78rem;color:var(--muted);">${row.event_name}</td>
+        <td><span class="format-pill">${row.event_format}</span></td>
+        <td style="font-size:0.78rem;color:var(--muted);">${row.faction}</td>
+        <td style="font-size:0.82rem;">${row.place || '—'} <span style="font-size:0.7rem;color:var(--muted);">/ ${row.total_players || '—'}</span></td>
         <td class="wld-cell">
-          <span class="rec-badge rec-w">${w}W</span>
-          <span class="rec-badge rec-l">${l}L</span>
-          ${d !== '—' && d > 0 ? `<span class="rec-badge rec-d">${d}D</span>` : ''}
+          <span class="rec-badge rec-w">${row.wins}W</span>
+          <span class="rec-badge rec-l">${row.losses}L</span>
+          ${row.draws > 0 ? `<span class="rec-badge rec-d">${row.draws}D</span>` : ''}
         </td>
+        <td style="font-size:0.75rem;">${approved}</td>
       </tr>`;
     });
     html += `</tbody></table>`;
     el.innerHTML = html;
   } catch(e) {
-    el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">Could not load submissions — make sure the sheet is set to "Anyone with link can view".</div>`;
+    el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">Could not load submissions.</div>`;
+  }
+}
+
+async function approveSubmission(id, approved) {
+  try {
+    await fetch(`${API}/submissions`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: '1719', id, approved })
+    });
+    loadSheetSubmissions();
+  } catch(e) {
+    console.error('Failed to update submission', e);
   }
 }
 
