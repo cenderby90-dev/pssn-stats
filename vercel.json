@@ -8,6 +8,7 @@
     { "src": "/api/attendance", "dest": "/api/attendance.js" },
     { "src": "/api/submissions", "dest": "/api/submissions.js" },
     { "src": "/api/players", "dest": "/api/players.js" },
+    { "src": "/api/awards", "dest": "/api/awards.js" },
     { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
