@@ -2509,44 +2509,47 @@ async function loadLeagueData() {
       return;
     }
     leagueData = await res.json();
-
-    // set title
-    if (leagueData.season) {
-      document.getElementById('league-title').textContent = `PSSN League — ${leagueData.season.name}`;
-    }
-
-    // build pod tab bar
-    const bar = document.getElementById('pod-tab-bar');
-    bar.innerHTML = '';
-    if (leagueData.pods) {
-      leagueData.pods.forEach((pod, i) => {
-        const btn = document.createElement('button');
-        btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
-        btn.textContent = pod.name;
-        btn.onclick = () => switchPod(i);
-        btn.id = `pod-btn-${i}`;
-        bar.appendChild(btn);
-      });
-    }
-    // playoffs tab
-    const playoffBtn = document.createElement('button');
-    playoffBtn.className = 'tab-btn';
-    playoffBtn.textContent = '🏆 Playoffs';
-    playoffBtn.id = `pod-btn-playoffs`;
-    playoffBtn.onclick = () => switchPod('playoffs');
-    bar.appendChild(playoffBtn);
-
+    if (leagueData.season) document.getElementById('league-title').textContent = `PSSN League — ${leagueData.season.name}`;
+    buildPodTabBar();
   } catch(e) {
     console.warn('League load error:', e);
     document.getElementById('league-content').innerHTML = '<div style="font-size:0.85rem;color:var(--muted);">Could not load league data.</div>';
   }
 }
 
+function buildPodTabBar() {
+  const bar = document.getElementById('pod-tab-bar');
+  bar.innerHTML = '';
+  (leagueData.pods || []).forEach((pod, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = pod.name;
+    btn.onclick = () => switchPod(i);
+    btn.id = `pod-btn-${i}`;
+    bar.appendChild(btn);
+  });
+  const playoffBtn = document.createElement('button');
+  playoffBtn.className = 'tab-btn';
+  playoffBtn.textContent = '🏆 Playoffs';
+  playoffBtn.id = 'pod-btn-playoffs';
+  playoffBtn.onclick = () => switchPod('playoffs');
+  bar.appendChild(playoffBtn);
+
+  // Archive tab if any
+  if ((leagueData.archive || []).length) {
+    const archBtn = document.createElement('button');
+    archBtn.className = 'tab-btn';
+    archBtn.textContent = '📋 Archive';
+    archBtn.id = 'pod-btn-archive';
+    archBtn.onclick = () => switchPod('archive');
+    bar.appendChild(archBtn);
+  }
+}
+
 function switchPod(idx) {
   activePod = idx;
   document.querySelectorAll('#pod-tab-bar .tab-btn').forEach(b => b.classList.remove('active'));
-  const btnId = idx === 'playoffs' ? 'pod-btn-playoffs' : `pod-btn-${idx}`;
-  const btn = document.getElementById(btnId);
+  const btn = document.getElementById(idx === 'playoffs' ? 'pod-btn-playoffs' : idx === 'archive' ? 'pod-btn-archive' : `pod-btn-${idx}`);
   if (btn) btn.classList.add('active');
   renderPod();
 }
@@ -2555,37 +2558,29 @@ function renderPod() {
   const el = document.getElementById('league-content');
   if (!el || !leagueData) return;
   if (activePod === 'playoffs') { renderPlayoffs(el); return; }
+  if (activePod === 'archive') { renderArchive(el); return; }
 
   const pod = leagueData.pods?.[activePod];
   if (!pod) return;
 
-  // get players in this pod
-  const podPlayers = (leagueData.players || [])
-    .filter(p => p.pod_id === pod.id)
-    .map(p => p.player_name);
-
-  // get approved games for this pod
+  const podPlayers = (leagueData.players || []).filter(p => p.pod_id === pod.id).map(p => p.player_name);
   const podGames = (leagueData.games || []).filter(g => g.pod_id === pod.id);
 
-  // calculate standings
+  // Calculate standings
   const standings = {};
   podPlayers.forEach(name => { standings[name] = { name, played: 0, pts: 0, bp: 0 }; });
-
   podGames.forEach(g => {
     if (!standings[g.player1]) standings[g.player1] = { name: g.player1, played: 0, pts: 0, bp: 0 };
     if (!standings[g.player2]) standings[g.player2] = { name: g.player2, played: 0, pts: 0, bp: 0 };
-    const s1 = standings[g.player1];
-    const s2 = standings[g.player2];
-    s1.played++; s2.played++;
-    s1.bp += g.bp1; s2.bp += g.bp2;
-    if (g.bp1 > g.bp2) { s1.pts += 2; }
-    else if (g.bp2 > g.bp1) { s2.pts += 2; }
-    else { s1.pts += 1; s2.pts += 1; } // draw
+    standings[g.player1].played++; standings[g.player2].played++;
+    standings[g.player1].bp += g.bp1; standings[g.player2].bp += g.bp2;
+    if (g.bp1 > g.bp2) standings[g.player1].pts += 2;
+    else if (g.bp2 > g.bp1) standings[g.player2].pts += 2;
+    else { standings[g.player1].pts++; standings[g.player2].pts++; }
   });
-
   const sorted = Object.values(standings).sort((a,b) => b.pts - a.pts || b.bp - a.bp);
 
-  // build matrix
+  // Build matrix
   const matrix = {};
   podPlayers.forEach(p => { matrix[p] = {}; });
   podGames.forEach(g => {
@@ -2596,16 +2591,13 @@ function renderPod() {
   });
 
   const names = podPlayers;
-
   let html = `
     <div style="margin-bottom:2rem;">
       <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">${pod.name} Standings</div>
       <table class="event-table" style="width:100%;max-width:560px;">
         <thead><tr>
-          <th style="padding-left:1rem;">Pos</th>
-          <th>Player</th>
-          <th style="text-align:center;">Played</th>
-          <th style="text-align:center;">Points</th>
+          <th style="padding-left:1rem;">Pos</th><th>Player</th>
+          <th style="text-align:center;">Played</th><th style="text-align:center;">Points</th>
           <th style="text-align:right;padding-right:1rem;">Battle Pts</th>
         </tr></thead>
         <tbody>
@@ -2650,82 +2642,263 @@ function renderPod() {
         <span style="color:var(--win);">Green</span> = won &nbsp;·&nbsp; <span style="color:var(--loss);">Red</span> = lost &nbsp;·&nbsp; — = not yet played
       </div>
     </div>`;
-
   el.innerHTML = html;
 }
 
 function renderPlayoffs(el) {
-  const matchBox = (label, p1, p2, highlight) => `
-    <div style="background:${highlight?'var(--accent-bg)':'var(--surface)'};border:${highlight?'2px solid var(--accent-muted)':'1px solid var(--border)'};border-radius:4px;padding:8px 12px;min-height:58px;margin-bottom:6px;">
-      <div style="font-size:0.62rem;color:${highlight?'var(--accent)':'var(--muted)'};margin-bottom:5px;letter-spacing:0.08em;">${label}</div>
-      <div style="font-size:0.78rem;color:var(--faint);border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:4px;">${p1}</div>
-      <div style="font-size:0.78rem;color:var(--faint);">${p2}</div>
-    </div>`;
+  const bracket = leagueData.bracket || {};
+  const seedings = leagueData.seedings || {};
+  const season_id = leagueData.season?.id;
 
-  // get pod winners/runners-up from current data
-  const podResults = (leagueData.pods || []).map((pod, i) => {
-    const podPlayers = (leagueData.players || []).filter(p => p.pod_id === pod.id).map(p => p.player_name);
-    const podGames = (leagueData.games || []).filter(g => g.pod_id === pod.id);
-    const standings = {};
-    podPlayers.forEach(name => { standings[name] = { name, pts: 0, bp: 0 }; });
-    podGames.forEach(g => {
-      if (!standings[g.player1]) standings[g.player1] = { name: g.player1, pts: 0, bp: 0 };
-      if (!standings[g.player2]) standings[g.player2] = { name: g.player2, pts: 0, bp: 0 };
-      standings[g.player1].bp += g.bp1; standings[g.player2].bp += g.bp2;
-      if (g.bp1 > g.bp2) standings[g.player1].pts += 2;
-      else if (g.bp2 > g.bp1) standings[g.player2].pts += 2;
-      else { standings[g.player1].pts++; standings[g.player2].pts++; }
-    });
-    const sorted = Object.values(standings).sort((a,b) => b.pts - a.pts || b.bp - a.bp);
-    return { pod: pod.name, winner: sorted[0]?.name || 'TBD', runnerUp: sorted[1]?.name || 'TBD' };
-  });
+  const playerBox = (slot, label, isBye) => {
+    if (!slot) return `<div style="font-size:0.78rem;color:var(--faint);padding:4px 0;">TBD</div>`;
+    const name = slot.name || 'TBD';
+    const bp = slot.bp ? ` · ${slot.bp}bp` : '';
+    const pod = slot.pod ? ` <span style="font-size:0.65rem;color:var(--muted);">(${slot.pod})</span>` : '';
+    const byeBadge = isBye ? `<span style="font-size:0.6rem;padding:1px 4px;background:var(--accent-bg);color:var(--accent);border-radius:3px;margin-left:4px;">BYE</span>` : '';
+    return `<div style="font-size:0.82rem;color:var(--text);">${name}${pod}${byeBadge}<span style="font-size:0.7rem;color:var(--muted);">${bp}</span></div>`;
+  };
+
+  const matchCard = (key, round, num, byeSlots, label) => {
+    const m = bracket[key] || {};
+    const hasResult = m.winner;
+    const pending = (leagueData.pendingPlayoffs || []).find(p => p.round === round && p.match_number === num);
+    const isBye1 = byeSlots && byeSlots[0];
+    const isBye2 = byeSlots && byeSlots[1];
+
+    let scoreHtml = '';
+    if (hasResult) {
+      scoreHtml = `<div style="font-size:0.7rem;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">
+        <span style="color:var(--win);font-weight:500;">${m.winner}</span> won · ${m.bp1}–${m.bp2}
+      </div>`;
+    } else if (pending) {
+      scoreHtml = `<div style="font-size:0.7rem;color:#f0c040;margin-top:6px;">⏳ Pending approval</div>`;
+    }
+
+    const canSubmit = m.p1 && m.p2 && !hasResult && !pending;
+    const submitBtn = canSubmit ? `<button onclick="openPlayoffSubmit('${key}','${round}',${num},'${(m.p1?.name||'').replace(/'/g,"\\'")}','${(m.p2?.name||'').replace(/'/g,"\\'")}',${season_id})"
+      style="margin-top:8px;font-size:0.7rem;padding:3px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;width:100%;"
+      onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">+ Submit result</button>` : '';
+
+    return `<div style="background:${hasResult?'var(--surface2)':'var(--surface)'};border:1px solid ${hasResult?'var(--border)':'var(--border)'};border-radius:4px;padding:8px 10px;margin-bottom:6px;">
+      <div style="font-size:0.6rem;color:var(--muted);margin-bottom:4px;letter-spacing:0.08em;">${label}</div>
+      <div style="border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:4px;">${playerBox(m.p1, 'p1', isBye1)}</div>
+      ${playerBox(m.p2, 'p2', isBye2)}
+      ${scoreHtml}
+      ${submitBtn}
+    </div>`;
+  };
 
   el.innerHTML = `
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Pod winners receive a bye to the semi-finals. Pod runners-up enter at the quarter-final stage.</div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">
+      Seeded by battle points. Pod winners 1–4 receive byes to the Semi Finals. Pod winners 5–6 enter at Quarter Finals alongside all 6 runners-up.
+    </div>
+
+    <!-- Seedings summary -->
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;">
+      <div style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
+        <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Pod Winners</div>
+        ${(seedings.byeWinners||[]).concat(seedings.qfWinners||[]).map((w,i) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:0.8rem;">
+            <span style="color:${i<4?'var(--text)':'var(--muted)'};">${i+1}. ${w.name}</span>
+            <span style="font-size:0.7rem;color:var(--muted);">${w.bp}bp ${i<4?'<span style="color:var(--accent);">BYE</span>':'→ QF'}</span>
+          </div>`).join('')}
+      </div>
+      <div style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
+        <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Runners-Up</div>
+        ${(seedings.runnersUp||[]).map((r,i) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:0.8rem;">
+            <span style="color:var(--text);">${i+1}. ${r.name}</span>
+            <span style="font-size:0.7rem;color:var(--muted);">${r.bp}bp → QF${[1,2,2,3,3,1][i]||''}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Bracket -->
     <div style="overflow-x:auto;">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;min-width:600px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1rem;min-width:700px;">
+
         <div>
-          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);">Quarter Finals</div>
-          ${matchBox('QF 1', podResults[0]?.runnerUp || 'Pod 1 Runner-up', podResults[1]?.runnerUp || 'Pod 2 Runner-up', false)}
-          ${matchBox('QF 2', podResults[2]?.runnerUp || 'Pod 3 Runner-up', podResults[3]?.runnerUp || 'Pod 4 Runner-up', false)}
-          ${matchBox('QF 3', podResults[4]?.runnerUp || 'Pod 5 Runner-up', podResults[5]?.runnerUp || 'Pod 6 Runner-up', false)}
+          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">Quarter Finals</div>
+          ${matchCard('QF1','QF',1,null,'QF 1 · 1st vs 6th Runner-up')}
+          ${matchCard('QF2','QF',2,null,'QF 2 · 2nd vs 5th Runner-up')}
+          ${matchCard('QF3','QF',3,null,'QF 3 · 3rd vs 4th Runner-up')}
+          ${matchCard('QF4','QF',4,null,'QF 4 · 5th vs 6th Pod Winner')}
         </div>
+
         <div>
-          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);">Semi Finals</div>
-          ${matchBox('SF 1 — bye', podResults[0]?.winner || 'Pod 1 Winner', 'QF 1 Winner', false)}
-          ${matchBox('SF 2 — bye', podResults[2]?.winner || 'Pod 3 Winner', 'QF 2 Winner', false)}
-          ${matchBox('SF 3 — bye', podResults[4]?.winner || 'Pod 5 Winner', 'QF 3 Winner', false)}
+          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">Semi Finals</div>
+          ${matchCard('SF1','SF',1,[true,false],'SF 1 · 1st Winner (bye) vs QF1')}
+          ${matchCard('SF2','SF',2,[true,false],'SF 2 · 2nd Winner (bye) vs QF2')}
+          ${matchCard('SF3','SF',3,[true,false],'SF 3 · 3rd Winner (bye) vs QF3')}
+          ${matchCard('SF4','SF',4,[true,false],'SF 4 · 4th Winner (bye) vs QF4')}
         </div>
+
         <div>
-          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);">Final</div>
-          ${matchBox('🏆 GRAND FINAL', 'SF Winner', 'SF Winner', true)}
-          <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;text-align:center;">Champion crowned here</div>
+          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">Finals</div>
+          ${matchCard('F1','F',1,null,'Final 1 · SF1 vs SF2')}
+          ${matchCard('F2','F',2,null,'Final 2 · SF3 vs SF4')}
+        </div>
+
+        <div>
+          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);text-align:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--accent-muted);">🏆 Grand Final</div>
+          <div style="background:var(--accent-bg);border:2px solid var(--accent-muted);border-radius:6px;padding:1rem;text-align:center;">
+            ${matchCard('GF','GF',1,null,'Grand Final')}
+            ${bracket.GF?.winner ? `<div style="font-size:1.1rem;font-family:'Bebas Neue',sans-serif;color:var(--accent);margin-top:8px;">🏆 ${bracket.GF.winner}</div>` : ''}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Playoff result submission modal -->
+    <div id="playoff-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;max-width:400px;width:90%;margin:auto;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.06em;color:var(--text);margin-bottom:4px;" id="pm-title">Submit Result</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;" id="pm-subtitle"></div>
+        <div style="display:grid;gap:10px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <label id="pm-p1-label" style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;"></label>
+              <input id="pm-bp1" type="number" min="0" max="100" placeholder="BP"
+                style="width:100%;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:1rem;text-align:center;"/>
+            </div>
+            <div>
+              <label id="pm-p2-label" style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;"></label>
+              <input id="pm-bp2" type="number" min="0" max="100" placeholder="BP"
+                style="width:100%;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:1rem;text-align:center;"/>
+            </div>
+          </div>
+          <button onclick="submitPlayoffResult()"
+            style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;">
+            Submit Result
+          </button>
+          <button onclick="document.getElementById('playoff-modal').style.display='none'"
+            style="width:100%;padding:8px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.85rem;cursor:pointer;">
+            Cancel
+          </button>
+          <div id="pm-message" style="font-size:0.8rem;display:none;"></div>
         </div>
       </div>
     </div>`;
 }
 
-// ── admin league tools ──
-function buildLeagueAdmin(adminEl) {
-  if (!leagueData) return;
+let _pmData = {};
+function openPlayoffSubmit(key, round, num, p1, p2, seasonId) {
+  _pmData = { key, round, num, p1, p2, seasonId };
+  document.getElementById('pm-title').textContent = `Submit ${round}${num} Result`;
+  document.getElementById('pm-subtitle').textContent = `${p1} vs ${p2}`;
+  document.getElementById('pm-p1-label').textContent = p1;
+  document.getElementById('pm-p2-label').textContent = p2;
+  document.getElementById('pm-bp1').value = '';
+  document.getElementById('pm-bp2').value = '';
+  document.getElementById('pm-message').style.display = 'none';
+  document.getElementById('playoff-modal').style.display = 'flex';
+}
 
+async function submitPlayoffResult() {
+  const msg = document.getElementById('pm-message');
+  const bp1 = parseInt(document.getElementById('pm-bp1').value);
+  const bp2 = parseInt(document.getElementById('pm-bp2').value);
+  const { round, num, p1, p2, seasonId } = _pmData;
+
+  if (isNaN(bp1) || isNaN(bp2)) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Please enter both scores.'; return;
+  }
+  if (bp1 === bp2) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Playoff matches cannot be draws.'; return;
+  }
+
+  msg.style.display = 'block'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Submitting...';
+
+  try {
+    const res = await fetch(`${API}/league`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pin: '1719',
+        type: 'playoff',
+        season_id: seasonId,
+        round, match_number: num,
+        player1: p1, player2: p2,
+        bp1, bp2,
+        winner: bp1 > bp2 ? p1 : p2
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.style.color = data.approved ? 'var(--win)' : '#f0c040';
+      msg.textContent = data.approved ? '✓ Result saved!' : '⏳ Submitted — pending admin approval.';
+      leagueLoaded = false;
+      setTimeout(async () => {
+        document.getElementById('playoff-modal').style.display = 'none';
+        await loadLeagueData();
+        renderPod();
+      }, 1500);
+    } else {
+      msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown');
+    }
+  } catch(e) {
+    msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error.';
+  }
+}
+
+function renderArchive(el) {
+  const archive = leagueData.archive || [];
+  if (!archive.length) { el.innerHTML = '<div style="font-size:0.85rem;color:var(--muted);">No archived seasons yet.</div>'; return; }
+
+  el.innerHTML = archive.map(a => {
+    const d = a.data || {};
+    const pods = d.pods || [];
+    return `
+      <div style="margin-bottom:2rem;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.06em;color:var(--text);margin-bottom:4px;">${a.label}</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-bottom:1rem;">Archived ${new Date(a.created_at).toLocaleDateString('en-GB',{month:'short',year:'numeric'})}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;">
+          ${pods.map(pod => `
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
+              <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">${pod.pod}</div>
+              ${(pod.standings||[]).map((p,i) => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:0.8rem;">
+                  <span style="color:${i<2?'var(--accent)':'var(--text)'};">${i+1}. ${p.name}</span>
+                  <span style="font-size:0.7rem;color:var(--muted);">${p.pts}pts · ${p.bp}bp</span>
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }).join('<hr style="border:none;border-top:1px solid var(--border);margin:2rem 0;">');
+}
+
+// ── admin league tools ──
+function buildLeagueAdmin() {
+  const container = document.getElementById('league-admin-section');
+  if (!container || !leagueData) return;
   const pending = leagueData.pending || [];
+  const pendingPlayoffs = leagueData.pendingPlayoffs || [];
   const pods = leagueData.pods || [];
-  const players = leagueData.players || [];
+  const season_id = leagueData.season?.id;
 
   let html = `
+    <!-- Add league game -->
     <div class="section-head" style="margin-top:2.5rem;">
       <div class="section-title">League — Add Game Result</div>
       <div class="section-rule"></div>
     </div>
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Add a completed league game directly. Goes live immediately.</div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Add a completed pod game. Goes live immediately as admin.</div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;max-width:500px;margin-bottom:1.5rem;">
       <div style="display:grid;gap:10px;">
         <div>
           <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Pod</label>
-          <select id="lg-pod" onchange="updateLeaguePlayerDropdowns()" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+          <select id="lg-pod" onchange="updateLeaguePlayerDropdowns()"
+            style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
             <option value="">Select pod...</option>
-            ${pods.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+            ${pods.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}
           </select>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -2745,32 +2918,35 @@ function buildLeagueAdmin(adminEl) {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div>
             <label style="font-size:0.72rem;color:var(--win);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Player 1 BP</label>
-            <input id="lg-bp1" type="number" min="0" max="100" placeholder="e.g. 82" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            <input id="lg-bp1" type="number" min="0" max="100" placeholder="e.g. 82"
+              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
           </div>
           <div>
             <label style="font-size:0.72rem;color:var(--win);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Player 2 BP</label>
-            <input id="lg-bp2" type="number" min="0" max="100" placeholder="e.g. 74" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            <input id="lg-bp2" type="number" min="0" max="100" placeholder="e.g. 74"
+              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
           </div>
         </div>
-        <button onclick="submitLeagueGame()" style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;">
+        <button onclick="submitLeagueGame()"
+          style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;">
           Save League Game
         </button>
         <div id="lg-message" style="font-size:0.82rem;display:none;"></div>
       </div>
     </div>`;
 
+  // Pending pod games
   if (pending.length) {
     html += `
       <div class="section-head" style="margin-top:1.5rem;">
-        <div class="section-title">Pending League Results</div>
+        <div class="section-title">Pending Pod Results</div>
         <div class="section-rule"></div>
       </div>
-      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Submitted by players, waiting for approval.</div>
-      ${pending.map(g => `
+      ${pending.map(g=>`
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div>
             <div style="font-size:0.88rem;color:var(--text);">${g.player1} vs ${g.player2}</div>
-            <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">BP: ${g.bp1} – ${g.bp2}</div>
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">BP: ${g.bp1}–${g.bp2}</div>
           </div>
           <div style="display:flex;gap:6px;">
             <button onclick="approveLeagueGame(${g.id},true)" style="font-size:0.72rem;padding:4px 10px;background:var(--win-bg);border:1px solid var(--win);border-radius:3px;color:var(--win);cursor:pointer;">✓ Approve</button>
@@ -2779,25 +2955,94 @@ function buildLeagueAdmin(adminEl) {
         </div>`).join('')}`;
   }
 
+  // Pending playoff results
+  if (pendingPlayoffs.length) {
+    html += `
+      <div class="section-head" style="margin-top:1.5rem;">
+        <div class="section-title">Pending Playoff Results</div>
+        <div class="section-rule"></div>
+      </div>
+      ${pendingPlayoffs.map(g=>`
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:0.72rem;color:var(--accent);margin-bottom:2px;">${g.round}${g.match_number}</div>
+            <div style="font-size:0.88rem;color:var(--text);">${g.player1} vs ${g.player2}</div>
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">BP: ${g.bp1}–${g.bp2} · Winner: <strong>${g.winner}</strong></div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="approvePlayoffGame(${g.id},true)" style="font-size:0.72rem;padding:4px 10px;background:var(--win-bg);border:1px solid var(--win);border-radius:3px;color:var(--win);cursor:pointer;">✓ Approve</button>
+            <button onclick="approvePlayoffGame(${g.id},false)" style="font-size:0.72rem;padding:4px 10px;background:var(--loss-bg);border:1px solid var(--loss);border-radius:3px;color:var(--loss);cursor:pointer;">✗ Reject</button>
+          </div>
+        </div>`).join('')}`;
+  }
+
+  // New season creator
   html += `
+    <div class="section-head" style="margin-top:2.5rem;">
+      <div class="section-title">New Season Setup</div>
+      <div class="section-rule"></div>
+    </div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">
+      Select players for the new season. Pods will be auto-generated with seeded random assignment — top performers from the current season are spread across pods.
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;max-width:600px;">
+      <div style="display:grid;gap:12px;">
+        <div>
+          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Season name</label>
+          <input id="ns-name" type="text" placeholder="e.g. Season 2"
+            style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Number of pods</label>
+          <select id="ns-num-pods"
+            style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+            ${[4,5,6,7,8].map(n=>`<option value="${n}"${n===6?' selected':''}>${n} pods</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px;">Select players</label>
+          <div id="ns-player-list" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:300px;overflow-y:auto;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;">
+            ${D.players.map(p=>`
+              <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text);padding:3px;cursor:pointer;">
+                <input type="checkbox" value="${p.name}" checked style="accent-color:var(--accent);"/>
+                ${p.name}
+              </label>`).join('')}
+          </div>
+        </div>
+        <button onclick="generateSeededPods()"
+          style="width:100%;padding:9px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;cursor:pointer;"
+          onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          🎲 Generate Seeded Pods
+        </button>
+        <div id="ns-pods-preview" style="display:none;"></div>
+        <button id="ns-create-btn" onclick="createNewSeason()" style="display:none;width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;">
+          Create Season
+        </button>
+        <div id="ns-message" style="font-size:0.82rem;display:none;"></div>
+      </div>
+    </div>
+
+    <!-- End of season -->
     <div class="section-head" style="margin-top:2.5rem;">
       <div class="section-title">End of Season</div>
       <div class="section-rule"></div>
     </div>
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Archive the current season and prepare for a new one. This cannot be undone.</div>
-    <button onclick="archiveLeagueSeason()" style="padding:9px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Archive the current season standings. This marks the season as inactive.</div>
+    <button onclick="archiveLeagueSeason()"
+      style="padding:9px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;"
+      onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
       💾 Archive Season &amp; Reset
     </button>
     <div id="lg-archive-message" style="font-size:0.82rem;display:none;margin-top:8px;"></div>`;
 
-  const container = document.getElementById('league-admin-section');
-  if (container) container.innerHTML = html;
+  container.innerHTML = html;
 }
 
 function updateLeaguePlayerDropdowns() {
   const podId = parseInt(document.getElementById('lg-pod').value);
   const podPlayers = (leagueData.players || []).filter(p => p.pod_id === podId).map(p => p.player_name);
-  const opts = `<option value="">Select player...</option>` + podPlayers.map(p => `<option value="${p}">${p}</option>`).join('');
+  const opts = `<option value="">Select player...</option>` + podPlayers.map(p=>`<option value="${p}">${p}</option>`).join('');
   document.getElementById('lg-p1').innerHTML = opts;
   document.getElementById('lg-p2').innerHTML = opts;
 }
@@ -2819,12 +3064,11 @@ async function submitLeagueGame() {
     msg.textContent = 'Players must be different.'; return;
   }
 
-  // use the admin PIN from the input field
   const adminPinEl = document.getElementById('admin-pin-input');
   const adminPin = adminPinEl ? adminPinEl.value : '';
   if (!adminPin) {
     msg.style.display = 'block'; msg.style.color = 'var(--loss)';
-    msg.textContent = 'Admin PIN not entered — scroll up and enter it first.'; return;
+    msg.textContent = 'Admin PIN not entered.'; return;
   }
 
   msg.style.display = 'block'; msg.style.color = 'var(--muted)';
@@ -2839,13 +3083,10 @@ async function submitLeagueGame() {
     const data = await res.json();
     if (data.success) {
       msg.style.color = 'var(--win)';
-      msg.textContent = data.approved
-        ? '✓ Game saved and live! Reload League tab to see updated standings.'
-        : '⚠️ Wrong admin PIN — game went to approval queue instead.';
+      msg.textContent = data.approved ? '✓ Game saved and live!' : '⚠️ Wrong PIN — went to queue.';
       document.getElementById('lg-bp1').value = '';
       document.getElementById('lg-bp2').value = '';
       leagueLoaded = false;
-      // refresh pending list
       await loadLeagueData();
       buildLeagueAdmin();
     } else {
@@ -2854,44 +3095,132 @@ async function submitLeagueGame() {
     }
   } catch(e) {
     msg.style.color = 'var(--loss)';
-    msg.textContent = 'Network error — try again.';
+    msg.textContent = 'Network error.';
   }
 }
 
 async function approveLeagueGame(gameId, approved) {
+  const adminPin = document.getElementById('admin-pin-input')?.value || '';
   try {
-    const adminPin = document.getElementById('admin-pin-input').value;
     const res = await fetch(`${API}/league`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pin: adminPin, gameId, approved })
     });
     const data = await res.json();
+    if (data.success) { leagueLoaded = false; await loadLeagueData(); buildLeagueAdmin(); }
+    else alert('Error: ' + (data.error || 'Unknown'));
+  } catch(e) { console.error(e); }
+}
+
+async function approvePlayoffGame(playoffId, approved) {
+  const adminPin = document.getElementById('admin-pin-input')?.value || '';
+  try {
+    const res = await fetch(`${API}/league`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: adminPin, playoffId, approved })
+    });
+    const data = await res.json();
+    if (data.success) { leagueLoaded = false; await loadLeagueData(); buildLeagueAdmin(); if (activePod === 'playoffs') renderPod(); }
+    else alert('Error: ' + (data.error || 'Unknown'));
+  } catch(e) { console.error(e); }
+}
+
+// ── new season pod generator ──
+let _generatedPods = null;
+
+function generateSeededPods() {
+  const numPods = parseInt(document.getElementById('ns-num-pods').value);
+  const selected = [...document.querySelectorAll('#ns-player-list input:checked')].map(c => c.value);
+  if (selected.length < numPods * 2) {
+    alert(`Need at least ${numPods * 2} players for ${numPods} pods.`); return;
+  }
+
+  // Seed by current season BP (higher BP = better seed)
+  const games = leagueData.games || [];
+  const bpMap = {};
+  selected.forEach(p => { bpMap[p] = 0; });
+  games.forEach(g => {
+    if (bpMap[g.player1] !== undefined) bpMap[g.player1] += g.bp1;
+    if (bpMap[g.player2] !== undefined) bpMap[g.player2] += g.bp2;
+  });
+
+  // Sort by BP descending — seeded players go first
+  const sorted = [...selected].sort((a, b) => (bpMap[b] || 0) - (bpMap[a] || 0));
+
+  // Snake draft: distribute seeds across pods
+  const pods = Array.from({ length: numPods }, (_, i) => ({ number: i + 1, name: `Pod ${i + 1}`, players: [] }));
+  sorted.forEach((player, i) => {
+    const round = Math.floor(i / numPods);
+    const podIdx = round % 2 === 0 ? i % numPods : numPods - 1 - (i % numPods);
+    pods[podIdx].players.push(player);
+  });
+
+  _generatedPods = pods;
+
+  const preview = document.getElementById('ns-pods-preview');
+  preview.style.display = 'block';
+  preview.innerHTML = `
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;">Preview — drag to rearrange before creating:</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">
+      ${pods.map((pod, pi) => `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:8px;">
+          <div style="font-size:0.7rem;font-weight:500;color:var(--accent);margin-bottom:6px;">Pod ${pod.number}</div>
+          ${pod.players.map((p, i) => `
+            <div style="font-size:0.8rem;color:var(--text);padding:2px 0;border-bottom:1px solid var(--border);">
+              <span style="color:var(--muted);margin-right:4px;">${i===0?'🌟':'·'}</span>${p}
+            </div>`).join('')}
+        </div>`).join('')}
+    </div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;">🌟 = top seed. Snake draft used — top performers spread across pods.</div>`;
+
+  document.getElementById('ns-create-btn').style.display = 'block';
+}
+
+async function createNewSeason() {
+  const msg = document.getElementById('ns-message');
+  const name = document.getElementById('ns-name').value.trim();
+  const adminPin = document.getElementById('admin-pin-input')?.value || '';
+
+  if (!name) { msg.style.display='block'; msg.style.color='var(--loss)'; msg.textContent='Enter a season name.'; return; }
+  if (!_generatedPods) { msg.style.display='block'; msg.style.color='var(--loss)'; msg.textContent='Generate pods first.'; return; }
+  if (!confirm(`Create "${name}" with ${_generatedPods.length} pods? This will deactivate the current season.`)) return;
+
+  msg.style.display = 'block'; msg.style.color = 'var(--muted)'; msg.textContent = 'Creating...';
+
+  try {
+    const res = await fetch(`${API}/league`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: adminPin, name, pods: _generatedPods })
+    });
+    const data = await res.json();
     if (data.success) {
+      msg.style.color = 'var(--win)';
+      msg.textContent = `✓ ${name} created! Reload to see the new season.`;
       leagueLoaded = false;
-      await loadLeagueData();
-      buildLeagueAdmin();
     } else {
-      alert('Error: ' + (data.error || 'Unknown'));
+      msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown');
     }
-  } catch(e) { console.error('Approve failed', e); }
+  } catch(e) { msg.style.color='var(--loss)'; msg.textContent='Network error.'; }
 }
 
 async function archiveLeagueSeason() {
-  const adminPin = document.getElementById('admin-pin-input').value;
+  const adminPin = document.getElementById('admin-pin-input')?.value || '';
   const msg = document.getElementById('lg-archive-message');
   const label = prompt('Enter archive label (e.g. "Season 1 — 2025/26"):');
   if (!label) return;
-  if (!confirm(`Archive "${label}" and reset the league? This cannot be undone.`)) return;
+  if (!confirm(`Archive "${label}" and mark season as inactive?`)) return;
 
-  // build snapshot from current data
   const snapshot = {
     season: leagueData.season,
     pods: (leagueData.pods || []).map(pod => {
       const podPlayers = (leagueData.players || []).filter(p => p.pod_id === pod.id).map(p => p.player_name);
       const podGames = (leagueData.games || []).filter(g => g.pod_id === pod.id);
       const standings = {};
-      podPlayers.forEach(name => { standings[name] = { name, pts: 0, bp: 0, played: 0 }; });
+      podPlayers.forEach(n => { standings[n] = { name: n, pts: 0, bp: 0, played: 0 }; });
       podGames.forEach(g => {
         if (!standings[g.player1]) standings[g.player1] = { name: g.player1, pts: 0, bp: 0, played: 0 };
         if (!standings[g.player2]) standings[g.player2] = { name: g.player2, pts: 0, bp: 0, played: 0 };
@@ -2906,8 +3235,7 @@ async function archiveLeagueSeason() {
   };
 
   try {
-    msg.style.display = 'block'; msg.style.color = 'var(--muted)';
-    msg.textContent = 'Archiving...';
+    msg.style.display = 'block'; msg.style.color = 'var(--muted)'; msg.textContent = 'Archiving...';
     const res = await fetch(`${API}/league`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -2916,16 +3244,12 @@ async function archiveLeagueSeason() {
     const data = await res.json();
     if (data.success) {
       msg.style.color = 'var(--win)';
-      msg.textContent = '✓ Season archived. Set up the new season in Neon then reload.';
+      msg.textContent = '✓ Season archived. Use New Season Setup above to start Season 2.';
       leagueLoaded = false;
     } else {
-      msg.style.color = 'var(--loss)';
-      msg.textContent = 'Error: ' + (data.error || 'Unknown');
+      msg.style.color = 'var(--loss)'; msg.textContent = 'Error: ' + (data.error || 'Unknown');
     }
-  } catch(e) {
-    msg.style.color = 'var(--loss)';
-    msg.textContent = 'Network error.';
-  }
+  } catch(e) { msg.style.color='var(--loss)'; msg.textContent='Network error.'; }
 }
 
 // ── wizard type toggle ──
