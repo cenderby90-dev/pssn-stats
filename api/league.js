@@ -59,8 +59,7 @@ export default async function handler(req, res) {
       const season = seasons[0];
 
       const [{ rows: pods }, { rows: players }, { rows: games }, { rows: pending },
-             { rows: playoffs }, { rows: pendingPlayoffs }, { rows: archive },
-             { rows: allPlayers }] = await Promise.all([
+             { rows: playoffs }, { rows: pendingPlayoffs }, { rows: archive }] = await Promise.all([
         sql`SELECT * FROM league_pods WHERE season_id = ${season.id} ORDER BY pod_number`,
         sql`SELECT lpp.*, lp.pod_number FROM league_pod_players lpp JOIN league_pods lp ON lpp.pod_id = lp.id WHERE lp.season_id = ${season.id}`,
         sql`SELECT * FROM league_games WHERE season_id = ${season.id} AND approved = true ORDER BY created_at`,
@@ -68,12 +67,20 @@ export default async function handler(req, res) {
         sql`SELECT * FROM league_playoff_matches WHERE season_id = ${season.id} AND approved = true ORDER BY round, match_number`,
         sql`SELECT * FROM league_playoff_matches WHERE season_id = ${season.id} AND approved = false ORDER BY created_at DESC`,
         sql`SELECT id, label, data, created_at FROM league_archive ORDER BY created_at DESC`,
-        sql`SELECT * FROM league_players ORDER BY name`,
       ]);
+
+      // Fetch allPlayers separately with fallback
+      let allPlayers = [];
+      try {
+        const { rows } = await sql`SELECT * FROM league_players WHERE active = true ORDER BY name`;
+        allPlayers = rows;
+      } catch(e) {
+        console.warn('league_players table not available:', e.message);
+      }
 
       const seedings = calcSeedings(pods, players, games);
 
-      // Overlay playoff results
+      // Overlay playoff results onto bracket
       const bracket = seedings.bracket;
       playoffs.forEach(m => {
         const key = `${m.round}${m.match_number}`;
@@ -85,50 +92,76 @@ export default async function handler(req, res) {
           const slot = m.match_number % 2 === 1 ? 'p1' : 'p2';
           if (bracket[fKey]) bracket[fKey][slot] = { name: winner };
         }
-        if (m.round === 'F') { const slot = m.match_number === 1 ? 'p1' : 'p2'; if (bracket['GF']) bracket['GF'][slot] = { name: winner }; }
+        if (m.round === 'F') {
+          const slot = m.match_number === 1 ? 'p1' : 'p2';
+          if (bracket['GF']) bracket['GF'][slot] = { name: winner };
+        }
       });
 
       return res.status(200).json({ season, pods, players, games, pending, playoffs, pendingPlayoffs, seedings, bracket, archive, allPlayers });
     }
 
-// Regular league game
-const { pod_id, player1, player2, bp1, bp2 } = req.body;
-if (!pod_id || !player1 || !player2 || bp1 === undefined || bp2 === undefined)
-  return res.status(400).json({ error: 'Missing required fields' });
+    // ── POST ──
+    if (req.method === 'POST') {
+      const { pin, type } = req.body;
+      if (!pin || (pin !== TEAM_PIN && pin !== ADMIN_PIN)) return res.status(401).json({ error: 'Unauthorised' });
+      const approved = pin === ADMIN_PIN;
 
-// BP validation — must be 0-100
-if (bp1 < 0 || bp1 > 100 || bp2 < 0 || bp2 > 100)
-  return res.status(400).json({ error: 'Battle Points must be between 0 and 100' });
+      // Add league player (admin only)
+      if (type === 'add_player') {
+        if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+        const { name } = req.body;
+        if (!name?.trim()) return res.status(400).json({ error: 'Name required' });
+        await sql`INSERT INTO league_players (name) VALUES (${name.trim()}) ON CONFLICT (name) DO UPDATE SET active = true`;
+        return res.status(200).json({ success: true });
+      }
 
-const { rows: pods } = await sql`SELECT season_id FROM league_pods WHERE id = ${pod_id}`;
-if (!pods.length) return res.status(400).json({ error: 'Pod not found' });
+      // Playoff result
+      if (type === 'playoff') {
+        const { season_id, round, match_number, player1, player2, bp1, bp2, winner } = req.body;
+        if (!round || !match_number || !player1 || !player2 || bp1 === undefined || bp2 === undefined || !winner)
+          return res.status(400).json({ error: 'Missing fields' });
+        if (bp1 < 0 || bp1 > 100 || bp2 < 0 || bp2 > 100)
+          return res.status(400).json({ error: 'Battle Points must be between 0 and 100' });
+        const { rows: existing } = await sql`SELECT id FROM league_playoff_matches WHERE season_id = ${season_id} AND round = ${round} AND match_number = ${match_number} AND approved = true`;
+        if (existing.length) return res.status(400).json({ error: 'Result already exists for this match' });
+        await sql`INSERT INTO league_playoff_matches (season_id, round, match_number, player1, player2, bp1, bp2, winner, approved) VALUES (${season_id}, ${round}, ${match_number}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${winner}, ${approved})`;
+        return res.status(200).json({ success: true, approved });
+      }
 
-// Pod membership check — both players must be in this pod
-const { rows: members } = await sql`
-  SELECT player_name FROM league_pod_players WHERE pod_id = ${pod_id}`;
-const memberNames = members.map(m => m.player_name);
-if (!memberNames.includes(player1))
-  return res.status(400).json({ error: `${player1} is not in this pod` });
-if (!memberNames.includes(player2))
-  return res.status(400).json({ error: `${player2} is not in this pod` });
+      // Regular league game
+      const { pod_id, player1, player2, bp1, bp2 } = req.body;
+      if (!pod_id || !player1 || !player2 || bp1 === undefined || bp2 === undefined)
+        return res.status(400).json({ error: 'Missing required fields' });
 
-// Duplicate check
-const { rows: dupes } = await sql`
-  SELECT id FROM league_games 
-  WHERE pod_id = ${pod_id} AND approved = true
-  AND (
-    (player1 = ${player1} AND player2 = ${player2}) OR
-    (player1 = ${player2} AND player2 = ${player1})
-  )`;
-if (dupes.length) return res.status(400).json({ 
-  error: `${player1} vs ${player2} has already been played in this pod` 
-});
+      // BP validation
+      if (bp1 < 0 || bp1 > 100 || bp2 < 0 || bp2 > 100)
+        return res.status(400).json({ error: 'Battle Points must be between 0 and 100' });
 
-await sql`INSERT INTO league_games (season_id, pod_id, player1, player2, bp1, bp2, approved)
-  VALUES (${pods[0].season_id}, ${pod_id}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${approved})`;
-return res.status(200).json({ success: true, approved });
+      const { rows: pods } = await sql`SELECT season_id FROM league_pods WHERE id = ${pod_id}`;
+      if (!pods.length) return res.status(400).json({ error: 'Pod not found' });
 
-    // ── PATCH — approve/reject, or deactivate player ──
+      // Pod membership check
+      const { rows: members } = await sql`SELECT player_name FROM league_pod_players WHERE pod_id = ${pod_id}`;
+      const memberNames = members.map(m => m.player_name);
+      if (!memberNames.includes(player1)) return res.status(400).json({ error: `${player1} is not in this pod` });
+      if (!memberNames.includes(player2)) return res.status(400).json({ error: `${player2} is not in this pod` });
+
+      // Duplicate check
+      const { rows: dupes } = await sql`
+        SELECT id FROM league_games 
+        WHERE pod_id = ${pod_id} AND approved = true
+        AND (
+          (player1 = ${player1} AND player2 = ${player2}) OR
+          (player1 = ${player2} AND player2 = ${player1})
+        )`;
+      if (dupes.length) return res.status(400).json({ error: `${player1} vs ${player2} has already been played in this pod` });
+
+      await sql`INSERT INTO league_games (season_id, pod_id, player1, player2, bp1, bp2, approved) VALUES (${pods[0].season_id}, ${pod_id}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${approved})`;
+      return res.status(200).json({ success: true, approved });
+    }
+
+    // ── PATCH — approve/reject, or toggle player ──
     if (req.method === 'PATCH') {
       const { pin, gameId, playoffId, playerId, active, approved } = req.body;
       if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
@@ -163,23 +196,36 @@ return res.status(200).json({ success: true, approved });
       return res.status(200).json({ success: true, seasonId });
     }
 
-  // ── DELETE — archive season ──
-if (req.method === 'DELETE') {
-  const { pin, label, snapshot } = req.body;
-  if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+    // ── DELETE — archive season ──
+    if (req.method === 'DELETE') {
+      const { pin, label, snapshot } = req.body;
+      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
 
-  // Fetch playoff results to include in archive
-  const { rows: playoffResults } = await sql`
-    SELECT * FROM league_playoff_matches 
-    WHERE season_id = ${snapshot.season?.id} AND approved = true 
-    ORDER BY round, match_number`;
+      // Get active season id directly from DB
+      const { rows: activeSeason } = await sql`SELECT id FROM league_seasons WHERE active = true LIMIT 1`;
+      const seasonId = activeSeason[0]?.id;
 
-  const fullSnapshot = {
-    ...snapshot,
-    playoffs: playoffResults
-  };
+      // Fetch playoff results
+      let playoffResults = [];
+      if (seasonId) {
+        const { rows } = await sql`
+          SELECT * FROM league_playoff_matches 
+          WHERE season_id = ${seasonId} AND approved = true 
+          ORDER BY round, match_number`;
+        playoffResults = rows;
+      }
 
-  await sql`INSERT INTO league_archive (label, data) VALUES (${label}, ${JSON.stringify(fullSnapshot)})`;
-  await sql`UPDATE league_seasons SET active = false`;
-  return res.status(200).json({ success: true });
+      const fullSnapshot = { ...snapshot, playoffs: playoffResults };
+
+      await sql`INSERT INTO league_archive (label, data) VALUES (${label}, ${JSON.stringify(fullSnapshot)})`;
+      await sql`UPDATE league_seasons SET active = false`;
+      return res.status(200).json({ success: true });
+    }
+
+    return res.status(405).json({ error: 'Method not allowed' });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Database error', detail: err.message });
+  }
 }
