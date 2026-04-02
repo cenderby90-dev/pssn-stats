@@ -968,6 +968,19 @@
 
   <div id="league-content"><div style="font-size:0.85rem;color:var(--muted);">Loading league data...</div></div>
 
+  <!-- League admin PIN gate -->
+  <div style="margin-top:3rem;padding-top:2rem;border-top:2px solid var(--border);">
+    <div style="font-size:0.72rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">League Admin</div>
+    <div id="league-admin-gate">
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Enter admin PIN to manage league games, playoffs and seasons.</div>
+      <input type="password" id="league-admin-pin-input" maxlength="8" placeholder="Admin PIN"
+        style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;width:160px;letter-spacing:0.2em;outline:none;"
+        oninput="checkLeagueAdminPin(this.value)"/>
+      <div id="league-admin-pin-error" style="font-size:0.75rem;color:var(--loss);display:none;margin-top:6px;">Incorrect admin PIN</div>
+    </div>
+    <div id="league-admin-section" style="display:none;"></div>
+  </div>
+
 </main>
 
 <!-- ── SUBMIT TAB ── -->
@@ -1271,9 +1284,6 @@
         </div>
         <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Events added via this form. Click Delete to remove.</div>
         <div id="ev-db-list"></div>
-
-        <!-- League admin -->
-        <div id="league-admin-section"></div>
 
       </div>
     </div>
@@ -2878,7 +2888,11 @@ function renderArchive(el) {
 // ── admin league tools ──
 function buildLeagueAdmin() {
   const container = document.getElementById('league-admin-section');
-  if (!container || !leagueData) return;
+  if (!container) return;
+  if (!leagueData) {
+    container.innerHTML = '<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">Loading league data...</div>';
+    return;
+  }
   const pending = leagueData.pending || [];
   const pendingPlayoffs = leagueData.pendingPlayoffs || [];
   const pods = leagueData.pods || [];
@@ -3064,11 +3078,10 @@ async function submitLeagueGame() {
     msg.textContent = 'Players must be different.'; return;
   }
 
-  const adminPinEl = document.getElementById('admin-pin-input');
-  const adminPin = adminPinEl ? adminPinEl.value : '';
+  const adminPin = window._leagueAdminPin || '';
   if (!adminPin) {
     msg.style.display = 'block'; msg.style.color = 'var(--loss)';
-    msg.textContent = 'Admin PIN not entered.'; return;
+    msg.textContent = 'Enter admin PIN in the League admin section.'; return;
   }
 
   msg.style.display = 'block'; msg.style.color = 'var(--muted)';
@@ -3100,7 +3113,7 @@ async function submitLeagueGame() {
 }
 
 async function approveLeagueGame(gameId, approved) {
-  const adminPin = document.getElementById('admin-pin-input')?.value || '';
+  const adminPin = window._leagueAdminPin || '';
   try {
     const res = await fetch(`${API}/league`, {
       method: 'PATCH',
@@ -3114,7 +3127,7 @@ async function approveLeagueGame(gameId, approved) {
 }
 
 async function approvePlayoffGame(playoffId, approved) {
-  const adminPin = document.getElementById('admin-pin-input')?.value || '';
+  const adminPin = window._leagueAdminPin || '';
   try {
     const res = await fetch(`${API}/league`, {
       method: 'PATCH',
@@ -3181,7 +3194,7 @@ function generateSeededPods() {
 async function createNewSeason() {
   const msg = document.getElementById('ns-message');
   const name = document.getElementById('ns-name').value.trim();
-  const adminPin = document.getElementById('admin-pin-input')?.value || '';
+  const adminPin = window._leagueAdminPin || '';
 
   if (!name) { msg.style.display='block'; msg.style.color='var(--loss)'; msg.textContent='Enter a season name.'; return; }
   if (!_generatedPods) { msg.style.display='block'; msg.style.color='var(--loss)'; msg.textContent='Generate pods first.'; return; }
@@ -3208,7 +3221,7 @@ async function createNewSeason() {
 }
 
 async function archiveLeagueSeason() {
-  const adminPin = document.getElementById('admin-pin-input')?.value || '';
+  const adminPin = window._leagueAdminPin || '';
   const msg = document.getElementById('lg-archive-message');
   const label = prompt('Enter archive label (e.g. "Season 1 — 2025/26"):');
   if (!label) return;
@@ -3523,7 +3536,6 @@ async function wizardSubmitResult() {
 function checkAdminPin(val) {
   if (val.length < 4) return;
   const errEl = document.getElementById('admin-pin-error');
-  // check against server
   fetch(`${API}/submissions?pin=${val}`)
     .then(r => r.json())
     .then(data => {
@@ -3532,7 +3544,6 @@ function checkAdminPin(val) {
         document.getElementById('admin-content').style.display = 'block';
         loadSheetSubmissions();
         loadDbEvents();
-        buildLeagueAdmin();
       } else {
         errEl.style.display = 'block';
         document.getElementById('admin-pin-input').value = '';
@@ -3542,6 +3553,38 @@ function checkAdminPin(val) {
     .catch(() => {
       errEl.style.display = 'block';
       document.getElementById('admin-pin-input').value = '';
+      setTimeout(() => { errEl.style.display = 'none'; }, 2000);
+    });
+}
+
+function checkLeagueAdminPin(val) {
+  if (val.length < 4) return;
+  const errEl = document.getElementById('league-admin-pin-error');
+  // verify against server using submissions endpoint (same admin PIN)
+  fetch(`${API}/submissions?pin=${val}`)
+    .then(r => r.json())
+    .then(async data => {
+      if (data.submissions !== undefined) {
+        document.getElementById('league-admin-gate').style.display = 'none';
+        const section = document.getElementById('league-admin-section');
+        section.style.display = 'block';
+        // store pin for league API calls
+        window._leagueAdminPin = val;
+        // ensure league data loaded
+        if (!leagueData) {
+          await loadLeagueData();
+          leagueLoaded = true;
+        }
+        buildLeagueAdmin();
+      } else {
+        errEl.style.display = 'block';
+        document.getElementById('league-admin-pin-input').value = '';
+        setTimeout(() => { errEl.style.display = 'none'; }, 2000);
+      }
+    })
+    .catch(() => {
+      errEl.style.display = 'block';
+      document.getElementById('league-admin-pin-input').value = '';
       setTimeout(() => { errEl.style.display = 'none'; }, 2000);
     });
 }
