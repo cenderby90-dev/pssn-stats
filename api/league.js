@@ -163,19 +163,23 @@ return res.status(200).json({ success: true, approved });
       return res.status(200).json({ success: true, seasonId });
     }
 
-    // ── DELETE — archive season ──
-    if (req.method === 'DELETE') {
-      const { pin, label, snapshot } = req.body;
-      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
-      await sql`INSERT INTO league_archive (label, data) VALUES (${label}, ${JSON.stringify(snapshot)})`;
-      await sql`UPDATE league_seasons SET active = false`;
-      return res.status(200).json({ success: true });
-    }
+  // ── DELETE — archive season ──
+if (req.method === 'DELETE') {
+  const { pin, label, snapshot } = req.body;
+  if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
 
-    return res.status(405).json({ error: 'Method not allowed' });
+  // Fetch playoff results to include in archive
+  const { rows: playoffResults } = await sql`
+    SELECT * FROM league_playoff_matches 
+    WHERE season_id = ${snapshot.season?.id} AND approved = true 
+    ORDER BY round, match_number`;
 
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Database error', detail: err.message });
-  }
+  const fullSnapshot = {
+    ...snapshot,
+    playoffs: playoffResults
+  };
+
+  await sql`INSERT INTO league_archive (label, data) VALUES (${label}, ${JSON.stringify(fullSnapshot)})`;
+  await sql`UPDATE league_seasons SET active = false`;
+  return res.status(200).json({ success: true });
 }
