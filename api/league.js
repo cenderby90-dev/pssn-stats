@@ -117,14 +117,27 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true, approved });
       }
 
-      // Regular league game
-      const { pod_id, player1, player2, bp1, bp2 } = req.body;
-      if (!pod_id || !player1 || !player2 || bp1 === undefined || bp2 === undefined)
-        return res.status(400).json({ error: 'Missing required fields' });
-      const { rows: pods } = await sql`SELECT season_id FROM league_pods WHERE id = ${pod_id}`;
-      if (!pods.length) return res.status(400).json({ error: 'Pod not found' });
-      await sql`INSERT INTO league_games (season_id, pod_id, player1, player2, bp1, bp2, approved) VALUES (${pods[0].season_id}, ${pod_id}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${approved})`;
-      return res.status(200).json({ success: true, approved });
+// Regular league game
+const { pod_id, player1, player2, bp1, bp2 } = req.body;
+if (!pod_id || !player1 || !player2 || bp1 === undefined || bp2 === undefined)
+  return res.status(400).json({ error: 'Missing required fields' });
+const { rows: pods } = await sql`SELECT season_id FROM league_pods WHERE id = ${pod_id}`;
+if (!pods.length) return res.status(400).json({ error: 'Pod not found' });
+
+// Duplicate check — same two players in same pod regardless of order
+const { rows: dupes } = await sql`
+  SELECT id FROM league_games 
+  WHERE pod_id = ${pod_id} AND approved = true
+  AND (
+    (player1 = ${player1} AND player2 = ${player2}) OR
+    (player1 = ${player2} AND player2 = ${player1})
+  )`;
+if (dupes.length) return res.status(400).json({ 
+  error: `${player1} vs ${player2} has already been played in this pod` 
+});
+
+await sql`INSERT INTO league_games (season_id, pod_id, player1, player2, bp1, bp2, approved) VALUES (${pods[0].season_id}, ${pod_id}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${approved})`;
+return res.status(200).json({ success: true, approved });
     }
 
     // ── PATCH — approve/reject, or deactivate player ──
