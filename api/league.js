@@ -91,40 +91,28 @@ export default async function handler(req, res) {
       return res.status(200).json({ season, pods, players, games, pending, playoffs, pendingPlayoffs, seedings, bracket, archive, allPlayers });
     }
 
-    // ── POST ──
-    if (req.method === 'POST') {
-      const { pin, type } = req.body;
-      if (!pin || (pin !== TEAM_PIN && pin !== ADMIN_PIN)) return res.status(401).json({ error: 'Unauthorised' });
-      const approved = pin === ADMIN_PIN;
-
-      // Add league player (admin only)
-      if (type === 'add_player') {
-        if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
-        const { name } = req.body;
-        if (!name?.trim()) return res.status(400).json({ error: 'Name required' });
-        await sql`INSERT INTO league_players (name) VALUES (${name.trim()}) ON CONFLICT (name) DO UPDATE SET active = true`;
-        return res.status(200).json({ success: true });
-      }
-
-      // Playoff result
-      if (type === 'playoff') {
-        const { season_id, round, match_number, player1, player2, bp1, bp2, winner } = req.body;
-        if (!round || !match_number || !player1 || !player2 || bp1 === undefined || bp2 === undefined || !winner)
-          return res.status(400).json({ error: 'Missing fields' });
-        const { rows: existing } = await sql`SELECT id FROM league_playoff_matches WHERE season_id = ${season_id} AND round = ${round} AND match_number = ${match_number} AND approved = true`;
-        if (existing.length) return res.status(400).json({ error: 'Result already exists for this match' });
-        await sql`INSERT INTO league_playoff_matches (season_id, round, match_number, player1, player2, bp1, bp2, winner, approved) VALUES (${season_id}, ${round}, ${match_number}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${winner}, ${approved})`;
-        return res.status(200).json({ success: true, approved });
-      }
-
 // Regular league game
 const { pod_id, player1, player2, bp1, bp2 } = req.body;
 if (!pod_id || !player1 || !player2 || bp1 === undefined || bp2 === undefined)
   return res.status(400).json({ error: 'Missing required fields' });
+
+// BP validation — must be 0-100
+if (bp1 < 0 || bp1 > 100 || bp2 < 0 || bp2 > 100)
+  return res.status(400).json({ error: 'Battle Points must be between 0 and 100' });
+
 const { rows: pods } = await sql`SELECT season_id FROM league_pods WHERE id = ${pod_id}`;
 if (!pods.length) return res.status(400).json({ error: 'Pod not found' });
 
-// Duplicate check — same two players in same pod regardless of order
+// Pod membership check — both players must be in this pod
+const { rows: members } = await sql`
+  SELECT player_name FROM league_pod_players WHERE pod_id = ${pod_id}`;
+const memberNames = members.map(m => m.player_name);
+if (!memberNames.includes(player1))
+  return res.status(400).json({ error: `${player1} is not in this pod` });
+if (!memberNames.includes(player2))
+  return res.status(400).json({ error: `${player2} is not in this pod` });
+
+// Duplicate check
 const { rows: dupes } = await sql`
   SELECT id FROM league_games 
   WHERE pod_id = ${pod_id} AND approved = true
@@ -136,9 +124,9 @@ if (dupes.length) return res.status(400).json({
   error: `${player1} vs ${player2} has already been played in this pod` 
 });
 
-await sql`INSERT INTO league_games (season_id, pod_id, player1, player2, bp1, bp2, approved) VALUES (${pods[0].season_id}, ${pod_id}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${approved})`;
+await sql`INSERT INTO league_games (season_id, pod_id, player1, player2, bp1, bp2, approved)
+  VALUES (${pods[0].season_id}, ${pod_id}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${approved})`;
 return res.status(200).json({ success: true, approved });
-    }
 
     // ── PATCH — approve/reject, or deactivate player ──
     if (req.method === 'PATCH') {
