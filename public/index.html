@@ -2593,6 +2593,17 @@ function renderPod() {
   });
   const sorted = Object.values(standings).sort((a,b) => b.pts - a.pts || b.bp - a.bp);
 
+  // Detect tiebreakers — players equal on both pts AND bp in qualification positions
+  const tieWarnings = [];
+  // Check positions 1-2 (qualification spots) and position 2-3 (bubble)
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const a = sorted[i], b = sorted[i+1];
+    if (a.pts === b.pts && a.bp === b.bp) {
+      const isQualBoundary = i === 1; // tied on the qualification cut line
+      tieWarnings.push({ names: [a.name, b.name], pos: i+1, isQualBoundary });
+    }
+  }
+
   // Build matrix
   const matrix = {};
   podPlayers.forEach(p => { matrix[p] = {}; });
@@ -2628,6 +2639,10 @@ function renderPod() {
         </tbody>
       </table>
     </div>
+    ${tieWarnings.length ? `
+      <div style="margin-top:10px;padding:8px 12px;background:#2a1500;border:1px solid #f0c040;border-radius:4px;font-size:0.78rem;color:#f0c040;">
+        ${tieWarnings.map(t => `⚠️ <strong>${t.names[0]}</strong> and <strong>${t.names[1]}</strong> are exactly tied on points and Battle Points at position ${t.pos}–${t.pos+1}.${t.isQualBoundary ? ' This is the <strong>qualification boundary</strong> — a tiebreaker or manual decision is needed before the playoffs.' : ''}`).join('<br>')}
+      </div>` : ''}
     <div>
       <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Games Matrix — Battle Points scored</div>
       <div style="overflow-x:auto;">
@@ -2820,6 +2835,10 @@ async function submitPlayoffResult() {
     msg.style.display = 'block'; msg.style.color = 'var(--loss)';
     msg.textContent = 'Please enter both scores.'; return;
   }
+  if (bp1 < 0 || bp1 > 100 || bp2 < 0 || bp2 > 100) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Battle Points must be between 0 and 100.'; return;
+  }
   if (bp1 === bp2) {
     msg.style.display = 'block'; msg.style.color = 'var(--loss)';
     msg.textContent = 'Playoff matches cannot be draws.'; return;
@@ -2869,6 +2888,28 @@ function renderArchive(el) {
   el.innerHTML = archive.map(a => {
     const d = a.data || {};
     const pods = d.pods || [];
+    const playoffs = d.playoffs || [];
+
+    const playoffHtml = playoffs.length ? `
+      <div style="margin-top:1.5rem;">
+        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Playoff Results</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">
+          ${['QF','SF','F','GF'].map(round => {
+            const roundGames = playoffs.filter(p => p.round === round);
+            if (!roundGames.length) return '';
+            const labels = { QF:'Quarter Finals', SF:'Semi Finals', F:'Finals', GF:'Grand Final' };
+            return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:8px;">
+              <div style="font-size:0.65rem;font-weight:500;color:var(--accent);margin-bottom:6px;">${labels[round]}</div>
+              ${roundGames.map(g => `
+                <div style="font-size:0.78rem;padding:3px 0;border-bottom:1px solid var(--border);">
+                  <span style="color:var(--win);font-weight:500;">${g.winner}</span>
+                  <span style="color:var(--muted);font-size:0.7rem;"> ${g.bp1}–${g.bp2}</span>
+                </div>`).join('')}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : '';
+
     return `
       <div style="margin-bottom:2rem;">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.06em;color:var(--text);margin-bottom:4px;">${a.label}</div>
@@ -2884,6 +2925,7 @@ function renderArchive(el) {
                 </div>`).join('')}
             </div>`).join('')}
         </div>
+        ${playoffHtml}
       </div>`;
   }).join('<hr style="border:none;border-top:1px solid var(--border);margin:2rem 0;">');
 }
@@ -3135,6 +3177,10 @@ async function submitLeagueGame() {
   if (!pod_id || !player1 || !player2 || isNaN(bp1) || isNaN(bp2)) {
     msg.style.display = 'block'; msg.style.color = 'var(--loss)';
     msg.textContent = 'Please fill in all fields.'; return;
+  }
+  if (bp1 < 0 || bp1 > 100 || bp2 < 0 || bp2 > 100) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Battle Points must be between 0 and 100.'; return;
   }
   if (player1 === player2) {
     msg.style.display = 'block'; msg.style.color = 'var(--loss)';
