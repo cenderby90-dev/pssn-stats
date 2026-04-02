@@ -3692,9 +3692,9 @@ function checkLeagueAdminPin(val) {
     });
 }
 
-// Helper — always get the most current league admin PIN
+// Helper — always get the most current league admin PIN from the input field
 function getLeagueAdminPin() {
-  return window._leagueAdminPin || document.getElementById('league-admin-pin-input')?.value || '';
+  return document.getElementById('league-admin-pin-input')?.value || window._leagueAdminPin || '';
 }
 
 // ── event entry ──
