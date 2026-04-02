@@ -2997,7 +2997,7 @@ function buildLeagueAdmin() {
       <div class="section-rule"></div>
     </div>
     <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">
-      Select players for the new season. Pods will be auto-generated with seeded random assignment — top performers from the current season are spread across pods.
+      Select players for the new season. Pods will be auto-generated with seeded random assignment — top performers from the current season are spread across pods. <strong style="color:var(--loss);">Archive the current season first before creating a new one.</strong>
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;max-width:600px;">
       <div style="display:grid;gap:12px;">
@@ -3014,9 +3014,9 @@ function buildLeagueAdmin() {
           </select>
         </div>
         <div>
-          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px;">Select players</label>
+          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px;">Select players <span style="color:var(--faint);font-weight:normal;text-transform:none;">(${(leagueData.allPlayers||[]).filter(p=>p.active).length} active)</span></label>
           <div id="ns-player-list" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:300px;overflow-y:auto;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;">
-            ${D.players.map(p=>`
+            ${(leagueData.allPlayers||[]).filter(p=>p.active).sort((a,b)=>a.name.localeCompare(b.name)).map(p=>`
               <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text);padding:3px;cursor:pointer;">
                 <input type="checkbox" value="${p.name}" checked style="accent-color:var(--accent);"/>
                 ${p.name}
@@ -3036,12 +3036,41 @@ function buildLeagueAdmin() {
       </div>
     </div>
 
+    <!-- Player Manager -->
+    <div class="section-head" style="margin-top:2.5rem;">
+      <div class="section-title">Player Manager</div>
+      <div class="section-rule"></div>
+    </div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Add new members or deactivate players who are no longer in the league.</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;max-width:500px;margin-bottom:1rem;">
+      <div style="display:flex;gap:8px;margin-bottom:1rem;">
+        <input id="pm-new-name" type="text" placeholder="New player name"
+          style="flex:1;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+        <button onclick="addLeaguePlayer()"
+          style="padding:8px 14px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;white-space:nowrap;">
+          + Add
+        </button>
+      </div>
+      <div id="pm-add-message" style="font-size:0.78rem;display:none;margin-bottom:10px;"></div>
+      <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">All Players</div>
+      <div style="max-height:250px;overflow-y:auto;">
+        ${(leagueData.allPlayers||[]).sort((a,b)=>a.name.localeCompare(b.name)).map(p=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:0.83rem;color:${p.active?'var(--text)':'var(--muted)'};">${p.name}${!p.active?'<span style="font-size:0.65rem;color:var(--faint);margin-left:6px;">inactive</span>':''}</span>
+            <button onclick="toggleLeaguePlayer(${p.id},${!p.active})"
+              style="font-size:0.65rem;padding:2px 8px;background:transparent;border:1px solid ${p.active?'var(--loss)':'var(--win)'};border-radius:3px;color:${p.active?'var(--loss)':'var(--win)'};cursor:pointer;">
+              ${p.active?'Deactivate':'Reactivate'}
+            </button>
+          </div>`).join('')}
+      </div>
+    </div>
+
     <!-- End of season -->
     <div class="section-head" style="margin-top:2.5rem;">
       <div class="section-title">End of Season</div>
       <div class="section-rule"></div>
     </div>
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Archive the current season standings. This marks the season as inactive.</div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Archive the current season standings. Do this before setting up the new season.</div>
     <button onclick="archiveLeagueSeason()"
       style="padding:9px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;"
       onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
@@ -3150,7 +3179,7 @@ function generateSeededPods() {
     alert(`Need at least ${numPods * 2} players for ${numPods} pods.`); return;
   }
 
-  // Seed by current season BP (higher BP = better seed)
+  // Seed by current season BP
   const games = leagueData.games || [];
   const bpMap = {};
   selected.forEach(p => { bpMap[p] = 0; });
@@ -3159,10 +3188,9 @@ function generateSeededPods() {
     if (bpMap[g.player2] !== undefined) bpMap[g.player2] += g.bp2;
   });
 
-  // Sort by BP descending — seeded players go first
   const sorted = [...selected].sort((a, b) => (bpMap[b] || 0) - (bpMap[a] || 0));
 
-  // Snake draft: distribute seeds across pods
+  // Snake draft
   const pods = Array.from({ length: numPods }, (_, i) => ({ number: i + 1, name: `Pod ${i + 1}`, players: [] }));
   sorted.forEach((player, i) => {
     const round = Math.floor(i / numPods);
@@ -3171,24 +3199,42 @@ function generateSeededPods() {
   });
 
   _generatedPods = pods;
+  renderPodPreview();
+  document.getElementById('ns-create-btn').style.display = 'block';
+}
 
+function renderPodPreview() {
   const preview = document.getElementById('ns-pods-preview');
   preview.style.display = 'block';
+  const numPods = _generatedPods.length;
+
   preview.innerHTML = `
-    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;">Preview — drag to rearrange before creating:</div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;">Preview — use arrows to move players between pods:</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">
-      ${pods.map((pod, pi) => `
+      ${_generatedPods.map((pod, pi) => `
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:8px;">
-          <div style="font-size:0.7rem;font-weight:500;color:var(--accent);margin-bottom:6px;">Pod ${pod.number}</div>
+          <div style="font-size:0.7rem;font-weight:500;color:var(--accent);margin-bottom:6px;">Pod ${pod.number} <span style="color:var(--muted);font-weight:400;">(${pod.players.length})</span></div>
           ${pod.players.map((p, i) => `
-            <div style="font-size:0.8rem;color:var(--text);padding:2px 0;border-bottom:1px solid var(--border);">
-              <span style="color:var(--muted);margin-right:4px;">${i===0?'🌟':'·'}</span>${p}
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--border);gap:4px;">
+              <span style="font-size:0.78rem;color:${i===0?'var(--accent)':'var(--text)'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p}">
+                ${i===0?'🌟 ':''}${p}
+              </span>
+              <div style="display:flex;gap:2px;flex-shrink:0;">
+                ${pi > 0 ? `<button onclick="movePlayer(${pi},${i},'left')" title="Move to Pod ${pi}" style="font-size:0.65rem;padding:1px 4px;background:transparent;border:1px solid var(--border);border-radius:2px;color:var(--muted);cursor:pointer;">←</button>` : ''}
+                ${pi < numPods-1 ? `<button onclick="movePlayer(${pi},${i},'right')" title="Move to Pod ${pi+2}" style="font-size:0.65rem;padding:1px 4px;background:transparent;border:1px solid var(--border);border-radius:2px;color:var(--muted);cursor:pointer;">→</button>` : ''}
+              </div>
             </div>`).join('')}
         </div>`).join('')}
     </div>
-    <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;">🌟 = top seed. Snake draft used — top performers spread across pods.</div>`;
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;">🌟 = top seed per pod · Arrows move a player to the adjacent pod</div>`;
+}
 
-  document.getElementById('ns-create-btn').style.display = 'block';
+function movePlayer(fromPodIdx, playerIdx, direction) {
+  const toPodIdx = direction === 'left' ? fromPodIdx - 1 : fromPodIdx + 1;
+  if (toPodIdx < 0 || toPodIdx >= _generatedPods.length) return;
+  const player = _generatedPods[fromPodIdx].players.splice(playerIdx, 1)[0];
+  _generatedPods[toPodIdx].players.push(player);
+  renderPodPreview();
 }
 
 async function createNewSeason() {
@@ -3198,7 +3244,18 @@ async function createNewSeason() {
 
   if (!name) { msg.style.display='block'; msg.style.color='var(--loss)'; msg.textContent='Enter a season name.'; return; }
   if (!_generatedPods) { msg.style.display='block'; msg.style.color='var(--loss)'; msg.textContent='Generate pods first.'; return; }
-  if (!confirm(`Create "${name}" with ${_generatedPods.length} pods? This will deactivate the current season.`)) return;
+
+  // Archive gate — warn if current season still active
+  if (leagueData.season?.active) {
+    const proceed = confirm(
+      `⚠️ The current season "${leagueData.season.name}" is still active and has not been archived.\n\n` +
+      `Creating a new season will deactivate it without saving an archive.\n\n` +
+      `Are you sure? Press Cancel to archive first (recommended).`
+    );
+    if (!proceed) return;
+  }
+
+  if (!confirm(`Create "${name}" with ${_generatedPods.length} pods?`)) return;
 
   msg.style.display = 'block'; msg.style.color = 'var(--muted)'; msg.textContent = 'Creating...';
 
@@ -3211,13 +3268,60 @@ async function createNewSeason() {
     const data = await res.json();
     if (data.success) {
       msg.style.color = 'var(--win)';
-      msg.textContent = `✓ ${name} created! Reload to see the new season.`;
+      msg.textContent = `✓ ${name} created! Reload the page to see the new season.`;
       leagueLoaded = false;
     } else {
       msg.style.color = 'var(--loss)';
       msg.textContent = 'Error: ' + (data.error || 'Unknown');
     }
   } catch(e) { msg.style.color='var(--loss)'; msg.textContent='Network error.'; }
+}
+
+async function addLeaguePlayer() {
+  const input = document.getElementById('pm-new-name');
+  const msg = document.getElementById('pm-add-message');
+  const name = input.value.trim();
+  if (!name) return;
+  const adminPin = window._leagueAdminPin || '';
+
+  try {
+    const res = await fetch(`${API}/league`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: adminPin, type: 'add_player', name })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.style.display = 'block'; msg.style.color = 'var(--win)';
+      msg.textContent = `✓ ${name} added.`;
+      input.value = '';
+      leagueLoaded = false;
+      await loadLeagueData();
+      buildLeagueAdmin();
+    } else {
+      msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown');
+    }
+  } catch(e) { msg.style.display='block'; msg.style.color='var(--loss)'; msg.textContent='Network error.'; }
+}
+
+async function toggleLeaguePlayer(playerId, active) {
+  const adminPin = window._leagueAdminPin || '';
+  try {
+    const res = await fetch(`${API}/league`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: adminPin, playerId, active })
+    });
+    const data = await res.json();
+    if (data.success) {
+      leagueLoaded = false;
+      await loadLeagueData();
+      buildLeagueAdmin();
+    } else {
+      alert('Error: ' + (data.error || 'Unknown'));
+    }
+  } catch(e) { console.error(e); }
 }
 
 async function archiveLeagueSeason() {
