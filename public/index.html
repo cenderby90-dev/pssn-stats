@@ -2921,13 +2921,13 @@ function buildLeagueAdmin() {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div>
             <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Player 1</label>
-            <select id="lg-p1" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+            <select id="lg-p1" onchange="checkLeagueDuplicate()" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
               <option value="">Select pod first</option>
             </select>
           </div>
           <div>
             <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Player 2</label>
-            <select id="lg-p2" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+            <select id="lg-p2" onchange="checkLeagueDuplicate()" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
               <option value="">Select pod first</option>
             </select>
           </div>
@@ -2944,7 +2944,7 @@ function buildLeagueAdmin() {
               style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
           </div>
         </div>
-        <button onclick="submitLeagueGame()"
+        <button id="lg-save-btn" onclick="submitLeagueGame()"
           style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;">
           Save League Game
         </button>
@@ -3091,6 +3091,37 @@ function updateLeaguePlayerDropdowns() {
   const opts = `<option value="">Select player...</option>` + podPlayers.map(p=>`<option value="${p}">${p}</option>`).join('');
   document.getElementById('lg-p1').innerHTML = opts;
   document.getElementById('lg-p2').innerHTML = opts;
+  // clear any duplicate warning
+  const msg = document.getElementById('lg-message');
+  if (msg) { msg.style.display = 'none'; }
+}
+
+function checkLeagueDuplicate() {
+  const podId = parseInt(document.getElementById('lg-pod').value);
+  const p1 = document.getElementById('lg-p1').value;
+  const p2 = document.getElementById('lg-p2').value;
+  const msg = document.getElementById('lg-message');
+  if (!p1 || !p2 || p1 === p2 || !podId) { msg.style.display = 'none'; return; }
+
+  // check against already loaded games
+  const existing = (leagueData.games || []).find(g =>
+    g.pod_id === podId && (
+      (g.player1 === p1 && g.player2 === p2) ||
+      (g.player1 === p2 && g.player2 === p1)
+    )
+  );
+
+  if (existing) {
+    msg.style.display = 'block';
+    msg.style.color = 'var(--loss)';
+    msg.textContent = `⚠️ ${p1} vs ${p2} has already been played (${existing.bp1}–${existing.bp2})`;
+    document.getElementById('lg-save-btn').disabled = true;
+    document.getElementById('lg-save-btn').style.opacity = '0.4';
+  } else {
+    msg.style.display = 'none';
+    document.getElementById('lg-save-btn').disabled = false;
+    document.getElementById('lg-save-btn').style.opacity = '1';
+  }
 }
 
 async function submitLeagueGame() {
