@@ -974,8 +974,9 @@
     <div id="league-admin-gate">
       <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Enter admin PIN to manage league games, playoffs and seasons.</div>
       <input type="password" id="league-admin-pin-input" maxlength="8" placeholder="Admin PIN"
+        autocomplete="new-password"
         style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;width:160px;letter-spacing:0.2em;outline:none;"
-        oninput="checkLeagueAdminPin(this.value)"/>
+        oninput="if(this.value.length>=4)checkLeagueAdminPin(this.value)"/>
       <div id="league-admin-pin-error" style="font-size:0.75rem;color:var(--loss);display:none;margin-top:6px;">Incorrect admin PIN</div>
     </div>
     <div id="league-admin-section" style="display:none;"></div>
@@ -992,6 +993,7 @@
       <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:0.06em;color:var(--text);margin-bottom:0.5rem;">Team Access</div>
       <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Enter your 4-digit team PIN to submit a result</div>
       <input type="password" id="pin-input" maxlength="4" placeholder="••••"
+        autocomplete="new-password"
         style="width:120px;text-align:center;font-size:1.4rem;letter-spacing:0.3em;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);outline:none;margin-bottom:1rem;display:block;margin-left:auto;margin-right:auto;"
         oninput="checkPin(this.value)"/>
       <div id="pin-error" style="font-size:0.78rem;color:var(--loss);display:none;margin-top:0.5rem;">Incorrect PIN</div>
@@ -1194,8 +1196,9 @@
       <div id="admin-gate">
         <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Enter admin PIN to manage submissions and events.</div>
         <input type="password" id="admin-pin-input" maxlength="8" placeholder="Admin PIN"
+          autocomplete="new-password"
           style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;width:160px;letter-spacing:0.2em;outline:none;"
-          oninput="checkAdminPin(this.value)"/>
+          oninput="if(this.value.length>=4)checkAdminPin(this.value)"/>
         <div id="admin-pin-error" style="font-size:0.75rem;color:var(--loss);display:none;margin-top:6px;">Incorrect admin PIN</div>
       </div>
       <div id="admin-content" style="display:none;">
@@ -3637,59 +3640,69 @@ async function wizardSubmitResult() {
 }
 
 // ── admin PIN ──
+let _adminPinTimer = null;
 function checkAdminPin(val) {
   if (val.length < 4) return;
-  const errEl = document.getElementById('admin-pin-error');
-  fetch(`${API}/submissions?pin=${val}`)
-    .then(r => r.json())
-    .then(data => {
-      if (data.submissions !== undefined) {
-        document.getElementById('admin-gate').style.display = 'none';
-        document.getElementById('admin-content').style.display = 'block';
-        loadSheetSubmissions();
-        loadDbEvents();
-      } else {
+  clearTimeout(_adminPinTimer);
+  _adminPinTimer = setTimeout(() => {
+    const errEl = document.getElementById('admin-pin-error');
+    fetch(`${API}/submissions?pin=${encodeURIComponent(val)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.submissions !== undefined) {
+          document.getElementById('admin-gate').style.display = 'none';
+          document.getElementById('admin-content').style.display = 'block';
+          loadSheetSubmissions();
+          loadDbEvents();
+        } else {
+          errEl.style.display = 'block';
+          document.getElementById('admin-pin-input').value = '';
+          setTimeout(() => { errEl.style.display = 'none'; }, 2000);
+        }
+      })
+      .catch(() => {
         errEl.style.display = 'block';
         document.getElementById('admin-pin-input').value = '';
         setTimeout(() => { errEl.style.display = 'none'; }, 2000);
-      }
-    })
-    .catch(() => {
-      errEl.style.display = 'block';
-      document.getElementById('admin-pin-input').value = '';
-      setTimeout(() => { errEl.style.display = 'none'; }, 2000);
-    });
+      });
+  }, 600);
 }
 
+let _leaguePinTimer = null;
 function checkLeagueAdminPin(val) {
   if (val.length < 4) return;
-  const errEl = document.getElementById('league-admin-pin-error');
-  fetch(`${API}/submissions?pin=${val}`)
-    .then(r => r.json())
-    .then(async data => {
-      if (data.submissions !== undefined) {
-        window._leagueAdminPin = val;
-        document.getElementById('league-admin-gate').style.display = 'none';
-        const section = document.getElementById('league-admin-section');
-        section.style.display = 'block';
-        if (!leagueData) {
-          await loadLeagueData();
-          leagueLoaded = true;
+  // Debounce — wait 600ms after last keystroke before checking
+  // This prevents Chrome autocomplete from triggering on partial values
+  clearTimeout(_leaguePinTimer);
+  _leaguePinTimer = setTimeout(() => {
+    const errEl = document.getElementById('league-admin-pin-error');
+    fetch(`${API}/submissions?pin=${encodeURIComponent(val)}`)
+      .then(r => r.json())
+      .then(async data => {
+        if (data.submissions !== undefined) {
+          window._leagueAdminPin = val;
+          document.getElementById('league-admin-gate').style.display = 'none';
+          const section = document.getElementById('league-admin-section');
+          section.style.display = 'block';
+          if (!leagueData) {
+            await loadLeagueData();
+            leagueLoaded = true;
+          }
+          buildLeagueAdmin();
+        } else {
+          errEl.style.display = 'block';
+          document.getElementById('league-admin-pin-input').value = '';
+          window._leagueAdminPin = null;
+          setTimeout(() => { errEl.style.display = 'none'; }, 2000);
         }
-        buildLeagueAdmin();
-      } else {
+      })
+      .catch(() => {
         errEl.style.display = 'block';
         document.getElementById('league-admin-pin-input').value = '';
         window._leagueAdminPin = null;
         setTimeout(() => { errEl.style.display = 'none'; }, 2000);
-      }
-    })
-    .catch(() => {
-      errEl.style.display = 'block';
-      document.getElementById('league-admin-pin-input').value = '';
-      window._leagueAdminPin = null;
-      setTimeout(() => { errEl.style.display = 'none'; }, 2000);
-    });
+      });
+  }, 600);
 }
 
 // Helper — always get the most current league admin PIN from the input field
