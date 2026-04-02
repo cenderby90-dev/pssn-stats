@@ -958,23 +958,15 @@
 <main class="page" id="tab-league" style="display:none;">
 
   <div class="section-head" style="margin-top:0;">
-    <div class="section-title">PSSN League — Season 1</div>
+    <div class="section-title" id="league-title">PSSN League</div>
     <div class="section-rule"></div>
   </div>
   <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Round-robin pods. 2 points for a win. Top 2 from each pod qualify for the playoffs.</div>
 
-  <!-- Pod tab bar -->
-  <div style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:1.5rem;flex-wrap:wrap;">
-    <button id="pod-btn-0" class="tab-btn active" onclick="switchPod(0)">Pod 1</button>
-    <button id="pod-btn-1" class="tab-btn" onclick="switchPod(1)">Pod 2</button>
-    <button id="pod-btn-2" class="tab-btn" onclick="switchPod(2)">Pod 3</button>
-    <button id="pod-btn-3" class="tab-btn" onclick="switchPod(3)">Pod 4</button>
-    <button id="pod-btn-4" class="tab-btn" onclick="switchPod(4)">Pod 5</button>
-    <button id="pod-btn-5" class="tab-btn" onclick="switchPod(5)">Pod 6</button>
-    <button id="pod-btn-6" class="tab-btn" onclick="switchPod(6)">🏆 Playoffs</button>
-  </div>
+  <!-- Pod tab bar — populated dynamically -->
+  <div id="pod-tab-bar" style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:1.5rem;flex-wrap:wrap;"></div>
 
-  <div id="league-content"></div>
+  <div id="league-content"><div style="font-size:0.85rem;color:var(--muted);">Loading league data...</div></div>
 
 </main>
 
@@ -1001,10 +993,22 @@
       <div class="section-title">Submit a Result</div>
       <div class="section-rule"></div>
     </div>
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Start by searching for the event. We'll check if it already exists before adding it.</div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Start by choosing what type of result you're submitting.</div>
 
-    <!-- Step 1: Event search -->
-    <div id="wizard-step1" style="max-width:500px;">
+    <!-- Result type selector -->
+    <div style="display:flex;gap:8px;margin-bottom:1.5rem;max-width:500px;">
+      <button id="wiz-type-tournament" onclick="setWizardType('tournament')"
+        style="flex:1;padding:10px;background:var(--accent);border:1px solid var(--accent);border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;">
+        🏆 Tournament Result
+      </button>
+      <button id="wiz-type-league" onclick="setWizardType('league')"
+        style="flex:1;padding:10px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;">
+        ⚔️ League Game
+      </button>
+    </div>
+
+    <!-- Tournament wizard -->
+    <div id="wiz-tournament-flow">
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;">
         <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Step 1 — Find or create event</div>
         <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event name</label>
@@ -1129,6 +1133,48 @@
       </div>
     </div>
 
+    </div> <!-- end wiz-tournament-flow -->
+
+    <!-- League game submission -->
+    <div id="wiz-league-flow" style="display:none;max-width:500px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;">
+        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">Submit a League Game</div>
+        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Your result will go to the admin for approval before appearing in the standings.</div>
+        <div style="display:grid;gap:12px;">
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your name</label>
+            <select id="lg-sub-me" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select your name...</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Opponent</label>
+            <select id="lg-sub-opponent" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select opponent...</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <label style="font-size:0.75rem;color:var(--win);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your Battle Points</label>
+              <input id="lg-sub-mybp" type="number" min="0" max="100" placeholder="e.g. 82"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            </div>
+            <div>
+              <label style="font-size:0.75rem;color:var(--loss);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Opponent Battle Points</label>
+              <input id="lg-sub-oppbp" type="number" min="0" max="100" placeholder="e.g. 74"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            </div>
+          </div>
+          <button onclick="submitLeagueGameAsPlayer()"
+            style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;"
+            onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+            Submit League Result
+          </button>
+          <div id="lg-sub-message" style="font-size:0.82rem;display:none;"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ADMIN SECTION -->
     <div style="margin-top:3rem;padding-top:2rem;border-top:2px solid var(--border);">
       <div style="font-size:0.72rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Admin Access</div>
@@ -1225,6 +1271,9 @@
         </div>
         <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Events added via this form. Click Delete to remove.</div>
         <div id="ev-db-list"></div>
+
+        <!-- League admin -->
+        <div id="league-admin-section"></div>
 
       </div>
     </div>
@@ -2439,146 +2488,114 @@ async function setGoing(name, sortDate, status) {
 }
 
 // ── league ──
-const LEAGUE_PODS = [
-  {
-    name: 'Pod 1',
-    players: [
-      { name: 'Tom D',          played: 2, pts: 4,  bp: 173 },
-      { name: 'Jack',           played: 4, pts: 4,  bp: 304 },
-      { name: 'Michael',        played: 2, pts: 2,  bp: 137 },
-      { name: 'Cayleb',         played: 1, pts: 0,  bp: 54  },
-      { name: 'Dan hates PSSN', played: 1, pts: 2,  bp: 84  },
-      { name: 'Ben',            played: 2, pts: 0,  bp: 102 },
-    ],
-    matrix: {
-      'Tom D':          { 'Jack': 82, 'Ben': 91 },
-      'Jack':           { 'Tom D': 74, 'Michael': 84, 'Cayleb': 58, 'Ben': 88 },
-      'Michael':        { 'Jack': 59, 'Dan hates PSSN': 78 },
-      'Cayleb':         { 'Jack': 54 },
-      'Dan hates PSSN': { 'Michael': 84 },
-      'Ben':            { 'Tom D': 59, 'Jack': 43 },
-    }
-  },
-  {
-    name: 'Pod 2',
-    players: [
-      { name: 'Christian', played: 3, pts: 4, bp: 224 },
-      { name: 'Nathan',    played: 2, pts: 0, bp: 128 },
-      { name: 'Jamie',     played: 2, pts: 0, bp: 81  },
-      { name: 'Joe',       played: 3, pts: 6, bp: 256 },
-      { name: 'Fintan',    played: 1, pts: 0, bp: 55  },
-      { name: 'Alex H',    played: 1, pts: 2, bp: 62  },
-    ],
-    matrix: {
-      'Christian': { 'Nathan': 78, 'Jamie': 80, 'Joe': 66 },
-      'Nathan':    { 'Christian': 59, 'Jamie': 69 },
-      'Jamie':     { 'Christian': 27, 'Nathan': 54 },
-      'Joe':       { 'Christian': 85, 'Jamie': 86, 'Alex H': 85 },
-      'Fintan':    { 'Joe': 55 },
-      'Alex H':    { 'Joe': 62 },
-    }
-  },
-  {
-    name: 'Pod 3',
-    players: [
-      { name: 'Alex C',   played: 2, pts: 0, bp: 91  },
-      { name: 'Rob',      played: 3, pts: 4, bp: 230 },
-      { name: 'Samuel H', played: 2, pts: 0, bp: 70  },
-      { name: 'Nora',     played: 4, pts: 2, bp: 282 },
-      { name: 'Gabe',     played: 5, pts: 8, bp: 429 },
-      { name: 'Tim',      played: 2, pts: 4, bp: 180 },
-      { name: 'Jordan',   played: 2, pts: 2, bp: 140 },
-    ],
-    matrix: {
-      'Alex C':   { 'Rob': 54, 'Nora': 37 },
-      'Rob':      { 'Alex C': 91, 'Samuel H': 91, 'Tim': 48 },
-      'Samuel H': { 'Rob': 39, 'Nora': 31 },
-      'Nora':     { 'Alex C': 77, 'Samuel H': 80, 'Tim': 46, 'Jordan': 79 },
-      'Gabe':     { 'Alex C': 82, 'Rob': 83, 'Samuel H': 100, 'Nora': 73, 'Jordan': 91 },
-      'Tim':      { 'Rob': 100, 'Nora': 80 },
-      'Jordan':   { 'Nora': 85, 'Tim': 55 },
-    }
-  },
-  {
-    name: 'Pod 4',
-    players: [
-      { name: 'Terra',   played: 5, pts: 0,  bp: 246 },
-      { name: 'Harvey',  played: 3, pts: 0,  bp: 124 },
-      { name: 'Matthew', played: 6, pts: 10, bp: 519 },
-      { name: 'Tom McC', played: 4, pts: 6,  bp: 306 },
-      { name: 'Kareem',  played: 4, pts: 4,  bp: 322 },
-      { name: 'James',   played: 5, pts: 8,  bp: 386 },
-      { name: 'Gino',    played: 5, pts: 4,  bp: 308 },
-    ],
-    matrix: {
-      'Terra':   { 'Harvey': 20, 'Matthew': 70, 'Tom McC': 70, 'Kareem': 47, 'James': 39 },
-      'Harvey':  { 'Terra': 26, 'Matthew': 49, 'Tom McC': 49 },
-      'Matthew': { 'Terra': 98, 'Harvey': 100, 'Tom McC': 85, 'Kareem': 85, 'James': 56, 'Gino': 95 },
-      'Tom McC': { 'Terra': 91, 'Harvey': 89, 'Kareem': 29, 'Gino': 97 },
-      'Kareem':  { 'Terra': 96, 'Harvey': 83, 'Tom McC': 65, 'Gino': 78 },
-      'James':   { 'Terra': 94, 'Harvey': 87, 'Kareem': 76, 'Gino': 74, 'Matthew': 55 },
-      'Gino':    { 'Terra': 81, 'Harvey': 42, 'Tom McC': 38, 'Kareem': 69, 'James': 78 },
-    }
-  },
-  {
-    name: 'Pod 5',
-    players: [
-      { name: 'Alex F', played: 3, pts: 2, bp: 221 },
-      { name: 'Chris',  played: 3, pts: 0, bp: 130 },
-      { name: 'Henry',  played: 5, pts: 6, bp: 359 },
-      { name: 'Guy',    played: 5, pts: 8, bp: 399 },
-      { name: 'Artur',  played: 3, pts: 2, bp: 188 },
-      { name: 'John',   played: 3, pts: 4, bp: 171 },
-    ],
-    matrix: {
-      'Alex F': { 'Chris': 98, 'Henry': 64, 'Guy': 59 },
-      'Chris':  { 'Alex F': 30, 'Henry': 25, 'John': 75 },
-      'Henry':  { 'Alex F': 83, 'Chris': 100, 'Artur': 45, 'Guy': 74, 'John': 57 },
-      'Guy':    { 'Alex F': 63, 'Chris': 84, 'Henry': 87, 'Artur': 100, 'John': 65 },
-      'Artur':  { 'Henry': 71, 'Guy': 80, 'John': 37 },
-      'John':   { 'Alex F': 58, 'Chris': 84, 'Artur': 29 },
-    }
-  },
-  {
-    name: 'Pod 6',
-    players: [
-      { name: 'Oscar',    played: 2, pts: 2, bp: 151 },
-      { name: 'Anthony',  played: 4, pts: 4, bp: 309 },
-      { name: 'Spencer',  played: 1, pts: 2, bp: 87  },
-      { name: 'Samuel F', played: 2, pts: 2, bp: 116 },
-      { name: 'Ricky',    played: 2, pts: 0, bp: 104 },
-      { name: 'Harry',    played: 1, pts: 2, bp: 86  },
-    ],
-    matrix: {
-      'Oscar':    { 'Anthony': 88, 'Samuel F': 63 },
-      'Anthony':  { 'Oscar': 56, 'Spencer': 98, 'Samuel F': 97, 'Ricky': 58 },
-      'Spencer':  { 'Anthony': 87 },
-      'Samuel F': { 'Oscar': 43, 'Anthony': 73 },
-      'Ricky':    { 'Anthony': 31, 'Samuel F': 73 },
-      'Harry':    { 'Anthony': 86 },
-    }
-  }
-];
-
+let leagueData = null;
 let activePod = 0;
+let leagueLoaded = false;
+
+async function renderLeague() {
+  if (!leagueLoaded) {
+    await loadLeagueData();
+    leagueLoaded = true;
+  }
+  renderPod();
+}
+
+async function loadLeagueData() {
+  try {
+    const res = await fetch(`${API}/league`);
+    const ct = res.headers.get('content-type') || '';
+    if (!res.ok || !ct.includes('application/json')) {
+      document.getElementById('league-content').innerHTML = '<div style="font-size:0.85rem;color:var(--muted);">Could not load league data.</div>';
+      return;
+    }
+    leagueData = await res.json();
+
+    // set title
+    if (leagueData.season) {
+      document.getElementById('league-title').textContent = `PSSN League — ${leagueData.season.name}`;
+    }
+
+    // build pod tab bar
+    const bar = document.getElementById('pod-tab-bar');
+    bar.innerHTML = '';
+    if (leagueData.pods) {
+      leagueData.pods.forEach((pod, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+        btn.textContent = pod.name;
+        btn.onclick = () => switchPod(i);
+        btn.id = `pod-btn-${i}`;
+        bar.appendChild(btn);
+      });
+    }
+    // playoffs tab
+    const playoffBtn = document.createElement('button');
+    playoffBtn.className = 'tab-btn';
+    playoffBtn.textContent = '🏆 Playoffs';
+    playoffBtn.id = `pod-btn-playoffs`;
+    playoffBtn.onclick = () => switchPod('playoffs');
+    bar.appendChild(playoffBtn);
+
+  } catch(e) {
+    console.warn('League load error:', e);
+    document.getElementById('league-content').innerHTML = '<div style="font-size:0.85rem;color:var(--muted);">Could not load league data.</div>';
+  }
+}
 
 function switchPod(idx) {
   activePod = idx;
-  for (let i = 0; i <= 6; i++) {
-    const btn = document.getElementById(`pod-btn-${i}`);
-    if (btn) btn.classList.toggle('active', i === idx);
-  }
-  renderLeague();
+  document.querySelectorAll('#pod-tab-bar .tab-btn').forEach(b => b.classList.remove('active'));
+  const btnId = idx === 'playoffs' ? 'pod-btn-playoffs' : `pod-btn-${idx}`;
+  const btn = document.getElementById(btnId);
+  if (btn) btn.classList.add('active');
+  renderPod();
 }
 
-function renderLeague() {
+function renderPod() {
   const el = document.getElementById('league-content');
-  if (!el) return;
-  if (activePod === 6) { renderPlayoffs(el); return; }
+  if (!el || !leagueData) return;
+  if (activePod === 'playoffs') { renderPlayoffs(el); return; }
 
-  const pod = LEAGUE_PODS[activePod];
-  const sorted = [...pod.players].sort((a,b) => b.pts - a.pts || b.bp - a.bp);
-  const names = pod.players.map(p => p.name);
+  const pod = leagueData.pods?.[activePod];
+  if (!pod) return;
+
+  // get players in this pod
+  const podPlayers = (leagueData.players || [])
+    .filter(p => p.pod_id === pod.id)
+    .map(p => p.player_name);
+
+  // get approved games for this pod
+  const podGames = (leagueData.games || []).filter(g => g.pod_id === pod.id);
+
+  // calculate standings
+  const standings = {};
+  podPlayers.forEach(name => { standings[name] = { name, played: 0, pts: 0, bp: 0 }; });
+
+  podGames.forEach(g => {
+    if (!standings[g.player1]) standings[g.player1] = { name: g.player1, played: 0, pts: 0, bp: 0 };
+    if (!standings[g.player2]) standings[g.player2] = { name: g.player2, played: 0, pts: 0, bp: 0 };
+    const s1 = standings[g.player1];
+    const s2 = standings[g.player2];
+    s1.played++; s2.played++;
+    s1.bp += g.bp1; s2.bp += g.bp2;
+    if (g.bp1 > g.bp2) { s1.pts += 2; }
+    else if (g.bp2 > g.bp1) { s2.pts += 2; }
+    else { s1.pts += 1; s2.pts += 1; } // draw
+  });
+
+  const sorted = Object.values(standings).sort((a,b) => b.pts - a.pts || b.bp - a.bp);
+
+  // build matrix
+  const matrix = {};
+  podPlayers.forEach(p => { matrix[p] = {}; });
+  podGames.forEach(g => {
+    if (!matrix[g.player1]) matrix[g.player1] = {};
+    if (!matrix[g.player2]) matrix[g.player2] = {};
+    matrix[g.player1][g.player2] = g.bp1;
+    matrix[g.player2][g.player1] = g.bp2;
+  });
+
+  const names = podPlayers;
 
   let html = `
     <div style="margin-bottom:2rem;">
@@ -2612,7 +2629,7 @@ function renderLeague() {
         <table class="event-table" style="min-width:400px;">
           <thead><tr>
             <th style="padding-left:1rem;">vs</th>
-            ${names.map(n=>`<th style="text-align:center;font-size:0.65rem;">${n}</th>`).join('')}
+            ${names.map(n=>`<th style="text-align:center;font-size:0.65rem;">${n.split(' ')[0]}</th>`).join('')}
           </tr></thead>
           <tbody>
             ${names.map(row=>`
@@ -2620,9 +2637,9 @@ function renderLeague() {
                 <td style="padding-left:1rem;font-size:0.82rem;color:var(--text);white-space:nowrap;">${row}</td>
                 ${names.map(col=>{
                   if(row===col) return `<td style="text-align:center;background:var(--surface2);"></td>`;
-                  const score = pod.matrix[row]?.[col];
+                  const score = matrix[row]?.[col];
                   if(score===undefined) return `<td style="text-align:center;color:var(--faint);">—</td>`;
-                  const won = score > (pod.matrix[col]?.[row]??0);
+                  const won = score > (matrix[col]?.[row]??0);
                   return `<td style="text-align:center;font-size:0.85rem;color:${won?'var(--win)':'var(--loss)'};font-weight:${won?'500':'300'};">${score}</td>`;
                 }).join('')}
               </tr>`).join('')}
@@ -2645,575 +2662,329 @@ function renderPlayoffs(el) {
       <div style="font-size:0.78rem;color:var(--faint);">${p2}</div>
     </div>`;
 
+  // get pod winners/runners-up from current data
+  const podResults = (leagueData.pods || []).map((pod, i) => {
+    const podPlayers = (leagueData.players || []).filter(p => p.pod_id === pod.id).map(p => p.player_name);
+    const podGames = (leagueData.games || []).filter(g => g.pod_id === pod.id);
+    const standings = {};
+    podPlayers.forEach(name => { standings[name] = { name, pts: 0, bp: 0 }; });
+    podGames.forEach(g => {
+      if (!standings[g.player1]) standings[g.player1] = { name: g.player1, pts: 0, bp: 0 };
+      if (!standings[g.player2]) standings[g.player2] = { name: g.player2, pts: 0, bp: 0 };
+      standings[g.player1].bp += g.bp1; standings[g.player2].bp += g.bp2;
+      if (g.bp1 > g.bp2) standings[g.player1].pts += 2;
+      else if (g.bp2 > g.bp1) standings[g.player2].pts += 2;
+      else { standings[g.player1].pts++; standings[g.player2].pts++; }
+    });
+    const sorted = Object.values(standings).sort((a,b) => b.pts - a.pts || b.bp - a.bp);
+    return { pod: pod.name, winner: sorted[0]?.name || 'TBD', runnerUp: sorted[1]?.name || 'TBD' };
+  });
+
   el.innerHTML = `
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Pod winners receive a bye to the semi-finals. Pod runners-up enter at the quarter-final stage. Bracket populates when pods complete.</div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Pod winners receive a bye to the semi-finals. Pod runners-up enter at the quarter-final stage.</div>
     <div style="overflow-x:auto;">
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;min-width:600px;">
-
         <div>
           <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);">Quarter Finals</div>
-          ${matchBox('QF 1','Pod 1 Runner-up','Pod 2 Runner-up',false)}
-          ${matchBox('QF 2','Pod 3 Runner-up','Pod 4 Runner-up',false)}
-          ${matchBox('QF 3','Pod 5 Runner-up','Pod 6 Runner-up',false)}
+          ${matchBox('QF 1', podResults[0]?.runnerUp || 'Pod 1 Runner-up', podResults[1]?.runnerUp || 'Pod 2 Runner-up', false)}
+          ${matchBox('QF 2', podResults[2]?.runnerUp || 'Pod 3 Runner-up', podResults[3]?.runnerUp || 'Pod 4 Runner-up', false)}
+          ${matchBox('QF 3', podResults[4]?.runnerUp || 'Pod 5 Runner-up', podResults[5]?.runnerUp || 'Pod 6 Runner-up', false)}
         </div>
-
         <div>
           <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);">Semi Finals</div>
-          ${matchBox('SF 1 — Pod 1 Winner gets bye','Pod 1 Winner','QF 1 Winner',false)}
-          ${matchBox('SF 2 — Pod 2 Winner gets bye','Pod 2 Winner','QF 2 Winner',false)}
-          ${matchBox('SF 3 — Pod 3 Winner gets bye','Pod 3 Winner','QF 3 Winner',false)}
+          ${matchBox('SF 1 — bye', podResults[0]?.winner || 'Pod 1 Winner', 'QF 1 Winner', false)}
+          ${matchBox('SF 2 — bye', podResults[2]?.winner || 'Pod 3 Winner', 'QF 2 Winner', false)}
+          ${matchBox('SF 3 — bye', podResults[4]?.winner || 'Pod 5 Winner', 'QF 3 Winner', false)}
         </div>
-
         <div>
           <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);">Final</div>
-          ${matchBox('🏆 GRAND FINAL','SF Winner','SF Winner',true)}
+          ${matchBox('🏆 GRAND FINAL', 'SF Winner', 'SF Winner', true)}
           <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;text-align:center;">Champion crowned here</div>
         </div>
-
       </div>
     </div>`;
 }
 
-async function loadSheetSubmissions() {
-  const el = document.getElementById('sheet-submissions');
-  el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">Loading submissions…</div>`;
-  try {
-    const res = await fetch(`${API}/submissions?pin=1719`);
-    const data = await res.json();
-    const rows = data.submissions;
-    if (!rows || !rows.length) {
-      el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">No submissions yet.</div>`;
-      return;
-    }
-    let html = `<table class="event-table">
-      <thead><tr>
-        <th>When</th><th>Player</th><th>Event</th><th>Format</th><th>Faction</th><th>Placing</th><th style="text-align:right">W/L/D</th><th>Approved</th>
-      </tr></thead><tbody>`;
-    rows.forEach(row => {
-      const ts    = row.submitted_at ? new Date(row.submitted_at).toLocaleDateString('en-GB') : '—';
-      const approved = row.approved
-        ? `<span style="color:var(--win);font-size:0.75rem;">✓ Yes</span>`
-        : `<button onclick="approveSubmission(${row.id},true)" style="font-size:0.72rem;padding:2px 8px;background:var(--win-bg);border:1px solid var(--win);border-radius:3px;color:var(--win);cursor:pointer;">Approve</button>
-           <button onclick="approveSubmission(${row.id},false)" style="font-size:0.72rem;padding:2px 8px;background:var(--loss-bg);border:1px solid var(--loss);border-radius:3px;color:var(--loss);cursor:pointer;margin-left:4px;">Reject</button>`;
-      html += `<tr>
-        <td style="font-size:0.75rem;color:var(--muted);">${ts}</td>
-        <td class="player-cell">${row.player_name}</td>
-        <td style="font-size:0.78rem;color:var(--muted);">${row.event_name}</td>
-        <td><span class="format-pill">${row.event_format}</span></td>
-        <td style="font-size:0.78rem;color:var(--muted);">${row.faction}</td>
-        <td style="font-size:0.82rem;">${row.place || '—'} <span style="font-size:0.7rem;color:var(--muted);">/ ${row.total_players || '—'}</span></td>
-        <td class="wld-cell">
-          <span class="rec-badge rec-w">${row.wins}W</span>
-          <span class="rec-badge rec-l">${row.losses}L</span>
-          ${row.draws > 0 ? `<span class="rec-badge rec-d">${row.draws}D</span>` : ''}
-        </td>
-        <td style="font-size:0.75rem;">${approved}</td>
-      </tr>`;
-    });
-    html += `</tbody></table>`;
-    el.innerHTML = html;
-  } catch(e) {
-    el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">Could not load submissions.</div>`;
-  }
-}
+// ── admin league tools ──
+function buildLeagueAdmin(adminEl) {
+  if (!leagueData) return;
 
-async function approveSubmission(id, approved) {
-  try {
-    await fetch(`${API}/submissions`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: '1719', id, approved })
-    });
-    loadSheetSubmissions();
-  } catch(e) {
-    console.error('Failed to update submission', e);
-  }
-}
+  const pending = leagueData.pending || [];
+  const pods = leagueData.pods || [];
+  const players = leagueData.players || [];
 
-// ── season highlights ──
-function buildHighlights() {
-  const hlEl = document.getElementById('highlights');
-  if (!hlEl) return;
-  const cards = [];
-  const activeEvs = getActiveEvents();
-
-  // 1. Best team result across all ITTs (by placing percentile)
-  const ittEvents = activeEvs.filter(ev => ev.format === 'Teams' && ev.subteams);
-  let bestTeam = null;
-  ittEvents.forEach(ev => {
-    ev.subteams.forEach(st => {
-      const pct = st.placing / ev.totalTeams;
-      if (!bestTeam || pct < bestTeam.pct) {
-        bestTeam = { pct, name: st.name, placing: st.placing, total: ev.totalTeams, event: ev.name, date: ev.date, w: st.w, l: st.l, d: st.d };
-      }
-    });
-  });
-  if (bestTeam) {
-    cards.push({ gold: true, label: 'Best team result', name: bestTeam.name, player: null,
-      detail: `${bestTeam.placing} of ${bestTeam.total} teams · ${bestTeam.event} · ${bestTeam.date}<br>${bestTeam.w}W ${bestTeam.l}L ${bestTeam.d}D` });
-  }
-
-  // 2. Perfect scores — split by format
-  const perfects = [];
-  activeEvs.forEach(ev => {
-    ev.results.forEach(r => {
-      if (r.dropped) return;
-      const effectiveL = r.shadow ? 0 : r.l;
-      const effectiveD = r.shadow ? 0 : r.d;
-      const effectiveGames = r.w + effectiveL + effectiveD;
-      if (effectiveL === 0 && effectiveD === 0 && effectiveGames >= 3) {
-        perfects.push({ player: r.player, event: ev.name, date: ev.date, w: r.w, format: ev.format, faction: r.faction, shadow: r.shadow });
-      }
-    });
-  });
-
-  const gtPerfects  = perfects.filter(p => p.format === 'GT');
-  const rttPerfects = perfects.filter(p => p.format === 'RTT');
-
-  if (gtPerfects.length) {
-    const list = gtPerfects.map(p => `${p.player} — ${p.w}-0${p.shadow ? ' (shadow)' : ''} · ${p.event}`).join('<br>');
-    const displayName = gtPerfects.length === 1 ? gtPerfects[0].player
-      : gtPerfects.map(p => p.player).filter((v,i,a) => a.indexOf(v) === i).join(', ');
-    cards.push({ gold: true, label: `GT perfect scores (${gtPerfects.length})`, name: displayName,
-      player: gtPerfects.length === 1 ? gtPerfects[0].player : null, detail: list });
-  }
-
-  if (rttPerfects.length) {
-    const list = rttPerfects.map(p => `${p.player} — ${p.w}-0 · ${p.event}`).join('<br>');
-    const displayName = rttPerfects.length === 1 ? rttPerfects[0].player
-      : rttPerfects.map(p => p.player).filter((v,i,a) => a.indexOf(v) === i).join(', ');
-    cards.push({ gold: false, label: `RTT perfect scores (${rttPerfects.length})`, name: displayName,
-      player: rttPerfects.length === 1 ? rttPerfects[0].player : null, detail: list });
-  }
-
-  // 3. Most active player — most events attended
-  const attendance = {};
-  activeEvs.forEach(ev => {
-    ev.results.forEach(r => {
-      if (!r.dropped) attendance[r.player] = (attendance[r.player] || 0) + 1;
-    });
-  });
-  const mostActive = Object.entries(attendance).sort((a,b) => b[1]-a[1])[0];
-  if (mostActive) {
-    const [name, count] = mostActive;
-    const tied = Object.entries(attendance).filter(([,v]) => v === count).map(([k]) => k);
-    cards.push({ gold: false, label: 'Most active player', name: tied.length > 1 ? tied.join(' & ') : name, player: tied.length === 1 ? name : null,
-      detail: `${count} events attended this season` });
-  }
-
-  // 4. Army collector — most unique factions used
-  const factionCounts = {};
-  activeEvs.forEach(ev => {
-    ev.results.forEach(r => {
-      if (!r.dropped) {
-        if (!factionCounts[r.player]) factionCounts[r.player] = new Set();
-        factionCounts[r.player].add(r.faction);
-      }
-    });
-  });
-  const mostFactions = Object.entries(factionCounts).sort((a,b) => b[1].size - a[1].size)[0];
-  if (mostFactions) {
-    const [name, factions] = mostFactions;
-    cards.push({ gold: false, label: 'Army collector', name, player: name,
-      detail: `${factions.size} factions played: ${[...factions].join(', ')}` });
-  }
-
-  hlEl.innerHTML = cards.length ? `<div class="highlights-grid">${cards.map(c => `
-    <div class="highlight-card${c.gold ? ' gold' : ''}">
-      <div class="highlight-label">${c.label}</div>
-      <div class="highlight-name" onclick="${c.player ? `openPlayerPanel('${c.player}')` : ''}">${c.name}</div>
-      <div class="highlight-detail">${c.detail}</div>
-    </div>`).join('')}</div>`
-    : `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No highlights yet for this edition.</div>`;
-}
-buildHighlights();
-
-// ── faction win rates ──
-function buildFactionStats() {
-  const el = document.getElementById('faction-stats');
-  if (!el) return;
-  el.innerHTML = '';
-
-  const fmtLabels = { GT: 'Grand Tournaments', RTT: 'RTTs', Teams: 'Teams Events' };
-
-  ['GT','RTT','Teams'].forEach(fmt => {
-    const factions = {};
-    getActiveEvents().filter(ev => ev.format === fmt).forEach(ev => {
-      ev.results.forEach(r => {
-        if (r.dropped) return;
-        if (!factions[r.faction]) factions[r.faction] = { w:0, l:0, d:0, games:0, players: new Set() };
-        const f = factions[r.faction];
-        const w = r.w;
-        const l = r.shadow ? 0 : r.l;
-        const d = r.shadow ? 0 : r.d;
-        f.w += w; f.l += l; f.d += d;
-        f.games += w + l + d;
-        f.players.add(r.player);
-      });
-    });
-
-    const entries = Object.entries(factions).filter(([,f]) => f.games > 0);
-    if (!entries.length) return;
-
-    const totalW = entries.reduce((a,[,f]) => a + f.w, 0);
-    const totalG = entries.reduce((a,[,f]) => a + f.games, 0);
-    const teamAvg = totalG ? totalW / totalG : 0.5;
-    const WEIGHT = 5;
-
-    const ranked = entries.map(([name, f]) => {
-      const rawWr = f.w / f.games;
-      const score = (f.games / (f.games + WEIGHT)) * rawWr + (WEIGHT / (f.games + WEIGHT)) * teamAvg;
-      return { name, ...f, score, rawWr };
-    }).sort((a,b) => b.score - a.score);
-
-    const groupId = 'faction-' + fmt.toLowerCase();
-    const rows = ranked.map((f, i) => {
-      const wr = Math.round(f.score * 100);
-      const rawWr = Math.round(f.rawWr * 100);
-      const wrColor = wr >= 60 ? '#ff6a00' : wr >= 40 ? 'var(--text)' : 'var(--loss)';
-      return `
-        <tr>
-          <td style="padding-left:1rem;font-size:0.85rem;color:var(--text);font-weight:400;">${i+1}. ${f.name}</td>
-          <td style="font-size:0.75rem;color:var(--muted);">${f.players.size} player${f.players.size !== 1 ? 's' : ''}</td>
-          <td style="font-size:0.78rem;">
-            <span class="rec-badge rec-w">${f.w}W</span>
-            <span class="rec-badge rec-l">${f.l}L</span>
-            ${f.d > 0 ? `<span class="rec-badge rec-d">${f.d}D</span>` : ''}
-          </td>
-          <td style="text-align:right;padding-right:1rem;">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:${wrColor};">${wr}%</div>
-            <div style="font-size:0.62rem;color:var(--muted);">${f.games} games · ${rawWr}% raw</div>
-          </td>
-        </tr>`;
-    }).join('');
-
-    el.innerHTML += `
-      <div class="fmt-group" style="margin-bottom:10px;">
-        <div class="fmt-group-head" onclick="toggleFmtGroup('${groupId}')">
+  let html = `
+    <div class="section-head" style="margin-top:2.5rem;">
+      <div class="section-title">League — Add Game Result</div>
+      <div class="section-rule"></div>
+    </div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Add a completed league game directly. Goes live immediately.</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;max-width:500px;margin-bottom:1.5rem;">
+      <div style="display:grid;gap:10px;">
+        <div>
+          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Pod</label>
+          <select id="lg-pod" onchange="updateLeaguePlayerDropdowns()" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+            <option value="">Select pod...</option>
+            ${pods.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div>
-            <span class="fmt-group-title">${fmtLabels[fmt]}</span>
-            <span class="fmt-group-meta" style="margin-left:12px;">${ranked.length} faction${ranked.length !== 1 ? 's' : ''}</span>
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Player 1</label>
+            <select id="lg-p1" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select pod first</option>
+            </select>
           </div>
-          <span id="${groupId}-arrow" style="color:var(--muted);font-size:0.8rem;transition:transform 0.2s;">▼</span>
+          <div>
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Player 2</label>
+            <select id="lg-p2" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select pod first</option>
+            </select>
+          </div>
         </div>
-        <div id="${groupId}" class="fmt-group-body open">
-          <table class="event-table" style="width:100%;">
-            <thead><tr>
-              <th style="padding-left:1rem;">Faction</th>
-              <th>Players</th>
-              <th>Record</th>
-              <th style="text-align:right;padding-right:1rem;">Win rate</th>
-            </tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:0.72rem;color:var(--win);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Player 1 BP</label>
+            <input id="lg-bp1" type="number" min="0" max="100" placeholder="e.g. 82" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div>
+            <label style="font-size:0.72rem;color:var(--win);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Player 2 BP</label>
+            <input id="lg-bp2" type="number" min="0" max="100" placeholder="e.g. 74" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
         </div>
-      </div>`;
-  });
-}
-buildFactionStats();
+        <button onclick="submitLeagueGame()" style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;">
+          Save League Game
+        </button>
+        <div id="lg-message" style="font-size:0.82rem;display:none;"></div>
+      </div>
+    </div>`;
 
-// ── season awards ──
-let awardsBuilt = false;
-function buildAwards() {
-  if (awardsBuilt) return;
-  awardsBuilt = true;
-  const el = document.getElementById('awards-grid');
-  if (!el) return;
-
-  const activeEvs = getActiveEvents();
-  const awards = [];
-
-  // helper — get all results for a player
-  function playerResults(name) {
-    return activeEvs.map(ev => {
-      const r = ev.results.find(r => r.player === name && !r.dropped);
-      return r ? { ...r, format: ev.format, date: ev.date, eventName: ev.name, totalPlayers: ev.totalPlayers, totalTeams: ev.totalTeams, sortDate: ev.sortDate } : null;
-    }).filter(Boolean);
+  if (pending.length) {
+    html += `
+      <div class="section-head" style="margin-top:1.5rem;">
+        <div class="section-title">Pending League Results</div>
+        <div class="section-rule"></div>
+      </div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Submitted by players, waiting for approval.</div>
+      ${pending.map(g => `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:0.88rem;color:var(--text);">${g.player1} vs ${g.player2}</div>
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">BP: ${g.bp1} – ${g.bp2}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="approveLeagueGame(${g.id},true)" style="font-size:0.72rem;padding:4px 10px;background:var(--win-bg);border:1px solid var(--win);border-radius:3px;color:var(--win);cursor:pointer;">✓ Approve</button>
+            <button onclick="approveLeagueGame(${g.id},false)" style="font-size:0.72rem;padding:4px 10px;background:var(--loss-bg);border:1px solid var(--loss);border-radius:3px;color:var(--loss);cursor:pointer;">✗ Reject</button>
+          </div>
+        </div>`).join('')}`;
   }
 
-  const allPlayers = [...new Set(activeEvs.flatMap(ev => ev.results.filter(r => !r.dropped).map(r => r.player)))];
+  html += `
+    <div class="section-head" style="margin-top:2.5rem;">
+      <div class="section-title">End of Season</div>
+      <div class="section-rule"></div>
+    </div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Archive the current season and prepare for a new one. This cannot be undone.</div>
+    <button onclick="archiveLeagueSeason()" style="padding:9px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+      💾 Archive Season &amp; Reset
+    </button>
+    <div id="lg-archive-message" style="font-size:0.82rem;display:none;margin-top:8px;"></div>`;
 
-  // 1. MVP — highest Bayesian weighted singles win rate (5+ games)
-  const singlesPlayers = allPlayers.map(name => {
-    const res = playerResults(name).filter(r => r.format !== 'Teams');
-    const w = res.reduce((a,r) => a + r.w, 0);
-    const l = res.reduce((a,r) => a + (r.shadow ? 0 : r.l), 0);
-    const d = res.reduce((a,r) => a + (r.shadow ? 0 : r.d), 0);
-    const g = w + l + d;
-    return { name, w, l, d, g };
-  }).filter(p => p.g >= 5);
-  const teamAvgSingles = singlesPlayers.reduce((a,p) => a + p.w, 0) / Math.max(1, singlesPlayers.reduce((a,p) => a + p.g, 0));
-  const mvp = singlesPlayers.map(p => ({ ...p, score: (p.g/(p.g+10)) * (p.w/p.g) + (10/(p.g+10)) * teamAvgSingles })).sort((a,b) => b.score - a.score)[0];
-  if (mvp) awards.push({ icon: '👑', title: 'MVP', winner: mvp.name, detail: `${Math.round(mvp.score*100)}% weighted win rate · ${mvp.w}W ${mvp.l}L in singles` });
-
-  // 2. Iron Man — most individual games played
-  const ironMan = allPlayers.map(name => {
-    const res = playerResults(name);
-    const g = res.reduce((a,r) => { const l=r.shadow?0:r.l; const d=r.shadow?0:r.d; return a+r.w+l+d; }, 0);
-    return { name, g };
-  }).sort((a,b) => b.g - a.g)[0];
-  if (ironMan) awards.push({ icon: '🦾', title: 'Iron Man', winner: ironMan.name, detail: `${ironMan.g} individual games played` });
-
-  // 3. Journeyman — most events attended
-  const journeyman = allPlayers.map(name => ({ name, ev: playerResults(name).length })).sort((a,b) => b.ev - a.ev)[0];
-  if (journeyman) awards.push({ icon: '🧭', title: 'Journeyman', winner: journeyman.name, detail: `${journeyman.ev} events attended` });
-
-  // 4. Best Debut — highest win rate at first event (min 3 games)
-  const debuts = allPlayers.map(name => {
-    const res = playerResults(name);
-    if (!res.length) return null;
-    const first = res[0];
-    const l = first.shadow ? 0 : first.l;
-    const d = first.shadow ? 0 : first.d;
-    const g = first.w + l + d;
-    if (g < 3) return null;
-    return { name, wr: first.w / g, w: first.w, g, event: first.eventName };
-  }).filter(Boolean).sort((a,b) => b.wr - a.wr)[0];
-  if (debuts) awards.push({ icon: '🌟', title: 'Best Debut', winner: debuts.name, detail: `${debuts.w}W from ${debuts.g} games at ${debuts.event}` });
-
-  // 5. Faction Champion — best win rate with a single faction (min 5 games)
-  const factionMap = {};
-  activeEvs.forEach(ev => {
-    ev.results.forEach(r => {
-      if (r.dropped) return;
-      const key = `${r.player}|${r.faction}`;
-      if (!factionMap[key]) factionMap[key] = { player: r.player, faction: r.faction, w:0, l:0, d:0, g:0 };
-      const f = factionMap[key];
-      f.w += r.w; f.l += r.shadow?0:r.l; f.d += r.shadow?0:r.d;
-      f.g += r.w + (r.shadow?0:r.l) + (r.shadow?0:r.d);
-    });
-  });
-  const factionChamp = Object.values(factionMap).filter(f => f.g >= 5).sort((a,b) => (b.w/b.g) - (a.w/a.g))[0];
-  if (factionChamp) awards.push({ icon: '⚜️', title: 'Faction Champion', winner: factionChamp.player, detail: `${Math.round(factionChamp.w/factionChamp.g*100)}% win rate with ${factionChamp.faction} (${factionChamp.g} games)` });
-
-  // 6. Team Player — best win rate in Teams events (min 5 games)
-  const teamPlayers = allPlayers.map(name => {
-    const res = playerResults(name).filter(r => r.format === 'Teams');
-    const w = res.reduce((a,r) => a + r.w, 0);
-    const l = res.reduce((a,r) => a + r.l, 0);
-    const d = res.reduce((a,r) => a + r.d, 0);
-    const g = w + l + d;
-    return { name, w, l, d, g };
-  }).filter(p => p.g >= 5).sort((a,b) => (b.w/b.g) - (a.w/a.g))[0];
-  if (teamPlayers) awards.push({ icon: '🤝', title: 'Team Player', winner: teamPlayers.name, detail: `${Math.round(teamPlayers.w/teamPlayers.g*100)}% win rate in Teams events · ${teamPlayers.w}W ${teamPlayers.l}L` });
-
-  // 7. Most Improved — biggest win rate improvement (first half vs second half of events)
-  const improved = allPlayers.map(name => {
-    const res = playerResults(name).filter(r => r.format !== 'Teams');
-    if (res.length < 4) return null;
-    const mid = Math.floor(res.length / 2);
-    const first = res.slice(0, mid);
-    const second = res.slice(mid);
-    const wr1 = first.reduce((a,r) => a+r.w,0) / Math.max(1, first.reduce((a,r) => a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0));
-    const wr2 = second.reduce((a,r) => a+r.w,0) / Math.max(1, second.reduce((a,r) => a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0));
-    return { name, improvement: wr2 - wr1, wr1: Math.round(wr1*100), wr2: Math.round(wr2*100) };
-  }).filter(Boolean).sort((a,b) => b.improvement - a.improvement)[0];
-  if (improved && improved.improvement > 0) awards.push({ icon: '📈', title: 'Most Improved', winner: improved.name, detail: `${improved.wr1}% → ${improved.wr2}% win rate across the season` });
-
-  // 8. Comeback Kid — worst first event, best improvement
-  const comeback = allPlayers.map(name => {
-    const res = playerResults(name).filter(r => r.format !== 'Teams');
-    if (res.length < 4) return null;
-    const mid = Math.floor(res.length / 2);
-    const firstHalfW = res.slice(0,mid).reduce((a,r)=>a+r.w,0);
-    const firstHalfG = res.slice(0,mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0);
-    const secondHalfW = res.slice(mid).reduce((a,r)=>a+r.w,0);
-    const secondHalfG = res.slice(mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0);
-    if (!firstHalfG || !secondHalfG) return null;
-    const improvement = (secondHalfW/secondHalfG) - (firstHalfW/firstHalfG);
-    return { name, improvement, wr1: Math.round(firstHalfW/firstHalfG*100), wr2: Math.round(secondHalfW/secondHalfG*100) };
-  }).filter(p => p && p.wr1 < 50 && p.improvement > 0).sort((a,b) => b.improvement - a.improvement)[0];
-  if (comeback) awards.push({ icon: '💪', title: 'Comeback Kid', winner: comeback.name, detail: `Started at ${comeback.wr1}%, finished at ${comeback.wr2}% win rate` });
-
-  el.innerHTML = `<div class="highlights-grid">${awards.map(a => `
-    <div class="highlight-card">
-      <div style="font-size:1.8rem;margin-bottom:6px;">${a.icon}</div>
-      <div class="highlight-label">${a.title}</div>
-      <div class="highlight-name" onclick="openPlayerPanel('${a.winner}');setTimeout(()=>switchTab('stats'),0);" style="cursor:pointer;">${a.winner}</div>
-      <div class="highlight-detail">${a.detail}</div>
-    </div>`).join('')}</div>`;
-
-  // build archive
-  buildArchive();
+  const container = document.getElementById('league-admin-section');
+  if (container) container.innerHTML = html;
 }
 
-async function saveAwardsToArchive() {
-  const confirm = document.getElementById('archive-save-confirm');
-  const error = document.getElementById('archive-save-error');
-  confirm.style.display = 'none';
-  error.style.display = 'none';
+function updateLeaguePlayerDropdowns() {
+  const podId = parseInt(document.getElementById('lg-pod').value);
+  const podPlayers = (leagueData.players || []).filter(p => p.pod_id === podId).map(p => p.player_name);
+  const opts = `<option value="">Select player...</option>` + podPlayers.map(p => `<option value="${p}">${p}</option>`).join('');
+  document.getElementById('lg-p1').innerHTML = opts;
+  document.getElementById('lg-p2').innerHTML = opts;
+}
 
-  const pin = prompt('Enter admin PIN to archive these awards:');
-  if (!pin) return;
-  if (pin !== '1719') {
-    error.style.display = 'inline';
-    error.textContent = 'Incorrect PIN.';
-    setTimeout(() => { error.style.display = 'none'; }, 2000);
-    return;
+async function submitLeagueGame() {
+  const msg = document.getElementById('lg-message');
+  const pod_id = parseInt(document.getElementById('lg-pod').value);
+  const player1 = document.getElementById('lg-p1').value;
+  const player2 = document.getElementById('lg-p2').value;
+  const bp1 = parseInt(document.getElementById('lg-bp1').value);
+  const bp2 = parseInt(document.getElementById('lg-bp2').value);
+
+  if (!pod_id || !player1 || !player2 || isNaN(bp1) || isNaN(bp2)) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Please fill in all fields.'; return;
+  }
+  if (player1 === player2) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Players must be different.'; return;
   }
 
-  // collect current awards from the grid
-  const awardsEl = document.getElementById('awards-grid');
-  if (!awardsEl || !awardsEl.innerHTML) {
-    error.style.display = 'inline';
-    error.textContent = 'No awards to save — open the More tab first.';
-    return;
-  }
-
-  // re-calculate awards to get clean data
-  const activeEvs = getActiveEvents();
-  const awards = [];
-
-  function pRes(name) {
-    return activeEvs.map(ev => {
-      const r = ev.results.find(r => r.player === name && !r.dropped);
-      return r ? { ...r, format: ev.format } : null;
-    }).filter(Boolean);
-  }
-
-  const allPlayers = [...new Set(activeEvs.flatMap(ev => ev.results.filter(r => !r.dropped).map(r => r.player)))];
-  const sp = allPlayers.map(name => { const res=pRes(name).filter(r=>r.format!=='Teams'); const w=res.reduce((a,r)=>a+r.w,0); const l=res.reduce((a,r)=>a+(r.shadow?0:r.l),0); const d=res.reduce((a,r)=>a+(r.shadow?0:r.d),0); const g=w+l+d; return{name,w,l,d,g}; }).filter(p=>p.g>=5);
-  const ta = sp.reduce((a,p)=>a+p.w,0)/Math.max(1,sp.reduce((a,p)=>a+p.g,0));
-  const mvp = sp.map(p=>({...p,score:(p.g/(p.g+10))*(p.w/p.g)+(10/(p.g+10))*ta})).sort((a,b)=>b.score-a.score)[0];
-  if (mvp) awards.push({icon:'👑',title:'MVP',winner:mvp.name,detail:`${Math.round(mvp.score*100)}% weighted win rate · ${mvp.w}W ${mvp.l}L`});
-
-  const ironMan = allPlayers.map(name=>{const res=pRes(name);const g=res.reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0);return{name,g};}).sort((a,b)=>b.g-a.g)[0];
-  if (ironMan) awards.push({icon:'🦾',title:'Iron Man',winner:ironMan.name,detail:`${ironMan.g} games played`});
-
-  const journeyman = allPlayers.map(name=>({name,ev:pRes(name).length})).sort((a,b)=>b.ev-a.ev)[0];
-  if (journeyman) awards.push({icon:'🧭',title:'Journeyman',winner:journeyman.name,detail:`${journeyman.ev} events attended`});
-
-  const debuts = allPlayers.map(name=>{const res=pRes(name);if(!res.length)return null;const f=res[0];const l=f.shadow?0:f.l;const d=f.shadow?0:f.d;const g=f.w+l+d;if(g<3)return null;return{name,wr:f.w/g,w:f.w,g};}).filter(Boolean).sort((a,b)=>b.wr-a.wr)[0];
-  if (debuts) awards.push({icon:'🌟',title:'Best Debut',winner:debuts.name,detail:`${debuts.w}W from ${debuts.g} games`});
-
-  const factionMap={};
-  activeEvs.forEach(ev=>{ev.results.forEach(r=>{if(r.dropped)return;const k=`${r.player}|${r.faction}`;if(!factionMap[k])factionMap[k]={player:r.player,faction:r.faction,w:0,g:0};factionMap[k].w+=r.w;factionMap[k].g+=r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d);});});
-  const fc=Object.values(factionMap).filter(f=>f.g>=5).sort((a,b)=>(b.w/b.g)-(a.w/a.g))[0];
-  if (fc) awards.push({icon:'⚜️',title:'Faction Champion',winner:fc.player,detail:`${Math.round(fc.w/fc.g*100)}% with ${fc.faction}`});
-
-  const tp=allPlayers.map(name=>{const res=pRes(name).filter(r=>r.format==='Teams');const w=res.reduce((a,r)=>a+r.w,0);const g=res.reduce((a,r)=>a+r.w+r.l+r.d,0);return{name,w,g};}).filter(p=>p.g>=5).sort((a,b)=>(b.w/b.g)-(a.w/a.g))[0];
-  if (tp) awards.push({icon:'🤝',title:'Team Player',winner:tp.name,detail:`${Math.round(tp.w/tp.g*100)}% win rate in Teams`});
-
-  const imp=allPlayers.map(name=>{const res=pRes(name).filter(r=>r.format!=='Teams');if(res.length<4)return null;const mid=Math.floor(res.length/2);const wr1=res.slice(0,mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(0,mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0));const wr2=res.slice(mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0));return{name,improvement:wr2-wr1,wr1:Math.round(wr1*100),wr2:Math.round(wr2*100)};}).filter(Boolean).sort((a,b)=>b.improvement-a.improvement)[0];
-  if (imp&&imp.improvement>0) awards.push({icon:'📈',title:'Most Improved',winner:imp.name,detail:`${imp.wr1}% → ${imp.wr2}%`});
-
-  const cb=allPlayers.map(name=>{const res=pRes(name).filter(r=>r.format!=='Teams');if(res.length<4)return null;const mid=Math.floor(res.length/2);const wr1=res.slice(0,mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(0,mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0));const wr2=res.slice(mid).reduce((a,r)=>a+r.w,0)/Math.max(1,res.slice(mid).reduce((a,r)=>a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d),0));return{name,improvement:wr2-wr1,wr1:Math.round(wr1*100),wr2:Math.round(wr2*100)};}).filter(p=>p&&p.wr1<50&&p.improvement>0).sort((a,b)=>b.improvement-a.improvement)[0];
-  if (cb) awards.push({icon:'💪',title:'Comeback Kid',winner:cb.name,detail:`${cb.wr1}% → ${cb.wr2}%`});
-
-  const label = `${ACTIVE_EDITION}th Edition — ${D.season}`;
+  msg.style.display = 'block'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Saving...';
 
   try {
-    const res = await fetch(`${API}/awards`, {
+    const adminPin = document.getElementById('admin-pin-input').value;
+    const res = await fetch(`${API}/league`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin, label, awards })
+      body: JSON.stringify({ pin: adminPin, pod_id, player1, player2, bp1, bp2 })
     });
     const data = await res.json();
     if (data.success) {
-      confirm.style.display = 'inline';
-      setTimeout(() => { confirm.style.display = 'none'; }, 3000);
-      awardsBuilt = false;
-      buildAwards();
+      msg.style.color = 'var(--win)';
+      msg.textContent = '✓ Game saved! Reload the League tab to see updated standings.';
+      document.getElementById('lg-bp1').value = '';
+      document.getElementById('lg-bp2').value = '';
+      leagueLoaded = false; // force reload next visit
     } else {
-      error.style.display = 'inline';
-      error.textContent = data.error || 'Failed to save';
+      msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown');
     }
   } catch(e) {
-    error.style.display = 'inline';
-    error.textContent = 'Network error — try again';
+    msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error — try again.';
   }
 }
 
-async function buildArchive() {
-  const el = document.getElementById('archive-grid');
-  if (!el) return;
-  el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:0.5rem 0;">Loading archive...</div>`;
+async function approveLeagueGame(gameId, approved) {
   try {
-    const res = await fetch(`${API}/awards`);
+    const adminPin = document.getElementById('admin-pin-input').value;
+    await fetch(`${API}/league`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: adminPin, gameId, approved })
+    });
+    leagueLoaded = false;
+    await loadLeagueData();
+    buildLeagueAdmin();
+  } catch(e) { console.error('Approve failed', e); }
+}
+
+async function archiveLeagueSeason() {
+  const adminPin = document.getElementById('admin-pin-input').value;
+  const msg = document.getElementById('lg-archive-message');
+  const label = prompt('Enter archive label (e.g. "Season 1 — 2025/26"):');
+  if (!label) return;
+  if (!confirm(`Archive "${label}" and reset the league? This cannot be undone.`)) return;
+
+  // build snapshot from current data
+  const snapshot = {
+    season: leagueData.season,
+    pods: (leagueData.pods || []).map(pod => {
+      const podPlayers = (leagueData.players || []).filter(p => p.pod_id === pod.id).map(p => p.player_name);
+      const podGames = (leagueData.games || []).filter(g => g.pod_id === pod.id);
+      const standings = {};
+      podPlayers.forEach(name => { standings[name] = { name, pts: 0, bp: 0, played: 0 }; });
+      podGames.forEach(g => {
+        if (!standings[g.player1]) standings[g.player1] = { name: g.player1, pts: 0, bp: 0, played: 0 };
+        if (!standings[g.player2]) standings[g.player2] = { name: g.player2, pts: 0, bp: 0, played: 0 };
+        standings[g.player1].bp += g.bp1; standings[g.player2].bp += g.bp2;
+        standings[g.player1].played++; standings[g.player2].played++;
+        if (g.bp1 > g.bp2) standings[g.player1].pts += 2;
+        else if (g.bp2 > g.bp1) standings[g.player2].pts += 2;
+        else { standings[g.player1].pts++; standings[g.player2].pts++; }
+      });
+      return { pod: pod.name, standings: Object.values(standings).sort((a,b) => b.pts - a.pts || b.bp - a.bp) };
+    })
+  };
+
+  try {
+    msg.style.display = 'block'; msg.style.color = 'var(--muted)';
+    msg.textContent = 'Archiving...';
+    const res = await fetch(`${API}/league`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: adminPin, label, snapshot })
+    });
     const data = await res.json();
-    const archive = data.archive || [];
-    if (!archive.length) {
-      el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No archived seasons yet. Use the Save to Archive button when a season ends.</div>`;
-      return;
+    if (data.success) {
+      msg.style.color = 'var(--win)';
+      msg.textContent = '✓ Season archived. Set up the new season in Neon then reload.';
+      leagueLoaded = false;
+    } else {
+      msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown');
     }
-    el.innerHTML = archive.map((season, si) => {
-      const groupId = `archive-season-${si}`;
-      const awards = typeof season.awards === 'string' ? JSON.parse(season.awards) : season.awards;
-      const awardCards = awards.map(a => `
-        <div class="highlight-card">
-          <div style="font-size:1.5rem;margin-bottom:4px;">${a.icon}</div>
-          <div class="highlight-label">${a.title}</div>
-          <div class="highlight-name" style="cursor:pointer;" onclick="openPlayerPanel('${a.winner}');setTimeout(()=>switchTab('stats'),0);">${a.winner}</div>
-          <div class="highlight-detail">${a.detail}</div>
-        </div>`).join('');
-      const saved = season.created_at ? new Date(season.created_at).toLocaleDateString('en-GB') : '';
-      return `
-        <div class="fmt-group" style="margin-bottom:10px;">
-          <div class="fmt-group-head" onclick="toggleFmtGroup('${groupId}')">
-            <div>
-              <span class="fmt-group-title">${season.label}</span>
-              <span class="fmt-group-meta" style="margin-left:12px;">${awards.length} awards${saved ? ' · saved ' + saved : ''}</span>
-            </div>
-            <span id="${groupId}-arrow" style="color:var(--muted);font-size:0.8rem;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
-          </div>
-          <div id="${groupId}" class="fmt-group-body" style="display:none;padding:1rem;">
-            <div class="highlights-grid">${awardCards}</div>
-          </div>
-        </div>`;
-    }).join('');
   } catch(e) {
-    el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">Could not load archive.</div>`;
+    msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error.';
   }
 }
 
-function buildMilestones() {
-  const el = document.getElementById('milestones-grid');
-  if (!el) return;
-  el.innerHTML = '';
+// ── wizard type toggle ──
+function setWizardType(type) {
+  const isTournament = type === 'tournament';
+  document.getElementById('wiz-tournament-flow').style.display = isTournament ? 'block' : 'none';
+  document.getElementById('wiz-league-flow').style.display = isTournament ? 'none' : 'block';
+  document.getElementById('wiz-type-tournament').style.background = isTournament ? 'var(--accent)' : 'transparent';
+  document.getElementById('wiz-type-tournament').style.borderColor = isTournament ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('wiz-type-tournament').style.color = isTournament ? '#fff' : 'var(--muted)';
+  document.getElementById('wiz-type-league').style.background = isTournament ? 'transparent' : 'var(--accent)';
+  document.getElementById('wiz-type-league').style.borderColor = isTournament ? 'var(--border)' : 'var(--accent)';
+  document.getElementById('wiz-type-league').style.color = isTournament ? 'var(--muted)' : '#fff';
 
-  const activeEvs = getActiveEvents();
-  const allPlayers = [...new Set(activeEvs.flatMap(ev =>
-    ev.results.filter(r => !r.dropped).map(r => r.player)
-  ))].sort();
+  // populate league player dropdowns from leagueData
+  if (!isTournament && leagueData) {
+    const allPlayers = [...new Set((leagueData.players || []).map(p => p.player_name))].sort();
+    const opts = `<option value="">Select...</option>` + allPlayers.map(p => `<option value="${p}">${p}</option>`).join('');
+    const meEl = document.getElementById('lg-sub-me');
+    const oppEl = document.getElementById('lg-sub-opponent');
+    if (meEl && meEl.options.length <= 1) meEl.innerHTML = opts;
+    if (oppEl && oppEl.options.length <= 1) oppEl.innerHTML = opts;
+  }
+}
 
-  const MILESTONES = [
-    { id: 'first-event',   icon: '🎮', label: 'First Event',      desc: 'Attended their first event',             check: (res, evs) => evs.length >= 1 },
-    { id: 'five-events',   icon: '🗺️', label: '5 Events',         desc: 'Attended 5 or more events',              check: (res, evs) => evs.length >= 5 },
-    { id: 'first-win',     icon: '✅', label: 'First Win',         desc: 'Won their first game',                   check: (res) => res.reduce((a,r) => a+r.w, 0) >= 1 },
-    { id: 'win-10',        icon: '🥈', label: '10 Wins',           desc: 'Accumulated 10 wins',                    check: (res) => res.reduce((a,r) => a+r.w, 0) >= 10 },
-    { id: 'win-25',        icon: '🥇', label: '25 Wins',           desc: 'Accumulated 25 wins',                    check: (res) => res.reduce((a,r) => a+r.w, 0) >= 25 },
-    { id: 'centurion',     icon: '💯', label: 'Centurion',         desc: '100 games played',                       check: (res) => res.reduce((a,r) => a+r.w+(r.shadow?0:r.l)+(r.shadow?0:r.d), 0) >= 100 },
-    { id: 'perfect',       icon: '⭐', label: 'Perfect Score',     desc: 'Went undefeated at an event (3-0/5-0)',  check: (res) => res.some(r => r.w >= 3 && (r.shadow?0:r.l) === 0 && (r.shadow?0:r.d) === 0) },
-    { id: 'all-formats',   icon: '🎯', label: 'All Formats',       desc: 'Played GT, RTT and Teams events',        check: (res) => ['GT','RTT','Teams'].every(fmt => res.some(r => r.format === fmt)) },
-  ];
+async function submitLeagueGameAsPlayer() {
+  const msg = document.getElementById('lg-sub-message');
+  const me = document.getElementById('lg-sub-me').value;
+  const opponent = document.getElementById('lg-sub-opponent').value;
+  const mybp = parseInt(document.getElementById('lg-sub-mybp').value);
+  const oppbp = parseInt(document.getElementById('lg-sub-oppbp').value);
 
-  const rows = allPlayers.map(name => {
-    const evs = activeEvs.filter(ev => ev.results.some(r => r.player === name && !r.dropped));
-    if (!evs.length) return '';
+  if (!me || !opponent || isNaN(mybp) || isNaN(oppbp)) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Please fill in all fields.'; return;
+  }
+  if (me === opponent) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'You can\'t play yourself!'; return;
+  }
 
-    const res = activeEvs.map(ev => {
-      const r = ev.results.find(r => r.player === name && !r.dropped);
-      return r ? { ...r, format: ev.format } : null;
-    }).filter(Boolean);
+  // find the pod these two players share
+  const myPods = (leagueData.players || []).filter(p => p.player_name === me).map(p => p.pod_id);
+  const oppPods = (leagueData.players || []).filter(p => p.player_name === opponent).map(p => p.pod_id);
+  const sharedPod = myPods.find(id => oppPods.includes(id));
 
-    const unlockedCount = MILESTONES.filter(m => m.check(res, evs)).length;
+  if (!sharedPod) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'These players are not in the same pod.'; return;
+  }
 
-    const dots = MILESTONES.map(m => {
-      const unlocked = m.check(res, evs);
-      return `<span title="${m.label}: ${m.desc}" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:4px;background:${unlocked ? 'var(--accent-bg)' : 'var(--surface2)'};border:1px solid ${unlocked ? 'var(--accent-muted)' : 'var(--border)'};font-size:0.85rem;opacity:${unlocked ? '1' : '0.35'};cursor:default;">${m.icon}</span>`;
-    }).join('');
+  msg.style.display = 'block'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Submitting...';
 
-    return `
-      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
-        <div style="width:140px;flex-shrink:0;">
-          <div style="font-size:0.85rem;color:var(--text);cursor:pointer;" onclick="openPlayerPanel('${name}')" class="player-link">${name}</div>
-          <div style="font-size:0.68rem;color:var(--muted);margin-top:1px;">${unlockedCount} / ${MILESTONES.length} unlocked</div>
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;">${dots}</div>
-      </div>`;
-  }).filter(Boolean).join('');
-
-  el.innerHTML = rows || '<div style="font-size:0.85rem;color:var(--muted);">No data yet.</div>';
+  try {
+    const res = await fetch(`${API}/league`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: '1719', pod_id: sharedPod, player1: me, player2: opponent, bp1: mybp, bp2: oppbp })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.style.color = 'var(--win)';
+      msg.textContent = '✓ League result submitted! Pending admin approval before it appears in standings.';
+      document.getElementById('lg-sub-me').value = '';
+      document.getElementById('lg-sub-opponent').value = '';
+      document.getElementById('lg-sub-mybp').value = '';
+      document.getElementById('lg-sub-oppbp').value = '';
+    } else {
+      msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown');
+    }
+  } catch(e) {
+    msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error — try again.';
+  }
 }
 
 // ── wizard state ──
@@ -3420,6 +3191,7 @@ function checkAdminPin(val) {
         document.getElementById('admin-content').style.display = 'block';
         loadSheetSubmissions();
         loadDbEvents();
+        buildLeagueAdmin();
       } else {
         errEl.style.display = 'block';
         document.getElementById('admin-pin-input').value = '';
