@@ -2819,11 +2819,18 @@ async function submitLeagueGame() {
     msg.textContent = 'Players must be different.'; return;
   }
 
+  // use the admin PIN from the input field
+  const adminPinEl = document.getElementById('admin-pin-input');
+  const adminPin = adminPinEl ? adminPinEl.value : '';
+  if (!adminPin) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Admin PIN not entered — scroll up and enter it first.'; return;
+  }
+
   msg.style.display = 'block'; msg.style.color = 'var(--muted)';
   msg.textContent = 'Saving...';
 
   try {
-    const adminPin = document.getElementById('admin-pin-input').value;
     const res = await fetch(`${API}/league`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2832,10 +2839,15 @@ async function submitLeagueGame() {
     const data = await res.json();
     if (data.success) {
       msg.style.color = 'var(--win)';
-      msg.textContent = '✓ Game saved! Reload the League tab to see updated standings.';
+      msg.textContent = data.approved
+        ? '✓ Game saved and live! Reload League tab to see updated standings.'
+        : '⚠️ Wrong admin PIN — game went to approval queue instead.';
       document.getElementById('lg-bp1').value = '';
       document.getElementById('lg-bp2').value = '';
-      leagueLoaded = false; // force reload next visit
+      leagueLoaded = false;
+      // refresh pending list
+      await loadLeagueData();
+      buildLeagueAdmin();
     } else {
       msg.style.color = 'var(--loss)';
       msg.textContent = 'Error: ' + (data.error || 'Unknown');
@@ -2849,14 +2861,19 @@ async function submitLeagueGame() {
 async function approveLeagueGame(gameId, approved) {
   try {
     const adminPin = document.getElementById('admin-pin-input').value;
-    await fetch(`${API}/league`, {
+    const res = await fetch(`${API}/league`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pin: adminPin, gameId, approved })
     });
-    leagueLoaded = false;
-    await loadLeagueData();
-    buildLeagueAdmin();
+    const data = await res.json();
+    if (data.success) {
+      leagueLoaded = false;
+      await loadLeagueData();
+      buildLeagueAdmin();
+    } else {
+      alert('Error: ' + (data.error || 'Unknown'));
+    }
   } catch(e) { console.error('Approve failed', e); }
 }
 
