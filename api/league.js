@@ -3,7 +3,6 @@ import { sql } from '@vercel/postgres';
 const ADMIN_PIN = process.env.ADMIN_PIN;
 const TEAM_PIN = '1719';
 
-// Calculate standings and seedings from games data
 function calcSeedings(pods, players, games) {
   const podResults = pods.map(pod => {
     const podPlayers = players.filter(p => p.pod_id === pod.id).map(p => p.player_name);
@@ -22,10 +21,8 @@ function calcSeedings(pods, players, games) {
     const sorted = Object.values(standings).sort((a, b) => b.pts - a.pts || b.bp - a.bp);
     return { pod: pod.name, podId: pod.id, winner: sorted[0], runnerUp: sorted[1] };
   });
-
   const winners = podResults.map(p => ({ ...p.winner, pod: p.pod })).sort((a, b) => b.bp - a.bp);
   const runnersUp = podResults.map(p => ({ ...p.runnerUp, pod: p.pod })).sort((a, b) => b.bp - a.bp);
-
   return {
     byeWinners: winners.slice(0, 4),
     qfWinners: winners.slice(4, 6),
@@ -34,14 +31,14 @@ function calcSeedings(pods, players, games) {
       QF1: { p1: runnersUp[0], p2: runnersUp[5] },
       QF2: { p1: runnersUp[1], p2: runnersUp[4] },
       QF3: { p1: runnersUp[2], p2: runnersUp[3] },
-      QF4: { p1: winners[4],   p2: winners[5] },
+      QF4: { p1: winners[4], p2: winners[5] },
       SF1: { p1: winners[0], p2: null },
       SF2: { p1: winners[1], p2: null },
       SF3: { p1: winners[2], p2: null },
       SF4: { p1: winners[3], p2: null },
-      F1:  { p1: null, p2: null },
-      F2:  { p1: null, p2: null },
-      GF:  { p1: null, p2: null },
+      F1: { p1: null, p2: null },
+      F2: { p1: null, p2: null },
+      GF: { p1: null, p2: null },
     }
   };
 }
@@ -62,7 +59,8 @@ export default async function handler(req, res) {
       const season = seasons[0];
 
       const [{ rows: pods }, { rows: players }, { rows: games }, { rows: pending },
-             { rows: playoffs }, { rows: pendingPlayoffs }, { rows: archive }] = await Promise.all([
+             { rows: playoffs }, { rows: pendingPlayoffs }, { rows: archive },
+             { rows: allPlayers }] = await Promise.all([
         sql`SELECT * FROM league_pods WHERE season_id = ${season.id} ORDER BY pod_number`,
         sql`SELECT lpp.*, lp.pod_number FROM league_pod_players lpp JOIN league_pods lp ON lpp.pod_id = lp.id WHERE lp.season_id = ${season.id}`,
         sql`SELECT * FROM league_games WHERE season_id = ${season.id} AND approved = true ORDER BY created_at`,
@@ -70,80 +68,74 @@ export default async function handler(req, res) {
         sql`SELECT * FROM league_playoff_matches WHERE season_id = ${season.id} AND approved = true ORDER BY round, match_number`,
         sql`SELECT * FROM league_playoff_matches WHERE season_id = ${season.id} AND approved = false ORDER BY created_at DESC`,
         sql`SELECT id, label, data, created_at FROM league_archive ORDER BY created_at DESC`,
+        sql`SELECT * FROM league_players ORDER BY name`,
       ]);
 
       const seedings = calcSeedings(pods, players, games);
 
-      // Overlay playoff results onto bracket
+      // Overlay playoff results
       const bracket = seedings.bracket;
       playoffs.forEach(m => {
         const key = `${m.round}${m.match_number}`;
-        if (bracket[key]) {
-          bracket[key].bp1 = m.bp1;
-          bracket[key].bp2 = m.bp2;
-          bracket[key].winner = m.winner;
-        }
-        // Propagate winners to next round
+        if (bracket[key]) { bracket[key].bp1 = m.bp1; bracket[key].bp2 = m.bp2; bracket[key].winner = m.winner; }
         const winner = m.winner;
-        if (m.round === 'QF') {
-          const sfKey = `SF${m.match_number}`;
-          if (bracket[sfKey]) bracket[sfKey].p2 = { name: winner };
-        }
+        if (m.round === 'QF') { const sfKey = `SF${m.match_number}`; if (bracket[sfKey]) bracket[sfKey].p2 = { name: winner }; }
         if (m.round === 'SF') {
           const fKey = m.match_number <= 2 ? 'F1' : 'F2';
           const slot = m.match_number % 2 === 1 ? 'p1' : 'p2';
           if (bracket[fKey]) bracket[fKey][slot] = { name: winner };
         }
-        if (m.round === 'F') {
-          const slot = m.match_number === 1 ? 'p1' : 'p2';
-          if (bracket['GF']) bracket['GF'][slot] = { name: winner };
-        }
+        if (m.round === 'F') { const slot = m.match_number === 1 ? 'p1' : 'p2'; if (bracket['GF']) bracket['GF'][slot] = { name: winner }; }
       });
 
-      return res.status(200).json({ season, pods, players, games, pending, playoffs, pendingPlayoffs, seedings, bracket, archive });
+      return res.status(200).json({ season, pods, players, games, pending, playoffs, pendingPlayoffs, seedings, bracket, archive, allPlayers });
     }
 
-    // ── POST — submit league game or playoff match ──
+    // ── POST ──
     if (req.method === 'POST') {
       const { pin, type } = req.body;
-      if (!pin || (pin !== TEAM_PIN && pin !== ADMIN_PIN)) {
-        return res.status(401).json({ error: 'Unauthorised' });
-      }
+      if (!pin || (pin !== TEAM_PIN && pin !== ADMIN_PIN)) return res.status(401).json({ error: 'Unauthorised' });
       const approved = pin === ADMIN_PIN;
 
+      // Add league player (admin only)
+      if (type === 'add_player') {
+        if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+        const { name } = req.body;
+        if (!name?.trim()) return res.status(400).json({ error: 'Name required' });
+        await sql`INSERT INTO league_players (name) VALUES (${name.trim()}) ON CONFLICT (name) DO UPDATE SET active = true`;
+        return res.status(200).json({ success: true });
+      }
+
+      // Playoff result
       if (type === 'playoff') {
         const { season_id, round, match_number, player1, player2, bp1, bp2, winner } = req.body;
-        if (!round || !match_number || !player1 || !player2 || bp1 === undefined || bp2 === undefined || !winner) {
+        if (!round || !match_number || !player1 || !player2 || bp1 === undefined || bp2 === undefined || !winner)
           return res.status(400).json({ error: 'Missing fields' });
-        }
-        // Check for duplicate
-        const { rows: existing } = await sql`
-          SELECT id FROM league_playoff_matches 
-          WHERE season_id = ${season_id} AND round = ${round} AND match_number = ${match_number} AND approved = true`;
+        const { rows: existing } = await sql`SELECT id FROM league_playoff_matches WHERE season_id = ${season_id} AND round = ${round} AND match_number = ${match_number} AND approved = true`;
         if (existing.length) return res.status(400).json({ error: 'Result already exists for this match' });
-
-        await sql`INSERT INTO league_playoff_matches (season_id, round, match_number, player1, player2, bp1, bp2, winner, approved)
-          VALUES (${season_id}, ${round}, ${match_number}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${winner}, ${approved})`;
+        await sql`INSERT INTO league_playoff_matches (season_id, round, match_number, player1, player2, bp1, bp2, winner, approved) VALUES (${season_id}, ${round}, ${match_number}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${winner}, ${approved})`;
         return res.status(200).json({ success: true, approved });
       }
 
       // Regular league game
       const { pod_id, player1, player2, bp1, bp2 } = req.body;
-      if (!pod_id || !player1 || !player2 || bp1 === undefined || bp2 === undefined) {
+      if (!pod_id || !player1 || !player2 || bp1 === undefined || bp2 === undefined)
         return res.status(400).json({ error: 'Missing required fields' });
-      }
       const { rows: pods } = await sql`SELECT season_id FROM league_pods WHERE id = ${pod_id}`;
       if (!pods.length) return res.status(400).json({ error: 'Pod not found' });
-      await sql`INSERT INTO league_games (season_id, pod_id, player1, player2, bp1, bp2, approved)
-        VALUES (${pods[0].season_id}, ${pod_id}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${approved})`;
+      await sql`INSERT INTO league_games (season_id, pod_id, player1, player2, bp1, bp2, approved) VALUES (${pods[0].season_id}, ${pod_id}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${approved})`;
       return res.status(200).json({ success: true, approved });
     }
 
-    // ── PATCH — approve/reject game or playoff match ──
+    // ── PATCH — approve/reject, or deactivate player ──
     if (req.method === 'PATCH') {
-      const { pin, gameId, playoffId, approved } = req.body;
+      const { pin, gameId, playoffId, playerId, active, approved } = req.body;
       if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
 
+      if (playerId !== undefined) {
+        await sql`UPDATE league_players SET active = ${active} WHERE id = ${playerId}`;
+        return res.status(200).json({ success: true });
+      }
       if (playoffId) {
         if (approved) await sql`UPDATE league_playoff_matches SET approved = true WHERE id = ${playoffId}`;
         else await sql`DELETE FROM league_playoff_matches WHERE id = ${playoffId}`;
