@@ -780,6 +780,9 @@
 <!-- ── STATS TAB ── -->
 <main class="page" id="tab-stats">
 
+  <!-- ── NOW PANEL ── -->
+  <div id="now-panel" style="margin-bottom:2rem;"></div>
+
   <div class="section-head" onclick="toggleSection('sec-gt')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
     <div class="section-title">Grand Tournaments</div>
     <div class="section-rule"></div>
@@ -1803,6 +1806,7 @@ function rebuildStats() {
   const playerCount = Object.values(allStats).filter(s => s.games > 0).length;
   document.getElementById('header-meta').innerHTML =
     `<span>${D.season}</span><span>${D.game}</span><span>${activeEvs.length} event${activeEvs.length !== 1 ? 's' : ''}</span><span>${playerCount} players with results</span><span style="color:var(--accent);font-weight:500;">${ACTIVE_EDITION}th Edition</span>`;
+  buildNowPanel();
 }
 // Stats are built above in the leaderboard section using quality-weighted ensurePlayerQ/addResultQ
 // FORMATS kept for backward compatibility with buildStrip etc.
@@ -1822,6 +1826,129 @@ document.getElementById('footer-updated').textContent = D.lastUpdated ? 'Last up
 if (D.version) {
   const vEl = document.getElementById('footer-version');
   if (vEl) vEl.textContent = 'v' + D.version;
+}
+
+// ── now panel ──
+function buildNowPanel() {
+  const el = document.getElementById('now-panel');
+  if (!el) return;
+
+  // Last event played
+  const events = getActiveEvents();
+  const lastEvent = [...events].sort((a,b) => (b.sortDate||0)-(a.sortDate||0))[0];
+
+  // Next calendar event
+  const todayNum = getTodaySortDate ? getTodaySortDate() : parseInt(new Date().toISOString().slice(0,10).replace(/-/g,''));
+  const nextCalEv = (CALENDAR||[]).filter(e => (e.sortDate||0) > todayNum)
+    .sort((a,b) => a.sortDate - b.sortDate)[0];
+
+  // Top 3 champions
+  const ranked = getRanked('Singles');
+  const teamAvg = getTeamAvg(singlesStats);
+  const top3 = ranked.slice(0,3).map((s,i) => {
+    const wr = Math.round(bayesianWinRate(s, teamAvg)*100);
+    const medal = ['🥇','🥈','🥉'][i];
+    return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;${i<2?'border-bottom:1px solid var(--border);':''}">
+      <span style="font-size:1rem;">${medal}</span>
+      <span style="font-size:0.85rem;color:var(--text);flex:1;">${s.name}</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:${i===0?'#ff6a00':'var(--muted)'};">${wr}%</span>
+    </div>`;
+  }).join('');
+
+  // League pod leaders — requires leagueData
+  let leagueHtml = '';
+  if (leagueData?.pods?.length) {
+    const podLeaders = leagueData.pods.map(pod => {
+      const podGames = leagueData.games.filter(g => g.pod_id === pod.id);
+      const standings = {};
+      leagueData.players.filter(p => p.pod_id === pod.id).forEach(p => {
+        standings[p.player_name] = { pts:0, bp:0 };
+      });
+      podGames.forEach(g => {
+        if (!standings[g.player1]) standings[g.player1] = {pts:0,bp:0};
+        if (!standings[g.player2]) standings[g.player2] = {pts:0,bp:0};
+        standings[g.player1].bp += g.bp1; standings[g.player2].bp += g.bp2;
+        if (g.bp1>g.bp2) standings[g.player1].pts += 2;
+        else if (g.bp2>g.bp1) standings[g.player2].pts += 2;
+        else { standings[g.player1].pts++; standings[g.player2].pts++; }
+      });
+      const sorted = Object.entries(standings).sort((a,b) => b[1].pts-a[1].pts || b[1].bp-a[1].bp);
+      const leader = sorted[0];
+      const games = podGames.length;
+      const maxGames = leagueData.players.filter(p=>p.pod_id===pod.id).length;
+      const maxPossible = maxGames*(maxGames-1)/2;
+      const pct = maxPossible ? Math.round((games/maxPossible)*100) : 0;
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);gap:8px;">
+        <span style="font-size:0.72rem;color:var(--muted);min-width:38px;">${pod.name}</span>
+        <span style="font-size:0.82rem;color:var(--text);flex:1;">${leader?.[0]||'TBD'}</span>
+        <span style="font-size:0.72rem;color:${leader?.[1]?.pts>0?'var(--win)':'var(--muted)'};">${leader?.[1]?.pts||0}pts</span>
+        <div style="width:40px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:2px;"></div>
+        </div>
+      </div>`;
+    }).join('');
+    leagueHtml = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
+        <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">League Leaders</div>
+        ${podLeaders}
+        <div style="margin-top:8px;font-size:0.68rem;color:var(--faint);">Progress bar = games played</div>
+      </div>`;
+  }
+
+  // Most recent result
+  const recentHtml = lastEvent ? `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
+      <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Most Recent Event</div>
+      <div style="font-size:0.88rem;color:var(--text);margin-bottom:4px;">${lastEvent.name}</div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">${lastEvent.date} · ${lastEvent.format} · ${lastEvent.totalPlayers} players</div>
+      ${(lastEvent.results||[]).filter(r=>!r.dropped).slice(0,3).map(r =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:0.78rem;">
+          <span style="color:var(--text);">${r.player}</span>
+          <span style="color:var(--muted);">${r.placing}/${lastEvent.totalPlayers} · ${r.w}W ${r.l}L</span>
+        </div>`
+      ).join('')}
+      <div style="margin-top:8px;">
+        <button onclick="toggleSection('sec-${lastEvent.format==='GT'?'gt':lastEvent.format==='RTT'?'rtt':'teams'}')" 
+          style="font-size:0.72rem;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;">
+          See full results ↓
+        </button>
+      </div>
+    </div>` : '';
+
+  // Next event
+  const nextEvHtml = nextCalEv ? `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
+      <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Next Event</div>
+      <div style="font-size:0.88rem;color:var(--text);margin-bottom:4px;">${nextCalEv.name}</div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:4px;">${nextCalEv.dates}</div>
+      <span style="font-size:0.65rem;padding:2px 6px;border-radius:3px;background:var(--surface2);color:var(--muted);">${nextCalEv.type}</span>
+    </div>` : '';
+
+  // Champions top 3
+  const champHtml = top3 ? `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
+      <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Champions of Shame — Top 3</div>
+      ${top3}
+      <div style="margin-top:8px;">
+        <button onclick="const el=document.getElementById('sec-leaderboard');el.style.display='block';el.scrollIntoView({behavior:'smooth'});" 
+          style="font-size:0.72rem;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;">
+          Full rankings ↓
+        </button>
+      </div>
+    </div>` : '';
+
+  el.innerHTML = `
+    <div style="margin-bottom:6px;">
+      <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);">
+        What's happening · ${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;">
+      ${recentHtml}
+      ${nextEvHtml}
+      ${champHtml}
+      ${leagueHtml}
+    </div>`;
 }
 
 // ── summary strips ──
@@ -1855,6 +1982,9 @@ function buildStrip(containerId, statsMap, label) {
 buildStrip('summary-gt',    fmtStats['GT'],    'GT');
 buildStrip('summary-rtt',   fmtStats['RTT'],   'RTT');
 buildStrip('summary-teams', fmtStats['Teams'], 'Teams');
+
+// Build now panel — will refresh with league data once loaded
+buildNowPanel();
 
 function renderLeaderboard(filter) {
   if (filter === 'Teams') { renderTeamsLeaderboard(); return; }
@@ -2196,6 +2326,7 @@ function switchTab(tab) {
   if (tab === 'club') renderClub();
   if (tab === 'league') renderLeague();
   if (tab === 'more') { buildAwards(); buildMilestones(); }
+  if (tab === 'stats') buildNowPanel();
 }
 
 // ── PIN gate ──
@@ -2572,6 +2703,7 @@ async function loadLeagueData() {
     leagueData = await res.json();
     if (leagueData.season) document.getElementById('league-title').textContent = `PSSN League — ${leagueData.season.name}`;
     buildPodTabBar();
+    buildNowPanel(); // refresh now panel with league leaders
   } catch(e) {
     console.warn('League load error:', e);
     document.getElementById('league-content').innerHTML = '<div style="font-size:0.85rem;color:var(--muted);">Could not load league data.</div>';
