@@ -1495,6 +1495,8 @@ async function loadApprovedSubmissions() {
 async function initSite() {
   await loadApprovedSubmissions();
   buildNowPanel(); // safe — all vars initialized by this point
+  // Pre-load league data so now panel shows pod leaders without visiting league tab
+  loadLeagueData().then(() => { leagueLoaded = true; });
 }
 
 function switchEdition(ed) {
