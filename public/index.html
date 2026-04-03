@@ -73,122 +73,6 @@
     /* ── PAGE ── */
     .page { max-width: 1200px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
 
-    /* ── SPLASH ── */
-    #splash {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      z-index: 9999;
-      display: var(--splash-display, flex);
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 3rem 2rem 2rem;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    #splash.hidden { display: none; }
-    .splash-inner {
-      max-width: 900px;
-      width: 100%;
-      margin: auto; /* vertically centres when there's room */
-    }
-    .splash-eyebrow {
-      font-size: 0.65rem;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 0.75rem;
-    }
-    .splash-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(3.5rem, 12vw, 8rem);
-      letter-spacing: 0.03em;
-      line-height: 0.9;
-      color: var(--text);
-      margin-bottom: 1.5rem;
-    }
-    .splash-title span { color: var(--accent); }
-    .splash-divider {
-      width: 48px;
-      height: 2px;
-      background: var(--accent);
-      margin-bottom: 1.5rem;
-    }
-    .splash-cards {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 2rem;
-    }
-    .splash-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 1rem;
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-      text-align: left;
-    }
-    .splash-card:hover {
-      border-color: var(--accent);
-      background: var(--accent-bg);
-    }
-    .splash-card-icon { font-size: 1.4rem; margin-bottom: 6px; }
-    .splash-card-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1rem;
-      letter-spacing: 0.06em;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-    .splash-card-desc { font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
-    .splash-live {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-    }
-    .splash-live-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 8px 14px;
-      font-size: 0.78rem;
-    }
-    .splash-live-label { color: var(--muted); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px; }
-    .splash-live-value { color: var(--text); }
-    .splash-enter {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      padding: 12px 28px;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.1rem;
-      letter-spacing: 0.1em;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-    .splash-enter:hover { opacity: 0.88; }
-    .splash-footer {
-      margin-top: 1rem;
-      font-size: 0.7rem;
-      color: var(--faint);
-    }
-    @media (max-width: 600px) {
-      .splash-cards { grid-template-columns: 1fr 1fr; }
-      .splash-title { font-size: clamp(2.5rem, 12vw, 5rem); }
-      #splash { padding: 2rem 1.25rem 2rem; }
-    }
-    @media (max-width: 380px) {
-      .splash-cards { grid-template-columns: 1fr; }
-      .splash-title { font-size: clamp(2rem, 11vw, 4rem); }
-    }
-
     /* ── SECTION LABELS ── */
     .section-head {
       display: flex;
@@ -571,8 +455,6 @@
       gap: 8px;
     }
   </style>
-  <!-- Hide splash instantly for returning visitors before any render -->
-  <script>if(localStorage.getItem('pssn-splash-seen')){document.documentElement.style.setProperty('--splash-display','none');}</script>
 </head>
 <body>
 
@@ -924,54 +806,6 @@
 
 <!-- ════════════════════════════════════════ -->
 
-<!-- ── SPLASH ── -->
-<div id="splash">
-  <div class="splash-inner">
-    <div class="splash-eyebrow">Warhammer 40,000 — Season Stats</div>
-    <div class="splash-title">Pile of<br>Shame<br><span>Support</span><br>Network</div>
-    <div class="splash-divider"></div>
-    <div class="splash-live" id="splash-live">
-      <div class="splash-live-item">
-        <div class="splash-live-label">Next Event</div>
-        <div class="splash-live-value" id="splash-next-event">Loading...</div>
-      </div>
-      <div class="splash-live-item">
-        <div class="splash-live-label">League Leader</div>
-        <div class="splash-live-value" id="splash-league-leader">Loading...</div>
-      </div>
-      <div class="splash-live-item">
-        <div class="splash-live-label">Season</div>
-        <div class="splash-live-value" id="splash-season">2025–26</div>
-      </div>
-    </div>
-    <div class="splash-cards">
-      <div class="splash-card" onclick="enterSite('stats')">
-        <div class="splash-card-icon">📊</div>
-        <div class="splash-card-title">Season Stats</div>
-        <div class="splash-card-desc">Champions, event results and faction win rates</div>
-      </div>
-      <div class="splash-card" onclick="enterSite('league')">
-        <div class="splash-card-icon">⚔️</div>
-        <div class="splash-card-title">League</div>
-        <div class="splash-card-desc">Pod standings, head-to-head matrix and playoffs</div>
-      </div>
-      <div class="splash-card" onclick="enterSite('calendar')">
-        <div class="splash-card-icon">📅</div>
-        <div class="splash-card-title">Calendar</div>
-        <div class="splash-card-desc">Full UKTC season schedule and upcoming events</div>
-      </div>
-      <div class="splash-card" onclick="enterSite('submit')">
-        <div class="splash-card-icon">✅</div>
-        <div class="splash-card-title">Submit Result</div>
-        <div class="splash-card-desc">Log your tournament or league game result</div>
-      </div>
-    </div>
-    <button class="splash-enter" onclick="enterSite('stats')">
-      Enter the Site →
-    </button>
-    <div class="splash-footer">pssn-stats.org · Updated regularly · Powered by the community</div>
-  </div>
-</div>
 
 <header class="site-header">
   <div class="site-header-inner">
@@ -1667,68 +1501,12 @@ async function initSite() {
   // Pre-load league data so now panel shows pod leaders without visiting league tab
   loadLeagueData().then(() => { leagueLoaded = true; });
   // Show splash on first visit
-  initSplash();
 }
 
-function initSplash() {
-  const seen = localStorage.getItem('pssn-splash-seen');
-  if (seen) {
-    // Returning visitor — hide immediately, no flash
-    document.getElementById('splash').classList.add('hidden');
-    document.body.style.overflow = '';
-  } else {
-    // First visit — splash already visible, just populate live data
-    document.body.style.overflow = 'hidden';
-    populateSplashLive();
-  }
-}
-
-function populateSplashLive() {
-  // Next upcoming event from CALENDAR
-  const todayNum = getTodaySortDate();
-  const nextEv = CALENDAR.filter(e => e.sortDate > todayNum).sort((a,b) => a.sortDate - b.sortDate)[0];
-  const nextEvEl = document.getElementById('splash-next-event');
-  if (nextEvEl) nextEvEl.textContent = nextEv ? `${nextEv.name} · ${nextEv.dates}` : 'Season underway';
-
-  // League leader — from leagueData if loaded, otherwise show season stats top player
-  const leaderEl = document.getElementById('splash-league-leader');
-  if (leaderEl) {
-    if (leagueData?.pods?.length) {
-      // Get overall leader by BP across all pods
-      const allStandings = {};
-      leagueData.games.forEach(g => {
-        if (!allStandings[g.player1]) allStandings[g.player1] = { pts:0, bp:0 };
-        if (!allStandings[g.player2]) allStandings[g.player2] = { pts:0, bp:0 };
-        allStandings[g.player1].bp += g.bp1; allStandings[g.player2].bp += g.bp2;
-        if (g.bp1 > g.bp2) allStandings[g.player1].pts += 2;
-        else if (g.bp2 > g.bp1) allStandings[g.player2].pts += 2;
-        else { allStandings[g.player1].pts++; allStandings[g.player2].pts++; }
-      });
-      const leader = Object.entries(allStandings).sort((a,b) => b[1].pts - a[1].pts || b[1].bp - a[1].bp)[0];
-      if (leader) leaderEl.textContent = `${leader[0]} · ${leader[1].pts}pts`;
-    } else {
-      // Fall back to champions top 1
-      const top = getRanked('Singles')[0];
-      const avg = getTeamAvg(singlesStats);
-      if (top) leaderEl.textContent = `${top.name} · ${Math.round(bayesianWinRate(top, avg)*100)}% wr`;
-      else leaderEl.textContent = 'Season underway';
-    }
-  }
-
-  // Season from D
-  const seasonEl = document.getElementById('splash-season');
-  if (seasonEl && D.season) seasonEl.textContent = D.season;
-}
-
-function enterSite(tab) {
-  localStorage.setItem('pssn-splash-seen', '1');
-  document.getElementById('splash').classList.add('hidden');
-  document.body.style.overflow = '';
-  switchTab(tab || 'stats');
-}
 
 function switchEdition(ed) {
   ACTIVE_EDITION = ed;
+  invalidateEventsCache();
   document.getElementById('ed-10').style.background = ed === 10 ? 'var(--accent)' : 'transparent';
   document.getElementById('ed-10').style.color = ed === 10 ? '#fff' : 'var(--muted)';
   document.getElementById('ed-11').style.background = ed === 11 ? 'var(--accent)' : 'transparent';
@@ -1736,8 +1514,38 @@ function switchEdition(ed) {
   rebuildStats();
 }
 
+// Cached active events — invalidated when edition changes
+let _activeEventsCache = null;
+let _activeEditionCache = null;
 function getActiveEvents() {
-  return D.events.filter(ev => (ev.edition || 10) === ACTIVE_EDITION);
+  if (_activeEventsCache && _activeEditionCache === ACTIVE_EDITION) return _activeEventsCache;
+  _activeEditionCache = ACTIVE_EDITION;
+  _activeEventsCache = D.events.filter(ev => (ev.edition || 10) === ACTIVE_EDITION);
+  return _activeEventsCache;
+}
+function invalidateEventsCache() { _activeEventsCache = null; }
+
+// Shared pod standings calculator — used by renderPod, buildNowPanel, openPlayerPanel, buildLeagueAdmin
+function calcPodStandings(podId, players, games) {
+  const podPlayers = players.filter(p => p.pod_id === podId).map(p => p.player_name);
+  const podGames = games.filter(g => g.pod_id === podId);
+  const standings = {};
+  podPlayers.forEach(n => { standings[n] = { name: n, pts: 0, bp: 0, played: 0 }; });
+  podGames.forEach(g => {
+    if (!standings[g.player1]) standings[g.player1] = { name: g.player1, pts: 0, bp: 0, played: 0 };
+    if (!standings[g.player2]) standings[g.player2] = { name: g.player2, pts: 0, bp: 0, played: 0 };
+    standings[g.player1].bp += g.bp1; standings[g.player2].bp += g.bp2;
+    standings[g.player1].played++; standings[g.player2].played++;
+    if (g.bp1 > g.bp2) standings[g.player1].pts += 2;
+    else if (g.bp2 > g.bp1) standings[g.player2].pts += 2;
+    else { standings[g.player1].pts++; standings[g.player2].pts++; }
+  });
+  return {
+    sorted: Object.values(standings).sort((a,b) => b.pts - a.pts || b.bp - a.bp),
+    standings,
+    podGames,
+    podPlayers
+  };
 }
 
 // ── leaderboard ──
@@ -2019,6 +1827,7 @@ function renderTeamsLeaderboard() {
 
 
 function rebuildStats() {
+  invalidateEventsCache(); // D.events may have changed
   // clear all stats maps
   Object.keys(allStats).forEach(k => delete allStats[k]);
   FORMATS.forEach(f => { if (fmtStats[f]) Object.keys(fmtStats[f]).forEach(k => delete fmtStats[f][k]); });
@@ -2089,9 +1898,6 @@ function rebuildStats() {
 // Stats are built above in the leaderboard section using quality-weighted ensurePlayerQ/addResultQ
 // FORMATS kept for backward compatibility with buildStrip etc.
 
-function ensurePlayer(map, name, factions) {
-  ensurePlayerQ(map, name, factions);
-}
 
 // ── header ──
 document.getElementById('team-title').textContent = D.team;
@@ -2174,29 +1980,14 @@ function buildNowPanel() {
   const ld = leagueData;
   if (ld?.pods?.length) {
     const podLeaders = ld.pods.map(pod => {
-      const podGames = ld.games.filter(g => g.pod_id === pod.id);
-      const standings = {};
-      ld.players.filter(p => p.pod_id === pod.id).forEach(p => {
-        standings[p.player_name] = { pts:0, bp:0 };
-      });
-      podGames.forEach(g => {
-        if (!standings[g.player1]) standings[g.player1] = {pts:0,bp:0};
-        if (!standings[g.player2]) standings[g.player2] = {pts:0,bp:0};
-        standings[g.player1].bp += g.bp1; standings[g.player2].bp += g.bp2;
-        if (g.bp1>g.bp2) standings[g.player1].pts += 2;
-        else if (g.bp2>g.bp1) standings[g.player2].pts += 2;
-        else { standings[g.player1].pts++; standings[g.player2].pts++; }
-      });
-      const sorted = Object.entries(standings).sort((a,b) => b[1].pts-a[1].pts || b[1].bp-a[1].bp);
+      const { sorted, podGames, podPlayers: pp } = calcPodStandings(pod.id, ld.players, ld.games);
       const leader = sorted[0];
-      const games = podGames.length;
-      const maxGames = ld.players.filter(p=>p.pod_id===pod.id).length;
-      const maxPossible = maxGames*(maxGames-1)/2;
-      const pct = maxPossible ? Math.round((games/maxPossible)*100) : 0;
+      const maxPossible = pp.length * (pp.length-1) / 2;
+      const pct = maxPossible ? Math.round((podGames.length/maxPossible)*100) : 0;
       return `<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);gap:8px;">
         <span style="font-size:0.72rem;color:var(--muted);min-width:38px;">${pod.name}</span>
-        <span style="font-size:0.82rem;color:var(--text);flex:1;">${leader?.[0]||'TBD'}</span>
-        <span style="font-size:0.72rem;color:${leader?.[1]?.pts>0?'var(--win)':'var(--muted)'};">${leader?.[1]?.pts||0}pts</span>
+        <span style="font-size:0.82rem;color:var(--text);flex:1;">${leader?.name||'TBD'}</span>
+        <span style="font-size:0.72rem;color:${leader?.pts>0?'var(--win)':'var(--muted)'};">${leader?.pts||0}pts</span>
         <div style="width:40px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;">
           <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:2px;"></div>
         </div>
@@ -2659,60 +2450,6 @@ function checkPin(val) {
   }
 }
 
-async function submitResult() {
-  const msg = document.getElementById('sub-message');
-  const player_name  = document.getElementById('sub-player').value;
-  const event_name   = document.getElementById('sub-event').value.trim();
-  const event_format = document.getElementById('sub-format').value;
-  const faction      = document.getElementById('sub-faction').value.trim();
-  const place        = parseInt(document.getElementById('sub-place').value) || null;
-  const total_players= parseInt(document.getElementById('sub-total').value) || null;
-  const wins         = parseInt(document.getElementById('sub-wins').value) || 0;
-  const losses       = parseInt(document.getElementById('sub-losses').value) || 0;
-  const draws        = parseInt(document.getElementById('sub-draws').value) || 0;
-  const subteam      = document.getElementById('sub-subteam').value.trim() || null;
-
-  if (!player_name || !event_name || !event_format || !faction) {
-    msg.style.display = 'block';
-    msg.style.color = 'var(--loss)';
-    msg.textContent = 'Please fill in all required fields.';
-    return;
-  }
-
-  try {
-    msg.style.display = 'block';
-    msg.style.color = 'var(--muted)';
-    msg.textContent = 'Submitting...';
-
-    const res = await fetch(`${API}/submissions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ player_name, event_name, event_format, faction, place, total_players, wins, losses, draws, subteam })
-    });
-    const data = await res.json();
-    if (data.success) {
-      msg.style.color = 'var(--win)';
-      msg.textContent = '✓ Submitted! Pending approval.';
-      document.getElementById('sub-player').value = '';
-      document.getElementById('sub-event').value = '';
-      document.getElementById('sub-format').value = '';
-      document.getElementById('sub-faction').value = '';
-      document.getElementById('sub-place').value = '';
-      document.getElementById('sub-total').value = '';
-      document.getElementById('sub-wins').value = '0';
-      document.getElementById('sub-losses').value = '0';
-      document.getElementById('sub-draws').value = '0';
-      document.getElementById('sub-subteam').value = '';
-      loadSheetSubmissions();
-    } else {
-      msg.style.color = 'var(--loss)';
-      msg.textContent = 'Error: ' + (data.error || 'Unknown error');
-    }
-  } catch(e) {
-    msg.style.color = 'var(--loss)';
-    msg.textContent = 'Failed to submit. Please try again.';
-  }
-}
 
 // ── calendar ──
 let calView = 'upcoming';
@@ -2984,8 +2721,7 @@ async function loadLeagueData() {
     if (leagueData.season) document.getElementById('league-title').textContent = `PSSN League — ${leagueData.season.name}`;
     buildPodTabBar();
     buildNowPanel(); // refresh now panel with league leaders
-    populateSplashLive(); // refresh splash live data if still visible
-  } catch(e) {
+    } catch(e) {
     console.warn('League load error:', e);
     document.getElementById('league-content').innerHTML = '<div style="font-size:0.85rem;color:var(--muted);">Could not load league data.</div>';
   }
@@ -3037,22 +2773,10 @@ function renderPod() {
   const pod = leagueData.pods?.[activePod];
   if (!pod) return;
 
-  const podPlayers = (leagueData.players || []).filter(p => p.pod_id === pod.id).map(p => p.player_name);
-  const podGames = (leagueData.games || []).filter(g => g.pod_id === pod.id);
-
-  // Calculate standings
-  const standings = {};
-  podPlayers.forEach(name => { standings[name] = { name, played: 0, pts: 0, bp: 0 }; });
-  podGames.forEach(g => {
-    if (!standings[g.player1]) standings[g.player1] = { name: g.player1, played: 0, pts: 0, bp: 0 };
-    if (!standings[g.player2]) standings[g.player2] = { name: g.player2, played: 0, pts: 0, bp: 0 };
-    standings[g.player1].played++; standings[g.player2].played++;
-    standings[g.player1].bp += g.bp1; standings[g.player2].bp += g.bp2;
-    if (g.bp1 > g.bp2) standings[g.player1].pts += 2;
-    else if (g.bp2 > g.bp1) standings[g.player2].pts += 2;
-    else { standings[g.player1].pts++; standings[g.player2].pts++; }
-  });
-  const sorted = Object.values(standings).sort((a,b) => b.pts - a.pts || b.bp - a.bp);
+  // Use shared standings calculator
+  const { sorted, standings, podGames, podPlayers } = calcPodStandings(
+    pod.id, leagueData.players || [], leagueData.games || []
+  );
 
   // Detect tiebreakers — players equal on both pts AND bp in qualification positions
   const tieWarnings = [];
@@ -4729,24 +4453,11 @@ function openPlayerPanel(name) {
     const podEntry = leagueData.players?.find(p => p.player_name === name);
     if (podEntry) {
       const pod = leagueData.pods?.find(p => p.id === podEntry.pod_id);
-      const podGames = leagueData.games?.filter(g => g.pod_id === podEntry.pod_id) || [];
-      const podPlayers = leagueData.players?.filter(p => p.pod_id === podEntry.pod_id).map(p => p.player_name) || [];
+      const { sorted, standings, podGames, podPlayers } = calcPodStandings(
+        podEntry.pod_id, leagueData.players || [], leagueData.games || []
+      );
 
-      // Calculate pod standings
-      const standings = {};
-      podPlayers.forEach(n => { standings[n] = { pts: 0, bp: 0, played: 0 }; });
-      podGames.forEach(g => {
-        if (!standings[g.player1]) standings[g.player1] = { pts: 0, bp: 0, played: 0 };
-        if (!standings[g.player2]) standings[g.player2] = { pts: 0, bp: 0, played: 0 };
-        standings[g.player1].bp += g.bp1; standings[g.player2].bp += g.bp2;
-        standings[g.player1].played++; standings[g.player2].played++;
-        if (g.bp1 > g.bp2) standings[g.player1].pts += 2;
-        else if (g.bp2 > g.bp1) standings[g.player2].pts += 2;
-        else { standings[g.player1].pts++; standings[g.player2].pts++; }
-      });
-
-      const sorted = Object.entries(standings).sort((a,b) => b[1].pts - a[1].pts || b[1].bp - a[1].bp);
-      const podPos = sorted.findIndex(([n]) => n === name) + 1;
+      const podPos = sorted.findIndex(p => p.name === name) + 1;
       const playerStats = standings[name] || { pts: 0, bp: 0, played: 0 };
       const totalPodPlayers = podPlayers.length;
       const qualifying = podPos <= 2;
@@ -4788,12 +4499,12 @@ function openPlayerPanel(name) {
           ${playerStats.played > 0 ? `
           <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);">
             <div style="font-size:0.68rem;color:var(--muted);margin-bottom:4px;">Pod standings</div>
-            ${sorted.map(([n, st], i) => `
-              <div style="display:flex;align-items:center;gap:8px;padding:2px 0;${n===name?'color:var(--text);font-weight:500;':'color:var(--muted);'}font-size:0.78rem;">
+            ${sorted.map((p, i) => `
+              <div style="display:flex;align-items:center;gap:8px;padding:2px 0;${p.name===name?'color:var(--text);font-weight:500;':'color:var(--muted);'}font-size:0.78rem;">
                 <span style="min-width:16px;color:${i<2?'var(--accent)':'var(--faint)'};">${i+1}.</span>
-                <span style="flex:1;${n===name?'color:var(--text);':'color:var(--muted);'}">${n}${n===name?' ◀':''}</span>
-                <span style="font-size:0.72rem;">${st.pts}pts</span>
-                <span style="font-size:0.68rem;color:var(--faint);">${st.bp}bp</span>
+                <span style="flex:1;${p.name===name?'color:var(--text);':'color:var(--muted);'}">${p.name}${p.name===name?' ◀':''}</span>
+                <span style="font-size:0.72rem;">${p.pts}pts</span>
+                <span style="font-size:0.68rem;color:var(--faint);">${p.bp}bp</span>
               </div>`).join('')}
           </div>` : ''}
         </div>`;
