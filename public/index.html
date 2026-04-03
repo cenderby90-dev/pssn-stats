@@ -79,7 +79,7 @@
       inset: 0;
       background: var(--bg);
       z-index: 9999;
-      display: flex;
+      display: var(--splash-display, flex);
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
@@ -571,6 +571,8 @@
       gap: 8px;
     }
   </style>
+  <!-- Hide splash instantly for returning visitors before any render -->
+  <script>if(localStorage.getItem('pssn-splash-seen')){document.documentElement.style.setProperty('--splash-display','none');}</script>
 </head>
 <body>
 
@@ -923,7 +925,7 @@
 <!-- ════════════════════════════════════════ -->
 
 <!-- ── SPLASH ── -->
-<div id="splash" class="hidden">
+<div id="splash">
   <div class="splash-inner">
     <div class="splash-eyebrow">Warhammer 40,000 — Season Stats</div>
     <div class="splash-title">Pile of<br>Shame<br><span>Support</span><br>Network</div>
@@ -1669,10 +1671,13 @@ async function initSite() {
 }
 
 function initSplash() {
-  const splash = document.getElementById('splash');
   const seen = localStorage.getItem('pssn-splash-seen');
-  if (!seen) {
-    splash.classList.remove('hidden');
+  if (seen) {
+    // Returning visitor — hide immediately, no flash
+    document.getElementById('splash').classList.add('hidden');
+    document.body.style.overflow = '';
+  } else {
+    // First visit — splash already visible, just populate live data
     document.body.style.overflow = 'hidden';
     populateSplashLive();
   }
