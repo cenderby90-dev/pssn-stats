@@ -40,6 +40,8 @@
     .site-header {
       border-bottom: 1px solid var(--border);
       padding: 3rem 2rem 2rem;
+    }
+    .site-header-inner {
       max-width: 1200px;
       margin: 0 auto;
     }
@@ -68,6 +70,9 @@
     .header-meta span { display: flex; align-items: center; gap: 6px; }
     .header-meta span::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--faint); display: inline-block; }
 
+    /* ── PAGE ── */
+    .page { max-width: 1200px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
+
     /* ── SPLASH ── */
     #splash {
       position: fixed;
@@ -77,14 +82,16 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 2rem;
-      overflow: hidden;
+      justify-content: flex-start;
+      padding: 3rem 2rem 2rem;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     #splash.hidden { display: none; }
     .splash-inner {
       max-width: 900px;
       width: 100%;
+      margin: auto; /* vertically centres when there's room */
     }
     .splash-eyebrow {
       font-size: 0.65rem;
@@ -174,10 +181,12 @@
     }
     @media (max-width: 600px) {
       .splash-cards { grid-template-columns: 1fr 1fr; }
-      .splash-title { font-size: clamp(3rem, 14vw, 5rem); }
+      .splash-title { font-size: clamp(2.5rem, 12vw, 5rem); }
+      #splash { padding: 2rem 1.25rem 2rem; }
     }
     @media (max-width: 380px) {
       .splash-cards { grid-template-columns: 1fr; }
+      .splash-title { font-size: clamp(2rem, 11vw, 4rem); }
     }
 
     /* ── SECTION LABELS ── */
@@ -554,8 +563,6 @@
     .site-footer {
       border-top: 1px solid var(--border);
       padding: 1.5rem 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
       font-size: 0.72rem;
       color: var(--muted);
       display: flex;
@@ -965,19 +972,21 @@
 </div>
 
 <header class="site-header">
-  <div class="header-eyebrow">Warhammer 40,000 — Season Stats</div>
-  <h1 class="header-title" id="team-title"></h1>
-  <div class="header-meta" id="header-meta"></div>
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:1rem;">
-    <div class="tab-bar" style="margin-top:0;border-bottom:none;">
-      <button class="tab-btn active" onclick="switchTab('stats')">Season Stats</button>
-      <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
-      <button class="tab-btn" onclick="switchTab('league')">League</button>
-      <button class="tab-btn" onclick="switchTab('submit')">Submit Result</button>
-    </div>
-    <div id="edition-toggle" style="display:flex;background:var(--surface2);border-radius:6px;padding:3px;gap:2px;border:1px solid var(--border);">
-      <button id="ed-10" onclick="switchEdition(10)" style="font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:500;padding:5px 12px;border:none;border-radius:4px;cursor:pointer;transition:all 0.15s;">10th Ed</button>
-      <button id="ed-11" onclick="switchEdition(11)" style="font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:500;padding:5px 12px;border:none;border-radius:4px;cursor:pointer;transition:all 0.15s;">11th Ed</button>
+  <div class="site-header-inner">
+    <div class="header-eyebrow">Warhammer 40,000 — Season Stats</div>
+    <h1 class="header-title" id="team-title"></h1>
+    <div class="header-meta" id="header-meta"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:1rem;">
+      <div class="tab-bar" style="margin-top:0;border-bottom:none;">
+        <button class="tab-btn active" onclick="switchTab('stats')">Season Stats</button>
+        <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
+        <button class="tab-btn" onclick="switchTab('league')">League</button>
+        <button class="tab-btn" onclick="switchTab('submit')">Submit Result</button>
+      </div>
+      <div id="edition-toggle" style="display:flex;background:var(--surface2);border-radius:6px;padding:3px;gap:2px;border:1px solid var(--border);">
+        <button id="ed-10" onclick="switchEdition(10)" style="font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:500;padding:5px 12px;border:none;border-radius:4px;cursor:pointer;transition:all 0.15s;">10th Ed</button>
+        <button id="ed-11" onclick="switchEdition(11)" style="font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:500;padding:5px 12px;border:none;border-radius:4px;cursor:pointer;transition:all 0.15s;">11th Ed</button>
+      </div>
     </div>
   </div>
 </header>
