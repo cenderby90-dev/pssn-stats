@@ -1869,8 +1869,16 @@ function buildNowPanel() {
   const el = document.getElementById('now-panel');
   if (!el) return;
 
+  // Guard — if core data not yet initialised, try again shortly
+  try {
+    if (typeof CALENDAR === 'undefined' || typeof singlesStats === 'undefined') {
+      setTimeout(buildNowPanel, 200);
+      return;
+    }
+  } catch(e) { setTimeout(buildNowPanel, 200); return; }
+
   // Last event played
-  const events = getActiveEvents();
+  const events = typeof getActiveEvents === 'function' ? getActiveEvents() : [];
   const lastEvent = [...events].sort((a,b) => (b.sortDate||0)-(a.sortDate||0))[0];
 
   // Next calendar event
@@ -1879,10 +1887,10 @@ function buildNowPanel() {
     .sort((a,b) => a.sortDate - b.sortDate)[0];
 
   // Top 3 champions
-  const ranked = getRanked('Singles');
-  const teamAvg = getTeamAvg(singlesStats);
+  const ranked = typeof getRanked === 'function' ? getRanked('Singles') : [];
+  const teamAvg = typeof getTeamAvg === 'function' && typeof singlesStats !== 'undefined' ? getTeamAvg(singlesStats) : 0.5;
   const top3 = ranked.slice(0,3).map((s,i) => {
-    const wr = Math.round(bayesianWinRate(s, teamAvg)*100);
+    const wr = typeof bayesianWinRate === 'function' ? Math.round(bayesianWinRate(s, teamAvg)*100) : 0;
     const medal = ['🥇','🥈','🥉'][i];
     return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;${i<2?'border-bottom:1px solid var(--border);':''}">
       <span style="font-size:1rem;">${medal}</span>
@@ -1893,11 +1901,12 @@ function buildNowPanel() {
 
   // League pod leaders — requires leagueData
   let leagueHtml = '';
-  if (leagueData?.pods?.length) {
-    const podLeaders = leagueData.pods.map(pod => {
-      const podGames = leagueData.games.filter(g => g.pod_id === pod.id);
+  const ld = typeof leagueData !== 'undefined' ? leagueData : null;
+  if (ld?.pods?.length) {
+    const podLeaders = ld.pods.map(pod => {
+      const podGames = ld.games.filter(g => g.pod_id === pod.id);
       const standings = {};
-      leagueData.players.filter(p => p.pod_id === pod.id).forEach(p => {
+      ld.players.filter(p => p.pod_id === pod.id).forEach(p => {
         standings[p.player_name] = { pts:0, bp:0 };
       });
       podGames.forEach(g => {
@@ -1911,7 +1920,7 @@ function buildNowPanel() {
       const sorted = Object.entries(standings).sort((a,b) => b[1].pts-a[1].pts || b[1].bp-a[1].bp);
       const leader = sorted[0];
       const games = podGames.length;
-      const maxGames = leagueData.players.filter(p=>p.pod_id===pod.id).length;
+      const maxGames = ld.players.filter(p=>p.pod_id===pod.id).length;
       const maxPossible = maxGames*(maxGames-1)/2;
       const pct = maxPossible ? Math.round((games/maxPossible)*100) : 0;
       return `<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);gap:8px;">
