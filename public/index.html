@@ -158,6 +158,15 @@
     .lb-name { font-size: 0.9rem; font-weight: 400; color: var(--text); }
     .lb-faction { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
     .lb-record { display: flex; gap: 6px; }
+
+    /* lb-inner — responsive grid for leaderboard rows */
+    .lb-inner {
+      display: grid;
+      grid-template-columns: 32px 1fr 120px 90px 20px;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+    }
     .rec-badge {
       font-size: 0.7rem;
       font-weight: 500;
@@ -355,12 +364,50 @@
     /* ── RESPONSIVE ── */
     @media (max-width: 700px) {
       .lb-row { grid-template-columns: 28px 1fr 90px; }
+      .lb-inner { grid-template-columns: 28px 1fr 90px 16px; }
       .lb-faction { display: none; }
       .event-table th:nth-child(3), .event-table td:nth-child(3) { display: none; }
     }
     @media (max-width: 500px) {
-      .lb-winrate { display: none; }
-      .lb-row { grid-template-columns: 28px 1fr 90px; }
+      /* Leaderboard — hide record on very small screens, show win rate only */
+      .lb-row { grid-template-columns: 28px 1fr 70px 16px; }
+      .lb-inner { grid-template-columns: 28px 1fr 70px 16px; }
+      .lb-inner .lb-record { display: none; }
+      .lb-record { display: none; }
+
+      /* Tab nav — smaller padding, wrap if needed */
+      .tab-btn { padding: 8px 12px; font-size: 0.78rem; }
+
+      /* Tables — hide less critical columns */
+      .event-table th:nth-child(4), .event-table td:nth-child(4) { display: none; } /* format */
+      .event-table th:nth-child(2), .event-table td:nth-child(2) { display: none; } /* faction */
+
+      /* Now panel — single column */
+      #now-panel > div:last-child { grid-template-columns: 1fr !important; }
+
+      /* Header — tighter */
+      .site-header { padding: 1.5rem 1rem 0.75rem; }
+      .team-name { font-size: clamp(2rem, 10vw, 4rem); }
+      #header-meta { gap: 8px; font-size: 0.72rem; }
+
+      /* Edition buttons */
+      #ed-10, #ed-11 { padding: 4px 8px; font-size: 0.7rem; }
+
+      /* Player panel — full width on mobile */
+      .player-panel { width: 100vw; border-left: none; border-top: 1px solid var(--border); border-radius: 12px 12px 0 0; top: auto; height: 90vh; }
+      .panel-stat-grid { grid-template-columns: 1fr 1fr; }
+
+      /* League pod tab bar — scrollable */
+      #pod-tab-bar { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      #pod-tab-bar::-webkit-scrollbar { display: none; }
+      #pod-tab-bar .tab-btn { white-space: nowrap; padding: 6px 10px; font-size: 0.75rem; }
+
+      /* Main content padding */
+      .page { padding: 1rem; }
+    }
+
+    @media (max-width: 360px) {
+      .tab-btn { padding: 6px 8px; font-size: 0.72rem; }
     }
 
     /* ── TABS ── */
@@ -1710,7 +1757,7 @@ function renderTeamsLeaderboard() {
     const bestPct = Math.round((1 - st.bestPlacing) * 100);
     return `
       <div class="lb-row${topCls}" style="display:block;padding:0;cursor:pointer;" onclick="toggleLb('${stId}')">
-        <div style="display:grid;grid-template-columns:32px 1fr 130px 70px 20px;align-items:center;gap:12px;padding:12px 16px;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+        <div class="lb-inner" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
           <div class="lb-rank">${i + 1}</div>
           <div>
             <div class="lb-name">${st.name}</div>
@@ -2112,7 +2159,7 @@ function renderLeaderboard(filter) {
 
     return `
     <div class="lb-row${topCls}" style="display:block;padding:0;cursor:pointer;opacity:${opacity};" onclick="toggleLb('${cardId}')">
-      <div style="display:grid;grid-template-columns:32px 1fr 120px 90px 20px;align-items:center;gap:12px;padding:12px 16px;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+      <div class="lb-inner" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
         <div class="lb-rank">${isProvisional ? '—' : i + 1}</div>
         <div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
