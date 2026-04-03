@@ -366,7 +366,7 @@
       .lb-row { grid-template-columns: 28px 1fr 90px; }
       .lb-inner { grid-template-columns: 28px 1fr 90px 16px; }
       .lb-faction { display: none; }
-      .event-table th:nth-child(3), .event-table td:nth-child(3) { display: none; }
+      .event-table:not(.league-table) th:nth-child(3), .event-table:not(.league-table) td:nth-child(3) { display: none; }
     }
     @media (max-width: 500px) {
       /* Leaderboard — hide record on very small screens, show win rate only */
@@ -378,9 +378,9 @@
       /* Tab nav — smaller padding, wrap if needed */
       .tab-btn { padding: 8px 12px; font-size: 0.78rem; }
 
-      /* Tables — hide less critical columns */
-      .event-table th:nth-child(4), .event-table td:nth-child(4) { display: none; } /* format */
-      .event-table th:nth-child(2), .event-table td:nth-child(2) { display: none; } /* faction */
+      /* Tables — hide less critical columns (not league tables) */
+      .event-table:not(.league-table) th:nth-child(4), .event-table:not(.league-table) td:nth-child(4) { display: none; } /* format */
+      .event-table:not(.league-table) th:nth-child(2), .event-table:not(.league-table) td:nth-child(2) { display: none; } /* faction */
 
       /* Now panel — single column */
       #now-panel > div:last-child { grid-template-columns: 1fr !important; }
@@ -2850,7 +2850,7 @@ function renderPod() {
   let html = `
     <div style="margin-bottom:2rem;">
       <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">${pod.name} Standings</div>
-      <table class="event-table" style="width:100%;max-width:560px;">
+      <table class="event-table league-table" style="width:100%;max-width:560px;">
         <thead><tr>
           <th style="padding-left:1rem;">Pos</th><th>Player</th>
           <th style="text-align:center;">Played</th><th style="text-align:center;">Points</th>
@@ -2877,11 +2877,11 @@ function renderPod() {
       </div>` : ''}
     <div>
       <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Games Matrix — Battle Points scored</div>
-      <div style="overflow-x:auto;">
-        <table class="event-table" style="min-width:400px;">
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table class="event-table league-table" style="min-width:${Math.max(400, names.length * 70)}px;width:100%;">
           <thead><tr>
             <th style="padding-left:1rem;">vs</th>
-            ${names.map(n=>`<th style="text-align:center;font-size:0.65rem;">${n.split(' ')[0]}</th>`).join('')}
+            ${names.map(n=>`<th style="text-align:center;font-size:0.65rem;min-width:50px;">${n.split(' ')[0]}</th>`).join('')}
           </tr></thead>
           <tbody>
             ${names.map(row=>`
