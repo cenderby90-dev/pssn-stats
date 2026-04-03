@@ -813,7 +813,34 @@
     <span id="sec-leaderboard-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
   </div>
   <div id="sec-leaderboard">
-    <div style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;margin-top:8px;line-height:1.5;">A celebration of everyone turning up and rolling dice — not a competitive ranking. Bayesian weighted to reward consistency over cherry-picking events.</div>
+    <div style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;margin-top:8px;line-height:1.5;">A celebration of everyone turning up and rolling dice. Rankings use quality-weighted win rates — bigger events count more. Attend 2+ events to leave provisional. <button onclick="toggleSection('sec-methodology')" style="background:none;border:none;color:var(--accent);font-size:0.78rem;cursor:pointer;padding:0;text-decoration:underline;">How rankings work ↓</button></div>
+
+    <!-- Methodology panel -->
+    <div id="sec-methodology" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;margin-bottom:1rem;font-size:0.82rem;color:var(--text);line-height:1.6;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.06em;margin-bottom:10px;color:var(--text);">How Champions of Shame Rankings Work</div>
+      <div style="display:grid;gap:10px;">
+        <div>
+          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Event Quality Multiplier</div>
+          <div style="color:var(--muted);">Not all events are equal. A win at a 1,000-player GT carries more weight than a win at a 24-player club RTT. We scale each event using <span style="color:var(--text);font-family:monospace;">log(players) / log(100)</span> — so a 100-player event is 1.0×, a 1,000-player event is ~1.5×, and a 24-player event is ~0.7×. The quality multiplier for each event is shown when you expand a player's card.</div>
+        </div>
+        <div>
+          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Bayesian Win Rate</div>
+          <div style="color:var(--muted);">Raw win rate rewards players who play fewer, carefully chosen events. We use a Bayesian adjustment (weight = ${BAYES_WEIGHT}) to pull small samples toward the team average — the more you play, the more your actual rate matters. Someone who goes 5-0 at one event ranks lower than someone consistently winning across multiple events.</div>
+        </div>
+        <div>
+          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Provisional Threshold</div>
+          <div style="color:var(--muted);">Players who have attended fewer than ${PROVISIONAL_MIN_EVENTS} events are listed as provisional at the bottom of the leaderboard. A single strong performance at one event isn't enough to earn a ranked position.</div>
+        </div>
+        <div>
+          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Form Guide Dots</div>
+          <div style="color:var(--muted);">Each dot represents one event (not one game). Green = winning record at that event, red = losing record. Dot size scales with event size — a larger dot means a bigger event.</div>
+        </div>
+        <div>
+          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Teams Events</div>
+          <div style="color:var(--muted);">Teams event results are excluded from the Singles, GT and RTT tabs. They appear only in the Teams tab and in each player's individual event history. This ensures team format performance doesn't inflate individual rankings.</div>
+        </div>
+      </div>
+    </div>
     <div id="lb-filters" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;"></div>
     <div class="leaderboard" id="leaderboard" style="max-height:600px;overflow-y:auto;border-radius:6px;"></div>
   </div>
@@ -1432,214 +1459,95 @@ function getActiveEvents() {
   return D.events.filter(ev => (ev.edition || 10) === ACTIVE_EDITION);
 }
 
-function rebuildStats() {
-  // clear and rebuild all stats maps
-  Object.keys(allStats).forEach(k => delete allStats[k]);
-  FORMATS.forEach(f => Object.keys(fmtStats[f]).forEach(k => delete fmtStats[f][k]));
-  Object.keys(singlesStats).forEach(k => delete singlesStats[k]);
-
-  D.players.forEach(p => {
-    ensurePlayer(allStats, p.name, p.factions);
-    FORMATS.forEach(f => ensurePlayer(fmtStats[f], p.name, p.factions));
-    ensurePlayer(singlesStats, p.name, p.factions);
-  });
-
-  getActiveEvents().forEach(ev => {
-    const fmt = ev.format;
-    ev.results.forEach(r => {
-      if (r.dropped) return;
-      ensurePlayer(allStats, r.player, []);
-      if (fmt && fmtStats[fmt]) ensurePlayer(fmtStats[fmt], r.player, []);
-      if (fmt !== 'Teams') ensurePlayer(singlesStats, r.player, []);
-      [allStats, fmtStats[fmt]].forEach(map => {
-        if (!map) return;
-        const s = map[r.player];
-        s.factions.add(r.faction);
-        const w = r.shadow ? r.w : r.w;
-        const l = r.shadow ? 0 : r.l;
-        const dv = r.shadow ? 0 : r.d;
-        s.w += w; s.l += l; s.d += dv;
-        s.games += w + l + dv;
-      });
-      if (fmt !== 'Teams') {
-        const s = singlesStats[r.player];
-        if (s) {
-          s.factions.add(r.faction);
-          const w = r.shadow ? r.w : r.w;
-          const l = r.shadow ? 0 : r.l;
-          const dv = r.shadow ? 0 : r.d;
-          s.w += w; s.l += l; s.d += dv;
-          s.games += w + l + dv;
-        }
-      }
-    });
-  });
-
-  // rebuild summary strips
-  ['summary-gt','summary-rtt','summary-teams'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = '';
-  });
-  buildStrip('summary-gt',    fmtStats['GT'],    'GT');
-  buildStrip('summary-rtt',   fmtStats['RTT'],   'RTT');
-  buildStrip('summary-teams', fmtStats['Teams'], 'Teams');
-
-  // rebuild leaderboard
-  renderLeaderboard(activeFilter);
-
-  // rebuild format groups
-  const fmtGroupEl = document.getElementById('format-groups');
-  fmtGroupEl.innerHTML = '';
-  teamsCardCount = 0;
-  buildFormatGroups();
-
-  // rebuild highlights
-  const hlEl = document.getElementById('highlights');
-  if (hlEl) { hlEl.innerHTML = ''; buildHighlights(); }
-
-  // rebuild faction stats
-  buildFactionStats();
-
-  // reset awards so they rebuild on next visit
-  awardsBuilt = false;
-  if (document.getElementById('awards-grid')) document.getElementById('awards-grid').innerHTML = '';
-  if (document.getElementById('milestones-grid')) document.getElementById('milestones-grid').innerHTML = '';
-
-  // update header meta
-  const activeEvs = getActiveEvents();
-  const playerCount = Object.values(allStats).filter(s => s.games > 0).length;
-  document.getElementById('header-meta').innerHTML =
-    `<span>${D.season}</span><span>${D.game}</span><span>${activeEvs.length} event${activeEvs.length !== 1 ? 's' : ''}</span><span>${playerCount} players with results</span><span style="color:var(--accent);font-weight:500;">${ACTIVE_EDITION}th Edition</span>`;
-}
-const FORMATS = ['GT', 'RTT', 'Teams'];
-
-// ── build per-format and overall stats ──
-const mkStats = () => ({});
-const allStats     = mkStats();
-const fmtStats     = { GT: mkStats(), RTT: mkStats(), Teams: mkStats() };
-const singlesStats = {};
-
-function ensurePlayer(map, name, factions) {
-  if (!map[name]) map[name] = { name, factions: new Set(factions || []), w: 0, l: 0, d: 0, games: 0 };
-}
-
-D.players.forEach(p => {
-  ensurePlayer(allStats, p.name, p.factions);
-  FORMATS.forEach(f => ensurePlayer(fmtStats[f], p.name, p.factions));
-  ensurePlayer(singlesStats, p.name, p.factions);
-});
-
-getActiveEvents().forEach(ev => {
-  const fmt = ev.format;
-  ev.results.forEach(r => {
-    if (r.dropped) return;
-    ensurePlayer(allStats, r.player, []);
-    if (fmt && fmtStats[fmt]) ensurePlayer(fmtStats[fmt], r.player, []);
-    if (fmt !== 'Teams') ensurePlayer(singlesStats, r.player, []);
-    [allStats, fmtStats[fmt]].forEach(map => {
-      if (!map) return;
-      const s = map[r.player];
-      s.factions.add(r.faction);
-      const w = r.shadow ? r.w : r.w;
-      const l = r.shadow ? 0 : r.l;
-      const d = r.shadow ? 0 : r.d;
-      s.w += w; s.l += l; s.d += d;
-      s.games += w + l + d;
-    });
-    if (fmt !== 'Teams') {
-      const s = singlesStats[r.player];
-      if (s) {
-        s.factions.add(r.faction);
-        const w = r.shadow ? r.w : r.w;
-        const l = r.shadow ? 0 : r.l;
-        const dv = r.shadow ? 0 : r.d;
-        s.w += w; s.l += l; s.d += dv;
-        s.games += w + l + dv;
-      }
-    }
-  });
-});
-
-// ── header ──
-document.getElementById('team-title').textContent = D.team;
-const evCount = getActiveEvents().length;
-const playerCount = Object.values(allStats).filter(s => s.games > 0).length;
-document.getElementById('header-meta').innerHTML =
-  `<span>${D.season}</span><span>${D.game}</span><span>${evCount} event${evCount !== 1 ? 's' : ''}</span><span>${playerCount} players with results</span><span style="color:var(--accent);font-weight:500;">${ACTIVE_EDITION}th Edition</span>`;
-document.getElementById('footer-team').textContent = D.team + ' · ' + D.season;
-document.getElementById('footer-updated').textContent = D.lastUpdated ? 'Last updated: ' + D.lastUpdated : '';
-if (D.version) {
-  const vEl = document.getElementById('footer-version');
-  if (vEl) vEl.textContent = 'v' + D.version;
-}
-
-// ── summary strips ──
-function buildStrip(containerId, statsMap, label) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  el.innerHTML = '';
-  const block = el.closest('.summary-block');
-  if (block) block.style.display = '';
-  const players = Object.values(statsMap).filter(s => s.games > 0);
-  if (!players.length) { if (block) block.style.display = 'none'; return; }
-  const W = players.reduce((a,s)=>a+s.w,0);
-  const L = players.reduce((a,s)=>a+s.l,0);
-  const Dv = players.reduce((a,s)=>a+s.d,0);
-  const G = W+L+Dv;
-  const wr = G ? Math.round((W/G)*100) : 0;
-  const evts = getActiveEvents().filter(e => e.format === label).length;
-  const uniquePlayers = players.length;
-  [
-    { label: 'Events',          val: evts,          cls: '' },
-    { label: 'Players active',  val: uniquePlayers,  cls: '' },
-    { label: 'Total games',     val: G,              cls: '' },
-    { label: 'Wins',            val: W,              cls: 'w' },
-    { label: 'Losses',          val: L,              cls: 'l' },
-    { label: 'Draws',           val: Dv,             cls: 'd' },
-    { label: 'Win rate',        val: wr+'%',         cls: '' },
-  ].forEach(s => {
-    el.innerHTML += `<div class="stat-cell"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls}">${s.val}</div></div>`;
-  });
-}
-buildStrip('summary-gt',    fmtStats['GT'],    'GT');
-buildStrip('summary-rtt',   fmtStats['RTT'],   'RTT');
-buildStrip('summary-teams', fmtStats['Teams'], 'Teams');
-
 // ── leaderboard ──
 let activeFilter = 'Singles';
 const filters = ['Singles', 'GT', 'RTT', 'Teams'];
 
 const BAYES_WEIGHT = 10;
+const PROVISIONAL_MIN_EVENTS = 2; // minimum events (not just games) to leave provisional
+
+// Quality multiplier: log(players)/log(100) so 100p=1.0x, 24p=0.70x, 1088p=1.52x
+function eventQuality(totalPlayers) {
+  if (!totalPlayers || totalPlayers < 2) return 1;
+  return Math.log(Math.max(totalPlayers, 2)) / Math.log(100);
+}
 
 function bayesianWinRate(s, teamAvg) {
-  if (!s.games) return 0;
-  const wr = s.w / s.games;
-  return (s.games / (s.games + BAYES_WEIGHT)) * wr + (BAYES_WEIGHT / (s.games + BAYES_WEIGHT)) * teamAvg;
+  if (!s.qGames) return 0;
+  const wr = s.qW / s.qGames;
+  return (s.qGames / (s.qGames + BAYES_WEIGHT)) * wr + (BAYES_WEIGHT / (s.qGames + BAYES_WEIGHT)) * teamAvg;
 }
 
 function getTeamAvg(map) {
-  const players = Object.values(map).filter(s => s.games > 0);
-  const totalW = players.reduce((a,s) => a + s.w, 0);
-  const totalG = players.reduce((a,s) => a + s.games, 0);
+  const players = Object.values(map).filter(s => s.qGames > 0);
+  const totalW = players.reduce((a,s) => a + s.qW, 0);
+  const totalG = players.reduce((a,s) => a + s.qGames, 0);
   return totalG ? totalW / totalG : 0.5;
 }
 
-// singles stats — GT and RTT only
+// Build stats maps with quality weighting
+// Each stat object now has:
+//   w/l/d/games — raw counts for display
+//   qW/qGames   — quality-weighted values for ranking
+//   events      — set of event names attended
+//   bestResult  — { placing, total, eventName, pct }
+
+function ensurePlayerQ(map, name, factions) {
+  if (!map[name]) map[name] = {
+    name, factions: new Set(factions || []),
+    w: 0, l: 0, d: 0, games: 0,
+    qW: 0, qGames: 0,
+    events: new Set(),
+    bestResult: null
+  };
+}
+
+function addResultQ(s, r, quality, eventName) {
+  const w = r.w;
+  const l = r.shadow ? 0 : r.l;
+  const d = r.shadow ? 0 : r.d;
+  s.w += w; s.l += l; s.d += d;
+  s.games += w + l + d;
+  s.qW += w * quality;
+  s.qGames += (w + l + d) * quality;
+  s.factions.add(r.faction);
+  s.events.add(eventName);
+  // track best result
+  if (r.placing && !r.dropped) {
+    const total = r.evTotal || 1;
+    const pct = r.placing / total;
+    if (!s.bestResult || pct < s.bestResult.pct) {
+      s.bestResult = { placing: r.placing, total, eventName, pct };
+    }
+  }
+}
+
+// Rebuild all stats from scratch
+const singlesStats = {};
+const allStats = {};
+const FORMATS = ['GT','RTT','Teams','Club','Championship'];
+const fmtStats = {};
+FORMATS.forEach(f => { fmtStats[f] = {}; });
+
 D.players.forEach(p => {
-  if (!singlesStats[p.name]) singlesStats[p.name] = { name: p.name, factions: new Set(p.factions || []), w: 0, l: 0, d: 0, games: 0 };
+  ensurePlayerQ(allStats, p.name, p.factions);
+  FORMATS.forEach(f => ensurePlayerQ(fmtStats[f], p.name, p.factions));
+  ensurePlayerQ(singlesStats, p.name, p.factions);
 });
+
 getActiveEvents().forEach(ev => {
-  if (ev.format === 'Teams') return;
-  ev.results.forEach(r => {
+  const fmt = ev.format;
+  const total = fmt === 'Teams' ? (ev.totalTeams || 1) : (ev.totalPlayers || 1);
+  const quality = eventQuality(total);
+  (ev.results || []).forEach(r => {
     if (r.dropped) return;
-    if (!singlesStats[r.player]) singlesStats[r.player] = { name: r.player, factions: new Set(), w: 0, l: 0, d: 0, games: 0 };
-    const s = singlesStats[r.player];
-    s.factions.add(r.faction);
-    const w = r.shadow ? r.w : r.w;
-    const l = r.shadow ? 0 : r.l;
-    const d = r.shadow ? 0 : r.d;
-    s.w += w; s.l += l; s.d += d;
-    s.games += w + l + d;
+    const rWithTotal = { ...r, evTotal: total };
+    ensurePlayerQ(allStats, r.player, []);
+    if (fmt && fmtStats[fmt]) ensurePlayerQ(fmtStats[fmt], r.player, []);
+    if (fmt !== 'Teams') ensurePlayerQ(singlesStats, r.player, []);
+    addResultQ(allStats[r.player], rWithTotal, quality, ev.name);
+    if (fmt && fmtStats[fmt]) addResultQ(fmtStats[fmt][r.player], rWithTotal, quality, ev.name);
+    if (fmt !== 'Teams') addResultQ(singlesStats[r.player], rWithTotal, quality, ev.name);
   });
 });
 
@@ -1828,6 +1736,126 @@ function renderTeamsLeaderboard() {
   }).join('');
 }
 
+
+function rebuildStats() {
+  // clear all stats maps
+  Object.keys(allStats).forEach(k => delete allStats[k]);
+  FORMATS.forEach(f => { if (fmtStats[f]) Object.keys(fmtStats[f]).forEach(k => delete fmtStats[f][k]); });
+  Object.keys(singlesStats).forEach(k => delete singlesStats[k]);
+
+  // ensure fmtStats has all formats
+  FORMATS.forEach(f => { if (!fmtStats[f]) fmtStats[f] = {}; });
+
+  D.players.forEach(p => {
+    ensurePlayerQ(allStats, p.name, p.factions);
+    FORMATS.forEach(f => ensurePlayerQ(fmtStats[f], p.name, p.factions));
+    ensurePlayerQ(singlesStats, p.name, p.factions);
+  });
+
+  getActiveEvents().forEach(ev => {
+    const fmt = ev.format;
+    const total = fmt === 'Teams' ? (ev.totalTeams || 1) : (ev.totalPlayers || 1);
+    const quality = eventQuality(total);
+    (ev.results || []).forEach(r => {
+      if (r.dropped) return;
+      const rWithTotal = { ...r, evTotal: total };
+      ensurePlayerQ(allStats, r.player, []);
+      if (fmt && fmtStats[fmt]) ensurePlayerQ(fmtStats[fmt], r.player, []);
+      if (fmt !== 'Teams') ensurePlayerQ(singlesStats, r.player, []);
+      addResultQ(allStats[r.player], rWithTotal, quality, ev.name);
+      if (fmt && fmtStats[fmt]) addResultQ(fmtStats[fmt][r.player], rWithTotal, quality, ev.name);
+      if (fmt !== 'Teams') addResultQ(singlesStats[r.player], rWithTotal, quality, ev.name);
+    });
+  });
+
+  // rebuild summary strips
+  ['summary-gt','summary-rtt','summary-teams'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+  buildStrip('summary-gt',    fmtStats['GT'],    'GT');
+  buildStrip('summary-rtt',   fmtStats['RTT'],   'RTT');
+  buildStrip('summary-teams', fmtStats['Teams'], 'Teams');
+
+  // rebuild leaderboard
+  renderLeaderboard(activeFilter);
+
+  // rebuild format groups
+  const fmtGroupEl = document.getElementById('format-groups');
+  fmtGroupEl.innerHTML = '';
+  teamsCardCount = 0;
+  buildFormatGroups();
+
+  // rebuild highlights
+  const hlEl = document.getElementById('highlights');
+  if (hlEl) { hlEl.innerHTML = ''; buildHighlights(); }
+
+  // rebuild faction stats
+  buildFactionStats();
+
+  // reset awards so they rebuild on next visit
+  awardsBuilt = false;
+  if (document.getElementById('awards-grid')) document.getElementById('awards-grid').innerHTML = '';
+  if (document.getElementById('milestones-grid')) document.getElementById('milestones-grid').innerHTML = '';
+
+  // update header meta
+  const activeEvs = getActiveEvents();
+  const playerCount = Object.values(allStats).filter(s => s.games > 0).length;
+  document.getElementById('header-meta').innerHTML =
+    `<span>${D.season}</span><span>${D.game}</span><span>${activeEvs.length} event${activeEvs.length !== 1 ? 's' : ''}</span><span>${playerCount} players with results</span><span style="color:var(--accent);font-weight:500;">${ACTIVE_EDITION}th Edition</span>`;
+}
+// Stats are built above in the leaderboard section using quality-weighted ensurePlayerQ/addResultQ
+// FORMATS kept for backward compatibility with buildStrip etc.
+
+function ensurePlayer(map, name, factions) {
+  ensurePlayerQ(map, name, factions);
+}
+
+// ── header ──
+document.getElementById('team-title').textContent = D.team;
+const evCount = getActiveEvents().length;
+const playerCount = Object.values(allStats).filter(s => s.games > 0).length;
+document.getElementById('header-meta').innerHTML =
+  `<span>${D.season}</span><span>${D.game}</span><span>${evCount} event${evCount !== 1 ? 's' : ''}</span><span>${playerCount} players with results</span><span style="color:var(--accent);font-weight:500;">${ACTIVE_EDITION}th Edition</span>`;
+document.getElementById('footer-team').textContent = D.team + ' · ' + D.season;
+document.getElementById('footer-updated').textContent = D.lastUpdated ? 'Last updated: ' + D.lastUpdated : '';
+if (D.version) {
+  const vEl = document.getElementById('footer-version');
+  if (vEl) vEl.textContent = 'v' + D.version;
+}
+
+// ── summary strips ──
+function buildStrip(containerId, statsMap, label) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  const block = el.closest('.summary-block');
+  if (block) block.style.display = '';
+  const players = Object.values(statsMap).filter(s => s.games > 0);
+  if (!players.length) { if (block) block.style.display = 'none'; return; }
+  const W = players.reduce((a,s)=>a+s.w,0);
+  const L = players.reduce((a,s)=>a+s.l,0);
+  const Dv = players.reduce((a,s)=>a+s.d,0);
+  const G = W+L+Dv;
+  const wr = G ? Math.round((W/G)*100) : 0;
+  const evts = getActiveEvents().filter(e => e.format === label).length;
+  const uniquePlayers = players.length;
+  [
+    { label: 'Events',          val: evts,          cls: '' },
+    { label: 'Players active',  val: uniquePlayers,  cls: '' },
+    { label: 'Total games',     val: G,              cls: '' },
+    { label: 'Wins',            val: W,              cls: 'w' },
+    { label: 'Losses',          val: L,              cls: 'l' },
+    { label: 'Draws',           val: Dv,             cls: 'd' },
+    { label: 'Win rate',        val: wr+'%',         cls: '' },
+  ].forEach(s => {
+    el.innerHTML += `<div class="stat-cell"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls}">${s.val}</div></div>`;
+  });
+}
+buildStrip('summary-gt',    fmtStats['GT'],    'GT');
+buildStrip('summary-rtt',   fmtStats['RTT'],   'RTT');
+buildStrip('summary-teams', fmtStats['Teams'], 'Teams');
+
 function renderLeaderboard(filter) {
   if (filter === 'Teams') { renderTeamsLeaderboard(); return; }
   const lbEl = document.getElementById('leaderboard');
@@ -1837,37 +1865,69 @@ function renderLeaderboard(filter) {
     return;
   }
 
-  const THRESHOLD = 3;
-  const qualified   = ranked.filter(s => s.games >= THRESHOLD);
-  const provisional = ranked.filter(s => s.games < THRESHOLD);
+  const map = filter === 'Singles' ? singlesStats : filter === 'All' ? allStats : fmtStats[filter];
+  const teamAvg = getTeamAvg(map);
+
+  // Provisional = fewer than PROVISIONAL_MIN_EVENTS events attended
+  const qualified   = ranked.filter(s => (s.events?.size || 0) >= PROVISIONAL_MIN_EVENTS);
+  const provisional = ranked.filter(s => (s.events?.size || 0) < PROVISIONAL_MIN_EVENTS && s.games > 0);
 
   function buildRow(s, i, isProvisional) {
-    const map = filter === 'Singles' ? singlesStats : filter === 'All' ? allStats : fmtStats[filter];
-    const teamAvg = getTeamAvg(map);
     const rawWr = s.games ? Math.round((s.w / s.games) * 100) : 0;
     const weightedWr = Math.round(bayesianWinRate(s, teamAvg) * 100);
-    const factions = [...s.factions].filter(Boolean).join(', ') || '—';
     const mainFaction = mostPlayedFaction(s.name);
     const factionDisplay = mainFaction
       ? mainFaction + (s.factions.size > 1 ? ` <span style="font-size:0.65rem;color:var(--faint);">+${s.factions.size - 1} more</span>` : '')
-      : factions;
+      : ([...s.factions].filter(Boolean).join(', ') || '—');
     const topCls = (!isProvisional && i < 3) ? ' top3' : '';
     const wrColor = isProvisional ? 'var(--muted)' : weightedWr >= 60 ? '#ff6a00' : weightedWr >= 40 ? 'var(--text)' : 'var(--loss)';
     const cardId = 'lb-' + s.name.replace(/\s+/g, '-').toLowerCase() + '-' + filter;
     const opacity = isProvisional ? '0.6' : '1';
+    const eventsAttended = s.events?.size || 0;
+
+    // Best result badge
+    const br = s.bestResult;
+    const bestResultHtml = br
+      ? `<span style="font-size:0.65rem;padding:1px 5px;border-radius:3px;background:${br.pct <= 0.1 ? 'rgba(255,106,0,0.15)' : 'var(--surface2)'};color:${br.pct <= 0.1 ? '#ff6a00' : 'var(--muted)'};border:1px solid ${br.pct <= 0.1 ? 'rgba(255,106,0,0.3)' : 'var(--border)'};" title="Best result: ${br.placing}/${br.total} at ${br.eventName}">
+        Best: ${br.placing}/${br.total}
+      </span>`
+      : '';
+
+    // Form guide — one dot per event (W/L based on event result), last 5 events
+    const playerEvents = getActiveEvents()
+      .filter(ev => {
+        if (filter !== 'Singles' && filter !== 'All' && ev.format !== filter) return false;
+        if (filter === 'Singles' && ev.format === 'Teams') return false;
+        return (ev.results || []).some(r => r.player === s.name && !r.dropped);
+      })
+      .sort((a,b) => (a.sortDate||0) - (b.sortDate||0));
+    const last5Events = playerEvents.slice(-5);
+    const dotColor = { w: 'var(--win)', l: 'var(--loss)', d: 'var(--draw)' };
+    const formDots = last5Events.map(ev => {
+      const r = (ev.results||[]).find(r => r.player === s.name);
+      if (!r) return '';
+      const result = r.shadow ? 'w' : (r.w > r.l ? 'w' : r.l > r.w ? 'l' : 'd');
+      const qMult = eventQuality(ev.format === 'Teams' ? (ev.totalTeams||1) : (ev.totalPlayers||1));
+      const sizePx = Math.round(7 + qMult * 3); // bigger dot = bigger event
+      return `<span title="${ev.name}: ${r.w}W ${r.l}L" style="display:inline-block;width:${sizePx}px;height:${sizePx}px;border-radius:50%;background:${dotColor[result]};opacity:0.85;flex-shrink:0;"></span>`;
+    }).join('');
+    const formHtml = `<div style="display:flex;gap:3px;align-items:center;margin-top:3px;">${formDots}</div>`;
 
     const evRows = getActiveEvents().filter(ev => {
       if (filter !== 'Singles' && filter !== 'All' && ev.format !== filter) return false;
-      return ev.results.some(r => r.player === s.name && !r.dropped);
+      if (filter === 'Singles' && ev.format === 'Teams') return false;
+      return (ev.results||[]).some(r => r.player === s.name && !r.dropped);
     }).map(ev => {
       const r = ev.results.find(r => r.player === s.name);
       if (!r) return '';
       const total = ev.format === 'Teams' ? ev.totalTeams : ev.totalPlayers;
       const placingStr = r.dropped ? '—' : `${r.placing} / ${total}`;
+      const q = eventQuality(total);
+      const qBadge = `<span style="font-size:0.6rem;color:var(--muted);margin-left:6px;" title="Event quality: ${q.toFixed(2)}x">${q.toFixed(1)}x</span>`;
       const shadowTag = r.shadow ? ` <span style="font-size:0.62rem;color:var(--accent);border:1px solid var(--accent-muted);padding:1px 5px;border-radius:3px;margin-left:4px;">5-0 shadow</span>` : '';
       const subteamStr = r.subteam ? `<div style="font-size:0.68rem;color:var(--muted);margin-top:1px;">${r.subteam}</div>` : '';
       return `<tr>
-        <td style="padding-left:2rem;font-size:0.8rem;color:var(--text);">${ev.name}${shadowTag}${subteamStr}</td>
+        <td style="padding-left:2rem;font-size:0.8rem;color:var(--text);">${ev.name}${shadowTag}${qBadge}${subteamStr}</td>
         <td style="font-size:0.78rem;color:var(--muted);">${r.faction}</td>
         <td style="font-size:0.78rem;color:var(--muted);">${ev.date}</td>
         <td style="font-size:0.78rem;"><span class="format-pill">${ev.format}</span></td>
@@ -1882,31 +1942,19 @@ function renderLeaderboard(filter) {
       </tr>`;
     }).join('');
 
-    // form guide — last 5 individual games across all active events
-    const formGames = [];
-    getActiveEvents().forEach(ev => {
-      const r = ev.results.find(r => r.player === s.name && !r.dropped);
-      if (!r) return;
-      const effectiveL = r.shadow ? 0 : r.l;
-      const effectiveD = r.shadow ? 0 : r.d;
-      for (let i = 0; i < r.w; i++) formGames.push('w');
-      for (let i = 0; i < effectiveL; i++) formGames.push('l');
-      for (let i = 0; i < effectiveD; i++) formGames.push('d');
-    });
-    const last5 = formGames.slice(-5);
-    const dotColor = { w: 'var(--win)', l: 'var(--loss)', d: 'var(--draw)' };
-    const formDots = last5.map(r =>
-      `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dotColor[r]};opacity:0.85;"></span>`
-    ).join('');
-    const formHtml = `<div style="display:flex;gap:3px;align-items:center;margin-top:3px;">${formDots}</div>`;
-
     return `
     <div class="lb-row${topCls}" style="display:block;padding:0;cursor:pointer;opacity:${opacity};" onclick="toggleLb('${cardId}')">
       <div style="display:grid;grid-template-columns:32px 1fr 120px 90px 20px;align-items:center;gap:12px;padding:12px 16px;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
         <div class="lb-rank">${isProvisional ? '—' : i + 1}</div>
         <div>
-          <div class="lb-name"><span class="player-link" onclick="event.stopPropagation();openPlayerPanel('${s.name}')">${s.name}</span></div>
-          <div class="lb-faction">${factionDisplay}</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span class="lb-name player-link" onclick="event.stopPropagation();openPlayerPanel('${s.name}')">${s.name}</span>
+            ${bestResultHtml}
+          </div>
+          <div class="lb-faction" style="display:flex;align-items:center;gap:8px;">
+            ${factionDisplay}
+            <span style="font-size:0.65rem;color:var(--faint);">${eventsAttended} event${eventsAttended !== 1 ? 's' : ''}</span>
+          </div>
           ${formHtml}
         </div>
         <div class="lb-record">
@@ -1941,7 +1989,7 @@ function renderLeaderboard(filter) {
   if (provisional.length) {
     html += `
       <div style="margin-top:1rem;padding:8px 0 6px;border-top:1px solid var(--border);">
-        <div style="font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:0 4px 8px;">Provisional — fewer than ${THRESHOLD} games</div>
+        <div style="font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:0 4px 8px;">Provisional — fewer than ${PROVISIONAL_MIN_EVENTS} events attended</div>
         ${provisional.map((s, i) => buildRow(s, i, true)).join('')}
       </div>`;
   }
