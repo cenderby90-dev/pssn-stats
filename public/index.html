@@ -1447,6 +1447,7 @@ async function loadApprovedSubmissions() {
 
 async function initSite() {
   await loadApprovedSubmissions();
+  buildNowPanel(); // safe — all vars initialized by this point
 }
 
 function switchEdition(ed) {
@@ -1806,7 +1807,7 @@ function rebuildStats() {
   const playerCount = Object.values(allStats).filter(s => s.games > 0).length;
   document.getElementById('header-meta').innerHTML =
     `<span>${D.season}</span><span>${D.game}</span><span>${activeEvs.length} event${activeEvs.length !== 1 ? 's' : ''}</span><span>${playerCount} players with results</span><span style="color:var(--accent);font-weight:500;">${ACTIVE_EDITION}th Edition</span>`;
-  buildNowPanel();
+  // buildNowPanel called after full init
 }
 // Stats are built above in the leaderboard section using quality-weighted ensurePlayerQ/addResultQ
 // FORMATS kept for backward compatibility with buildStrip etc.
@@ -1869,16 +1870,8 @@ function buildNowPanel() {
   const el = document.getElementById('now-panel');
   if (!el) return;
 
-  // Guard — if core data not yet initialised, try again shortly
-  try {
-    if (typeof CALENDAR === 'undefined' || typeof singlesStats === 'undefined') {
-      setTimeout(buildNowPanel, 200);
-      return;
-    }
-  } catch(e) { setTimeout(buildNowPanel, 200); return; }
-
   // Last event played
-  const events = typeof getActiveEvents === 'function' ? getActiveEvents() : [];
+  const events = getActiveEvents();
   const lastEvent = [...events].sort((a,b) => (b.sortDate||0)-(a.sortDate||0))[0];
 
   // Next calendar event
@@ -1887,10 +1880,10 @@ function buildNowPanel() {
     .sort((a,b) => a.sortDate - b.sortDate)[0];
 
   // Top 3 champions
-  const ranked = typeof getRanked === 'function' ? getRanked('Singles') : [];
-  const teamAvg = typeof getTeamAvg === 'function' && typeof singlesStats !== 'undefined' ? getTeamAvg(singlesStats) : 0.5;
+  const ranked = getRanked('Singles');
+  const teamAvg = getTeamAvg(singlesStats);
   const top3 = ranked.slice(0,3).map((s,i) => {
-    const wr = typeof bayesianWinRate === 'function' ? Math.round(bayesianWinRate(s, teamAvg)*100) : 0;
+    const wr = Math.round(bayesianWinRate(s, teamAvg)*100);
     const medal = ['🥇','🥈','🥉'][i];
     return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;${i<2?'border-bottom:1px solid var(--border);':''}">
       <span style="font-size:1rem;">${medal}</span>
@@ -1901,7 +1894,7 @@ function buildNowPanel() {
 
   // League pod leaders — requires leagueData
   let leagueHtml = '';
-  const ld = typeof leagueData !== 'undefined' ? leagueData : null;
+  const ld = leagueData;
   if (ld?.pods?.length) {
     const podLeaders = ld.pods.map(pod => {
       const podGames = ld.games.filter(g => g.pod_id === pod.id);
@@ -2029,7 +2022,7 @@ buildStrip('summary-rtt',   fmtStats['RTT'],   'RTT');
 buildStrip('summary-teams', fmtStats['Teams'], 'Teams');
 
 // Build now panel — will refresh with league data once loaded
-buildNowPanel();
+// buildNowPanel called from initSite after all vars declared
 
 function renderLeaderboard(filter) {
   if (filter === 'Teams') { renderTeamsLeaderboard(); return; }
