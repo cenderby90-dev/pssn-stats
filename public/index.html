@@ -4180,12 +4180,29 @@ function openPlayerPanel(name) {
   const s = allStats[name];
   if (!s) return;
 
+  // Load league data if not already loaded so pod context shows
+  if (!leagueData) {
+    loadLeagueData().then(() => { leagueLoaded = true; openPlayerPanel(name); });
+    return;
+  }
+
   const mainFaction = mostPlayedFaction(name);
   const allFactions = [...s.factions].filter(Boolean).join(' · ') || 'No faction data';
   document.getElementById('panel-name').textContent = name;
   document.getElementById('panel-factions').innerHTML = mainFaction
     ? `<span style="color:var(--accent);">${mainFaction}</span>${s.factions.size > 1 ? ` <span style="color:var(--muted);font-size:0.72rem;">· also: ${[...s.factions].filter(f => f !== mainFaction).join(', ')}</span>` : ''}`
     : allFactions;
+
+  // Add champions rank to header
+  const singlesRanked = getRanked('Singles');
+  const champPos = singlesRanked.findIndex(p => p.name === name);
+  const champRankHtml = champPos >= 0 ? `
+    <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">
+      #${champPos + 1} Champions of Shame
+      ${champPos < singlesRanked.filter(p => (p.events?.size||0) >= PROVISIONAL_MIN_EVENTS).length
+        ? '' : ' <span style="color:var(--faint);">(provisional)</span>'}
+    </div>` : '';
+  document.getElementById('panel-factions').innerHTML += champRankHtml;
 
   const wr = s.games ? Math.round((s.w / s.games) * 100) : 0;
   const wrColor = wr >= 60 ? '#ff6a00' : wr >= 40 ? 'var(--text)' : 'var(--loss)';
@@ -4424,7 +4441,86 @@ function openPlayerPanel(name) {
       </div>
     </div>` : '';
 
+  // ── league context ──
+  let leagueContextHtml = '';
+  if (leagueData?.pods?.length) {
+    // Find which pod this player is in
+    const podEntry = leagueData.players.find(p => p.player_name === name);
+    if (podEntry) {
+      const pod = leagueData.pods.find(p => p.id === podEntry.pod_id);
+      const podGames = leagueData.games.filter(g => g.pod_id === podEntry.pod_id);
+      const podPlayers = leagueData.players.filter(p => p.pod_id === podEntry.pod_id).map(p => p.player_name);
+
+      // Calculate pod standings
+      const standings = {};
+      podPlayers.forEach(n => { standings[n] = { pts: 0, bp: 0, played: 0 }; });
+      podGames.forEach(g => {
+        if (!standings[g.player1]) standings[g.player1] = { pts: 0, bp: 0, played: 0 };
+        if (!standings[g.player2]) standings[g.player2] = { pts: 0, bp: 0, played: 0 };
+        standings[g.player1].bp += g.bp1; standings[g.player2].bp += g.bp2;
+        standings[g.player1].played++; standings[g.player2].played++;
+        if (g.bp1 > g.bp2) standings[g.player1].pts += 2;
+        else if (g.bp2 > g.bp1) standings[g.player2].pts += 2;
+        else { standings[g.player1].pts++; standings[g.player2].pts++; }
+      });
+
+      const sorted = Object.entries(standings).sort((a,b) => b[1].pts - a[1].pts || b[1].bp - a[1].bp);
+      const podPos = sorted.findIndex(([n]) => n === name) + 1;
+      const playerStats = standings[name] || { pts: 0, bp: 0, played: 0 };
+      const totalPodPlayers = podPlayers.length;
+      const qualifying = podPos <= 2;
+
+      // League win/loss from pod games
+      const leagueW = podGames.filter(g => (g.player1 === name && g.bp1 > g.bp2) || (g.player2 === name && g.bp2 > g.bp1)).length;
+      const leagueL = podGames.filter(g => (g.player1 === name && g.bp1 < g.bp2) || (g.player2 === name && g.bp2 < g.bp1)).length;
+      const maxGames = podPlayers.length - 1;
+      const gamesLeft = maxGames - playerStats.played;
+
+      const posColor = podPos === 1 ? '#ff6a00' : podPos === 2 ? 'var(--win)' : 'var(--muted)';
+      const qualBadge = qualifying
+        ? `<span style="font-size:0.62rem;padding:2px 6px;border-radius:3px;background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-muted);margin-left:6px;">Qualifying</span>`
+        : '';
+
+      leagueContextHtml = `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:1.25rem;">
+          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">
+            League — ${pod?.name || 'Pod'} ${qualBadge}
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;text-align:center;">
+            <div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:${posColor};line-height:1;">${podPos}<span style="font-size:0.9rem;color:var(--muted);">/${totalPodPlayers}</span></div>
+              <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">Position</div>
+            </div>
+            <div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--text);line-height:1;">${playerStats.pts}</div>
+              <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">Points</div>
+            </div>
+            <div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--text);line-height:1;">${leagueW}<span style="font-size:0.9rem;color:var(--loss);">/${leagueL}</span></div>
+              <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">W / L</div>
+            </div>
+            <div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:${gamesLeft > 0 ? 'var(--muted)' : 'var(--win)'};line-height:1;">${gamesLeft}</div>
+              <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">Games left</div>
+            </div>
+          </div>
+          ${playerStats.played > 0 ? `
+          <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);">
+            <div style="font-size:0.68rem;color:var(--muted);margin-bottom:4px;">Pod standings</div>
+            ${sorted.map(([n, st], i) => `
+              <div style="display:flex;align-items:center;gap:8px;padding:2px 0;${n===name?'color:var(--text);font-weight:500;':'color:var(--muted);'}font-size:0.78rem;">
+                <span style="min-width:16px;color:${i<2?'var(--accent)':'var(--faint)'};">${i+1}.</span>
+                <span style="flex:1;${n===name?'color:var(--text);':'color:var(--muted);'}">${n}${n===name?' ◀':''}</span>
+                <span style="font-size:0.72rem;">${st.pts}pts</span>
+                <span style="font-size:0.68rem;color:var(--faint);">${st.bp}bp</span>
+              </div>`).join('')}
+          </div>` : ''}
+        </div>`;
+    }
+  }
+
   document.getElementById('panel-body').innerHTML = `
+    ${leagueContextHtml}
     ${bestResultHtml}
     <div class="panel-stat-grid">
       <div class="panel-stat">
