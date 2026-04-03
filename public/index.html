@@ -786,36 +786,36 @@
   <div class="section-head" onclick="toggleSection('sec-gt')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
     <div class="section-title">Grand Tournaments</div>
     <div class="section-rule"></div>
-    <span id="sec-gt-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+    <span id="sec-gt-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
   </div>
-  <div id="sec-gt" style="display:none;">
+  <div id="sec-gt" style="display:block;">
     <div class="summary-block"><div class="summary-strip" id="summary-gt"></div></div>
   </div>
 
   <div class="section-head" onclick="toggleSection('sec-rtt')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
     <div class="section-title">RTTs</div>
     <div class="section-rule"></div>
-    <span id="sec-rtt-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+    <span id="sec-rtt-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
   </div>
-  <div id="sec-rtt" style="display:none;">
+  <div id="sec-rtt" style="display:block;">
     <div class="summary-block"><div class="summary-strip" id="summary-rtt"></div></div>
   </div>
 
   <div class="section-head" onclick="toggleSection('sec-teams')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
     <div class="section-title">Teams Events</div>
     <div class="section-rule"></div>
-    <span id="sec-teams-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+    <span id="sec-teams-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
   </div>
-  <div id="sec-teams" style="display:none;">
+  <div id="sec-teams" style="display:block;">
     <div class="summary-block"><div class="summary-strip" id="summary-teams"></div></div>
   </div>
 
   <div class="section-head" onclick="toggleSection('sec-leaderboard')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
     <div class="section-title">Champions of Shame</div>
     <div class="section-rule"></div>
-    <span id="sec-leaderboard-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
+    <span id="sec-leaderboard-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
   </div>
-  <div id="sec-leaderboard">
+  <div id="sec-leaderboard" style="display:none;">
     <div style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;margin-top:8px;line-height:1.5;">A celebration of everyone turning up and rolling dice. Rankings use quality-weighted win rates — bigger events count more. Attend 2+ events to leave provisional. <button onclick="toggleSection('sec-methodology')" style="background:none;border:none;color:var(--accent);font-size:0.78rem;cursor:pointer;padding:0;text-decoration:underline;">How rankings work ↓</button></div>
 
     <!-- Methodology panel -->
@@ -1828,6 +1828,42 @@ if (D.version) {
   if (vEl) vEl.textContent = 'v' + D.version;
 }
 
+const CALENDAR = [
+  { name: "Winter ITT",        dates: "1–2 Feb 2025",       type: "Teams", attended: true,  sortDate: 20250201 },
+  { name: "Spring ITT",        dates: "3–4 May 2025",       type: "Teams", attended: true,  sortDate: 20250503 },
+  { name: "Bristol GT",        dates: "7–8 Jun 2025",       type: "GT",    attended: true,  sortDate: 20250607 },
+  { name: "Leeds GT",          dates: "5–6 Jul 2025",       type: "GT",    attended: false, sortDate: 20250705 },
+  { name: "Summer ITT",        dates: "2–3 Aug 2025",       type: "Teams", attended: true,  sortDate: 20250802 },
+  { name: "LGT",               dates: "26–28 Sep 2025",     type: "GT",    attended: true,  sortDate: 20250926 },
+  { name: "Coventry GT",       dates: "24–26 Oct 2025",     type: "GT",    attended: true,  sortDate: 20251024 },
+  { name: "Autumn ITT",        dates: "15–16 Nov 2025",     type: "Teams", attended: true,  sortDate: 20251115 },
+  { name: "Leicester GT",      dates: "6–7 Dec 2025",       type: "GT",    attended: false, sortDate: 20251206 },
+  { name: "Nottingham GT",     dates: "10–11 Jan 2026",     type: "GT",    attended: true,  sortDate: 20260110 },
+  { name: "Shaming in the New Year RTT", dates: "24 Jan 2026", type: "RTT", attended: true, sortDate: 20260124 },
+  { name: "Winter ITT",        dates: "31 Jan–1 Feb 2026",  type: "Teams", attended: true,  sortDate: 20260131 },
+  { name: "Manchester GT",     dates: "21–22 Feb 2026",     type: "GT",    attended: false, sortDate: 20260221 },
+  { name: "Windsor Super Major", dates: "7–8 Mar 2026",     type: "GT",    attended: true,  sortDate: 20260307 },
+  { name: "Sheffield GT",      dates: "28–29 Mar 2026",     type: "GT",    attended: false, sortDate: 20260328 },
+  { name: "South Coast GT",    dates: "11–12 Apr 2026",     type: "GT",    attended: false, sortDate: 20260411 },
+  { name: "Spring ITT",        dates: "2–3 May 2026",       type: "Teams", attended: false, sortDate: 20260502 },
+  { name: "Bristol GT",        dates: "23–24 May 2026",     type: "GT",    attended: false, sortDate: 20260523 },
+  { name: "Leeds GT",          dates: "13–14 Jun 2026",     type: "GT",    attended: false, sortDate: 20260613 },
+  { name: "Birmingham GT",     dates: "4–5 Jul 2026",       type: "GT",    attended: false, sortDate: 20260704 },
+  { name: "Edinburgh Super Major", dates: "18–19 Jul 2026", type: "GT",    attended: false, sortDate: 20260718 },
+  { name: "Manchester GT: Summer", dates: "8–9 Aug 2026",   type: "GT",    attended: false, sortDate: 20260808 },
+  { name: "Summer ITT",        dates: "29–30 Aug 2026",     type: "Teams", attended: false, sortDate: 20260829 },
+  { name: "LGT",               dates: "25–27 Sep 2026",     type: "GT",    attended: false, sortDate: 20260925 },
+  { name: "Coventry GT",       dates: "23–25 Oct 2026",     type: "GT",    attended: false, sortDate: 20261023 },
+  { name: "Autumn ITT",        dates: "14–15 Nov 2026",     type: "Teams", attended: false, sortDate: 20261114 },
+  { name: "Bedfordshire Super Major", dates: "5–6 Dec 2026", type: "GT",   attended: false, sortDate: 20261205 },
+];
+
+function getTodaySortDate() {
+  const n = new Date(); n.setHours(0,0,0,0);
+  return n.getFullYear()*10000 + (n.getMonth()+1)*100 + n.getDate();
+}
+
+
 // ── now panel ──
 function buildNowPanel() {
   const el = document.getElementById('now-panel');
@@ -2400,41 +2436,6 @@ async function submitResult() {
 }
 
 // ── calendar ──
-const CALENDAR = [
-  { name: "Winter ITT",        dates: "1–2 Feb 2025",       type: "Teams", attended: true,  sortDate: 20250201 },
-  { name: "Spring ITT",        dates: "3–4 May 2025",       type: "Teams", attended: true,  sortDate: 20250503 },
-  { name: "Bristol GT",        dates: "7–8 Jun 2025",       type: "GT",    attended: true,  sortDate: 20250607 },
-  { name: "Leeds GT",          dates: "5–6 Jul 2025",       type: "GT",    attended: false, sortDate: 20250705 },
-  { name: "Summer ITT",        dates: "2–3 Aug 2025",       type: "Teams", attended: true,  sortDate: 20250802 },
-  { name: "LGT",               dates: "26–28 Sep 2025",     type: "GT",    attended: true,  sortDate: 20250926 },
-  { name: "Coventry GT",       dates: "24–26 Oct 2025",     type: "GT",    attended: true,  sortDate: 20251024 },
-  { name: "Autumn ITT",        dates: "15–16 Nov 2025",     type: "Teams", attended: true,  sortDate: 20251115 },
-  { name: "Leicester GT",      dates: "6–7 Dec 2025",       type: "GT",    attended: false, sortDate: 20251206 },
-  { name: "Nottingham GT",     dates: "10–11 Jan 2026",     type: "GT",    attended: true,  sortDate: 20260110 },
-  { name: "Shaming in the New Year RTT", dates: "24 Jan 2026", type: "RTT", attended: true, sortDate: 20260124 },
-  { name: "Winter ITT",        dates: "31 Jan–1 Feb 2026",  type: "Teams", attended: true,  sortDate: 20260131 },
-  { name: "Manchester GT",     dates: "21–22 Feb 2026",     type: "GT",    attended: false, sortDate: 20260221 },
-  { name: "Windsor Super Major", dates: "7–8 Mar 2026",     type: "GT",    attended: true,  sortDate: 20260307 },
-  { name: "Sheffield GT",      dates: "28–29 Mar 2026",     type: "GT",    attended: false, sortDate: 20260328 },
-  { name: "South Coast GT",    dates: "11–12 Apr 2026",     type: "GT",    attended: false, sortDate: 20260411 },
-  { name: "Spring ITT",        dates: "2–3 May 2026",       type: "Teams", attended: false, sortDate: 20260502 },
-  { name: "Bristol GT",        dates: "23–24 May 2026",     type: "GT",    attended: false, sortDate: 20260523 },
-  { name: "Leeds GT",          dates: "13–14 Jun 2026",     type: "GT",    attended: false, sortDate: 20260613 },
-  { name: "Birmingham GT",     dates: "4–5 Jul 2026",       type: "GT",    attended: false, sortDate: 20260704 },
-  { name: "Edinburgh Super Major", dates: "18–19 Jul 2026", type: "GT",    attended: false, sortDate: 20260718 },
-  { name: "Manchester GT: Summer", dates: "8–9 Aug 2026",   type: "GT",    attended: false, sortDate: 20260808 },
-  { name: "Summer ITT",        dates: "29–30 Aug 2026",     type: "Teams", attended: false, sortDate: 20260829 },
-  { name: "LGT",               dates: "25–27 Sep 2026",     type: "GT",    attended: false, sortDate: 20260925 },
-  { name: "Coventry GT",       dates: "23–25 Oct 2026",     type: "GT",    attended: false, sortDate: 20261023 },
-  { name: "Autumn ITT",        dates: "14–15 Nov 2026",     type: "Teams", attended: false, sortDate: 20261114 },
-  { name: "Bedfordshire Super Major", dates: "5–6 Dec 2026", type: "GT",   attended: false, sortDate: 20261205 },
-];
-
-function getTodaySortDate() {
-  const n = new Date(); n.setHours(0,0,0,0);
-  return n.getFullYear()*10000 + (n.getMonth()+1)*100 + n.getDate();
-}
-
 let calView = 'upcoming';
 
 function switchCalView(view) {
