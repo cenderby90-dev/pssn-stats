@@ -1062,7 +1062,17 @@
     </div>
     <div id="sec-whos-going" style="display:none;">
       <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">Tick ✓ if you're going, ? if you're not sure. Visible to everyone with the team PIN.</div>
-      <div id="whos-going-grid"></div>
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:1rem;">
+        <button id="wg-btn-individual" class="tab-btn active" onclick="switchWgTab('individual')">Individual Events</button>
+        <button id="wg-btn-teams"      class="tab-btn"        onclick="switchWgTab('teams')">ITT Teams</button>
+      </div>
+      <div id="wg-individual">
+        <div id="whos-going-grid"></div>
+      </div>
+      <div id="wg-teams" style="display:none;">
+        <div id="whos-going-teams-grid"></div>
+      </div>
     </div>
 
     <!-- WIZARD -->
@@ -2462,6 +2472,7 @@ function checkPin(val) {
     document.getElementById('submit-form').style.display = 'block';
     // Load attendance for who's going and db events for wizard
     renderWhosGoing();
+    renderTeamsSignup();
     loadDbEvents();
   } else {
     document.getElementById('pin-error').style.display = 'block';
@@ -2747,6 +2758,212 @@ async function setGoing(name, sortDate, status) {
   } catch(e) {
     console.error('Failed to update attendance', e);
   }
+}
+
+// ── who's going sub-tabs ──
+function switchWgTab(tab) {
+  ['individual','teams'].forEach(t => {
+    document.getElementById('wg-' + t).style.display = t === tab ? '' : 'none';
+    document.getElementById('wg-btn-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'teams') renderTeamsSignup();
+}
+
+// ── ITT teams sign-up ──
+// Default teams seeded from the last recorded ITT (Winter ITT Feb 2026)
+const DEFAULT_ITT_TEAMS = [
+  {
+    name: 'The Sh[a]meful Suspects',
+    players: ['Cayleb Langhals', 'Daniel Green', 'Anthony Keen', 'Alex Ford', 'Matt Whiteley']
+  },
+  {
+    name: "[D]a Empuror's Shamepions",
+    players: ['Tim Waters', 'Samuel Francis', 'Guy Miscampbell', 'Henry Bamford', 'Chris Enderby']
+  },
+  {
+    name: '[E]verlasting Shame',
+    players: ['Matthew Yeoh', 'Nora Tinfou', 'Harvey R', 'Spencer James', 'Artur Tokarski']
+  }
+];
+
+// In-memory team state (loaded from attendanceData on render)
+// Key format: team_TEAMNAME_SORTDATE → JSON array of player names
+// Key format: team_list_SORTDATE → JSON array of team names
+
+async function saveTeamData(sortDate, teams) {
+  // Save each team's roster as a single attendance record
+  // player_name = '_team_json', event_sort_date = sortDate, status = JSON blob
+  try {
+    await fetch(`${API}/attendance`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        player_name: `_teams_${sortDate}`,
+        event_sort_date: sortDate,
+        status: JSON.stringify(teams)
+      })
+    });
+    await loadAttendance();
+  } catch(e) {
+    console.error('Failed to save team data', e);
+  }
+}
+
+function getTeamsForEvent(sortDate) {
+  const raw = attendanceData[`_teams_${sortDate}`];
+  if (raw) {
+    try { return JSON.parse(raw); } catch(e) {}
+  }
+  // Return defaults
+  return JSON.parse(JSON.stringify(DEFAULT_ITT_TEAMS));
+}
+
+async function renderTeamsSignup() {
+  const el = document.getElementById('whos-going-teams-grid');
+  if (!el) return;
+  el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);">Loading...</div>`;
+  await loadAttendance();
+
+  const TODAY = getTodaySortDate();
+  const ittEvents = CALENDAR.filter(ev => ev.type === 'Teams' && ev.sortDate >= TODAY)
+    .sort((a,b) => a.sortDate - b.sortDate).slice(0, 4);
+
+  if (!ittEvents.length) {
+    el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">No upcoming ITT events found.</div>`;
+    return;
+  }
+
+  // Render just the first upcoming ITT by default with a selector
+  let activeIttIdx = 0;
+
+  const allPlayers = D.players.map(p => p.name).filter(Boolean).sort();
+
+  function renderIttEvent(idx) {
+    const ev = ittEvents[idx];
+    const teams = getTeamsForEvent(ev.sortDate);
+
+    const eventSelector = ittEvents.length > 1 ? `
+      <div style="display:flex;gap:6px;margin-bottom:1.25rem;flex-wrap:wrap;">
+        ${ittEvents.map((e, i) => `
+          <button onclick="renderIttIdx(${i})"
+            style="font-size:0.78rem;padding:5px 12px;border-radius:4px;cursor:pointer;font-family:'DM Sans',sans-serif;
+                   background:${i===idx?'var(--accent)':'var(--surface2)'};
+                   border:1px solid ${i===idx?'var(--accent)':'var(--border)'};
+                   color:${i===idx?'#fff':'var(--muted)'};">
+            ${e.name} · ${e.dates}
+          </button>`).join('')}
+      </div>` : `<div style="font-size:0.88rem;color:var(--text);margin-bottom:1.25rem;font-weight:400;">${ev.name} · ${ev.dates}</div>`;
+
+    const teamsHtml = teams.map((team, ti) => {
+      const playersInOtherTeams = teams.filter((_,i)=>i!==ti).flatMap(t=>t.players);
+      const available = allPlayers.filter(p => !playersInOtherTeams.includes(p) && !team.players.includes(p));
+
+      return `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;">
+            <input id="team-name-${ev.sortDate}-${ti}" value="${team.name}"
+              style="flex:1;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.04em;
+                     background:transparent;border:none;border-bottom:1px solid var(--border);
+                     color:var(--text);padding:2px 4px;outline:none;"
+              onchange="updateTeamName(${ev.sortDate},${ti},this.value)"/>
+            <button onclick="removeTeam(${ev.sortDate},${ti})"
+              style="font-size:0.7rem;padding:3px 8px;background:transparent;border:1px solid var(--loss);
+                     border-radius:3px;color:var(--loss);cursor:pointer;flex-shrink:0;">Remove team</button>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;">
+            ${team.players.map((p,pi) => `
+              <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);
+                          border:1px solid var(--border);border-radius:4px;padding:3px 8px;">
+                <span style="font-size:0.78rem;color:var(--text);">${p}</span>
+                <button onclick="removePlayerFromTeam(${ev.sortDate},${ti},'${p.replace(/'/g,"\\'")}')"
+                  style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;line-height:1;padding:0 2px;">✕</button>
+              </div>`).join('')}
+          </div>
+          ${available.length ? `
+          <div style="display:flex;align-items:center;gap:6px;">
+            <select id="add-player-${ev.sortDate}-${ti}"
+              style="flex:1;padding:5px 8px;background:var(--surface2);border:1px solid var(--border);
+                     border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
+              <option value="">Add player...</option>
+              ${available.map(p=>`<option value="${p}">${p}</option>`).join('')}
+            </select>
+            <button onclick="addPlayerToTeam(${ev.sortDate},${ti})"
+              style="padding:5px 12px;background:var(--accent);border:none;border-radius:4px;
+                     color:#fff;font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;">Add</button>
+          </div>` : `<div style="font-size:0.72rem;color:var(--faint);">All players assigned</div>`}
+        </div>`;
+    }).join('');
+
+    el.innerHTML = `
+      ${eventSelector}
+      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;">
+        Set up your ITT teams. Player names are editable — click team name to rename. Changes save automatically.
+      </div>
+      ${teamsHtml}
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+        <button onclick="addNewTeam(${ev.sortDate})"
+          style="padding:7px 14px;background:transparent;border:1px dashed var(--border);border-radius:4px;
+                 color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;"
+          onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+          + Add team
+        </button>
+        <button onclick="copyTeamsFromLastItt(${ev.sortDate})"
+          style="padding:7px 14px;background:transparent;border:1px solid var(--border);border-radius:4px;
+                 color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;"
+          onmouseover="this.style.borderColor='var(--faint)';this.style.color='var(--text)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+          ↩ Reset to last ITT roster
+        </button>
+      </div>`;
+
+    // Store current state globally for mutation functions
+    window._ittState = { sortDate: ev.sortDate, teams, idx };
+  }
+
+  window.renderIttIdx = (idx) => { activeIttIdx = idx; renderIttEvent(idx); };
+  renderIttEvent(activeIttIdx);
+
+  // Mutation helpers — all save and re-render
+  window.updateTeamName = async (sortDate, ti, newName) => {
+    const teams = getTeamsForEvent(sortDate);
+    teams[ti].name = newName;
+    await saveTeamData(sortDate, teams);
+    renderIttEvent(activeIttIdx);
+  };
+  window.removeTeam = async (sortDate, ti) => {
+    if (!confirm('Remove this team?')) return;
+    const teams = getTeamsForEvent(sortDate);
+    teams.splice(ti, 1);
+    await saveTeamData(sortDate, teams);
+    renderIttEvent(activeIttIdx);
+  };
+  window.addNewTeam = async (sortDate) => {
+    const teams = getTeamsForEvent(sortDate);
+    teams.push({ name: 'New Team', players: [] });
+    await saveTeamData(sortDate, teams);
+    renderIttEvent(activeIttIdx);
+  };
+  window.addPlayerToTeam = async (sortDate, ti) => {
+    const sel = document.getElementById(`add-player-${sortDate}-${ti}`);
+    const player = sel?.value;
+    if (!player) return;
+    const teams = getTeamsForEvent(sortDate);
+    if (!teams[ti].players.includes(player)) teams[ti].players.push(player);
+    await saveTeamData(sortDate, teams);
+    renderIttEvent(activeIttIdx);
+  };
+  window.removePlayerFromTeam = async (sortDate, ti, player) => {
+    const teams = getTeamsForEvent(sortDate);
+    teams[ti].players = teams[ti].players.filter(p => p !== player);
+    await saveTeamData(sortDate, teams);
+    renderIttEvent(activeIttIdx);
+  };
+  window.copyTeamsFromLastItt = async (sortDate) => {
+    if (!confirm('Reset to last recorded ITT roster? This will overwrite current team setup.')) return;
+    await saveTeamData(sortDate, JSON.parse(JSON.stringify(DEFAULT_ITT_TEAMS)));
+    renderIttEvent(activeIttIdx);
+  };
 }
 
 // ── league ──
