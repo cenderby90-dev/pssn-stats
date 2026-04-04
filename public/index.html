@@ -1053,12 +1053,15 @@
 
     <!-- WHO'S GOING -->
     <div class="section-head" style="margin-top:0;cursor:pointer;" onclick="toggleSection('sec-whos-going')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-      <div class="section-title">Who's Going?</div>
+      <div>
+        <div class="section-title">Who's Going?</div>
+        <div id="sec-whos-going-hint" style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Sign up for upcoming events so your teammates know to look out for you — click to open</div>
+      </div>
       <div class="section-rule"></div>
-      <span id="sec-whos-going-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
+      <span id="sec-whos-going-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
     </div>
-    <div id="sec-whos-going">
-      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">Mark yourself as going to upcoming events. Everyone with the team PIN can see this.</div>
+    <div id="sec-whos-going" style="display:none;">
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">Tick ✓ if you're going, ? if you're not sure. Visible to everyone with the team PIN.</div>
       <div id="whos-going-grid"></div>
     </div>
 
