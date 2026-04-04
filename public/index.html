@@ -916,12 +916,12 @@
     <div id="highlights"></div>
   </div>
 
-  <div class="section-head" style="margin-top:2rem;" onclick="toggleSection('sec-factions')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+  <div class="section-head" style="margin-top:2rem;cursor:pointer;" onclick="toggleSection('sec-factions')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
     <div class="section-title">Faction Win Rates</div>
     <div class="section-rule"></div>
-    <span id="sec-factions-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+    <span id="sec-factions-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
   </div>
-  <div id="sec-factions" style="display:none;">
+  <div id="sec-factions" style="display:block;">
     <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">How each army is performing across PSSN this season. Bayesian weighted — more games = more reliable.</div>
     <div id="faction-stats"></div>
   </div>
@@ -4170,6 +4170,166 @@ function renderDbEvents() {
       <button onclick="deleteDbEvent(${ev.id})" style="font-size:0.72rem;padding:4px 10px;background:var(--loss-bg);border:1px solid var(--loss);border-radius:3px;color:var(--loss);cursor:pointer;flex-shrink:0;">Delete</button>
     </div>`).join('');
 }
+function buildFactionStats() {
+  const el = document.getElementById('faction-stats');
+  if (!el) return;
+
+  const events = getActiveEvents();
+
+  // Build faction data from all active events
+  const factions = {};
+  events.forEach(ev => {
+    const total = ev.format === 'Teams' ? ev.totalTeams : ev.totalPlayers;
+    (ev.results || []).forEach(r => {
+      if (r.dropped || !r.faction) return;
+      if (!factions[r.faction]) {
+        factions[r.faction] = { w:0, l:0, d:0, games:0, players:new Set(), events:new Set(), bestPlacing:null, bestTotal:null, bestEvent:null };
+      }
+      const s = factions[r.faction];
+      const w = r.w || 0;
+      const l = r.shadow ? 0 : (r.l || 0);
+      const d = r.shadow ? 0 : (r.d || 0);
+      s.w += w; s.l += l; s.d += d;
+      s.games += w + l + d;
+      s.players.add(r.player);
+      s.events.add(ev.name);
+      if (r.placing && (!s.bestPlacing || r.placing/total < s.bestPlacing/s.bestTotal)) {
+        s.bestPlacing = r.placing;
+        s.bestTotal = total;
+        s.bestEvent = ev.name;
+      }
+    });
+  });
+
+  // Sort by Bayesian win rate (same logic as leaderboard)
+  const factionList = Object.entries(factions)
+    .filter(([,s]) => s.games >= 5)
+    .map(([name, s]) => {
+      const rawWr = s.games ? s.w / s.games : 0;
+      const teamAvg = 0.58; // approximate
+      const bWr = (s.games / (s.games + 10)) * rawWr + (10 / (s.games + 10)) * teamAvg;
+      return { name, ...s, rawWr, bWr };
+    })
+    .sort((a,b) => b.bWr - a.bWr);
+
+  // Player loyalty — who plays each faction most
+  const playerFactions = {};
+  events.forEach(ev => {
+    (ev.results || []).forEach(r => {
+      if (r.dropped || !r.faction) return;
+      if (!playerFactions[r.player]) playerFactions[r.player] = {};
+      playerFactions[r.player][r.faction] = (playerFactions[r.player][r.faction] || 0) + 1;
+    });
+  });
+
+  // Most played faction per player
+  const loyaltyMap = {};
+  Object.entries(playerFactions).forEach(([player, facs]) => {
+    const top = Object.entries(facs).sort((a,b) => b[1]-a[1])[0];
+    if (top) {
+      if (!loyaltyMap[top[0]]) loyaltyMap[top[0]] = [];
+      loyaltyMap[top[0]].push({ player, games: facs[top[0]], total: Object.values(facs).reduce((a,b)=>a+b,0) });
+    }
+  });
+
+  // Max games for bar scaling
+  const maxGames = Math.max(...factionList.map(f => f.games), 1);
+
+  const rows = factionList.map((f, i) => {
+    const wr = Math.round(f.rawWr * 100);
+    const bwr = Math.round(f.bWr * 100);
+    const wrColor = bwr >= 60 ? '#ff6a00' : bwr >= 50 ? 'var(--win)' : bwr >= 40 ? 'var(--text)' : 'var(--loss)';
+    const barPct = Math.round((f.games / maxGames) * 100);
+    const isTop = bwr >= 60;
+    const loyal = (loyaltyMap[f.name] || []).sort((a,b) => b.games-a.games)[0];
+    const bestStr = f.bestPlacing ? `${f.bestPlacing}/${f.bestTotal}` : '—';
+    const cardId = `fs-${f.name.replace(/[^a-z0-9]/gi,'-').toLowerCase()}`;
+
+    return `
+      <div style="background:var(--surface);border:1px solid ${isTop?'var(--accent-muted)':'var(--border)'};border-radius:6px;padding:12px 14px;cursor:pointer;" onclick="toggleLb('${cardId}')">
+        <div style="display:grid;grid-template-columns:24px 1fr 80px 70px 20px;align-items:center;gap:10px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:${i<3?'var(--accent)':'var(--muted)'};">${i+1}</div>
+          <div>
+            <div style="font-size:0.88rem;color:var(--text);font-weight:400;">${f.name}</div>
+            <div style="font-size:0.68rem;color:var(--muted);margin-top:2px;">
+              ${f.players.size} player${f.players.size!==1?'s':''} · ${f.events.size} event${f.events.size!==1?'s':''}
+              ${loyal ? `· <span style="color:var(--text);">${loyal.player}</span> leads` : ''}
+            </div>
+            <div style="margin-top:5px;height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;max-width:160px;">
+              <div style="width:${barPct}%;height:100%;background:${wrColor};border-radius:2px;opacity:0.7;"></div>
+            </div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.72rem;color:var(--muted);">${f.w}W ${f.l}L${f.d>0?' '+f.d+'D':''}</div>
+            <div style="font-size:0.65rem;color:var(--faint);">${f.games} games</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:${wrColor};">${bwr}%</div>
+            <div style="font-size:0.62rem;color:var(--muted);">${wr}% raw</div>
+          </div>
+          <div id="${cardId}-arrow" style="color:var(--muted);font-size:0.75rem;transition:transform 0.2s;">▼</div>
+        </div>
+        <!-- Expanded detail -->
+        <div id="${cardId}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.78rem;">
+            <div>
+              <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Best Result</div>
+              <div style="color:${f.bestPlacing && f.bestPlacing/f.bestTotal<=0.1?'#ff6a00':'var(--text)'};">${bestStr}${f.bestEvent?` · ${f.bestEvent.replace(' — 40k Main Event','').replace(' Grand Tournament','')}`:''}  </div>
+            </div>
+            <div>
+              <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">PSSN Players</div>
+              <div style="color:var(--text);">${[...f.players].join(', ')}</div>
+            </div>
+          </div>
+          ${loyal ? `
+          <div style="margin-top:8px;font-size:0.78rem;">
+            <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Most Loyal</div>
+            ${(loyaltyMap[f.name]||[]).sort((a,b)=>b.games-a.games).slice(0,3).map(p =>
+              `<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--border);">
+                <span style="color:var(--text);cursor:pointer;" onclick="event.stopPropagation();openPlayerPanel('${p.player}')" class="player-link">${p.player}</span>
+                <span style="color:var(--muted);">${p.games}/${p.total} games</span>
+              </div>`
+            ).join('')}
+          </div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  // Summary stats at top
+  const totalFactions = Object.keys(factions).length;
+  const topFaction = factionList[0];
+  const mostUsed = factionList.sort((a,b) => b.games-a.games)[0];
+  // re-sort for display
+  factionList.sort((a,b) => b.bWr-a.bWr);
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:1.5rem;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 12px;">
+        <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Factions Played</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--text);">${totalFactions}</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 12px;">
+        <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Top Performer</div>
+        <div style="font-size:0.88rem;color:var(--accent);">${topFaction?.name||'—'}</div>
+        <div style="font-size:0.68rem;color:var(--muted);">${topFaction?Math.round(topFaction.bWr*100)+'% wr':''}</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 12px;">
+        <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Most Played</div>
+        <div style="font-size:0.88rem;color:var(--text);">${mostUsed?.name||'—'}</div>
+        <div style="font-size:0.68rem;color:var(--muted);">${mostUsed?mostUsed.games+' games':''}</div>
+      </div>
+    </div>
+    <div style="font-size:0.68rem;color:var(--muted);margin-bottom:1rem;">Ranked by Bayesian win rate (min 5 games). Click any row to expand. Loyalty = player who plays that faction most.</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${rows}
+    </div>
+    ${Object.keys(factions).filter(f => factions[f].games < 5).length ?
+      `<div style="margin-top:1rem;font-size:0.72rem;color:var(--faint);">
+        ${Object.keys(factions).filter(f=>factions[f].games<5).length} factions with fewer than 5 games not shown: 
+        ${Object.keys(factions).filter(f=>factions[f].games<5).join(', ')}
+      </div>` : ''}`;
+}
+
 function mostPlayedFaction(name) {
   const counts = {};
   getActiveEvents().forEach(ev => {
