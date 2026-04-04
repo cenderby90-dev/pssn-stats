@@ -1497,10 +1497,10 @@ async function loadApprovedSubmissions() {
 
 async function initSite() {
   await loadApprovedSubmissions();
-  buildNowPanel(); // safe — all vars initialized by this point
-  // Pre-load league data so now panel shows pod leaders without visiting league tab
+  rebuildStats();      // refresh all stats now D.events is fully populated
+  buildFactionStats(); // faction section
+  buildNowPanel();
   loadLeagueData().then(() => { leagueLoaded = true; });
-  // Show splash on first visit
 }
 
 
