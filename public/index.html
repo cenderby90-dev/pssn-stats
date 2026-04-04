@@ -1876,10 +1876,6 @@ function rebuildStats() {
   teamsCardCount = 0;
   buildFormatGroups();
 
-  // rebuild highlights
-  const hlEl = document.getElementById('highlights');
-  if (hlEl) { hlEl.innerHTML = ''; buildHighlights(); }
-
   // rebuild faction stats
   buildFactionStats();
 
