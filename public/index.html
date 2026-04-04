@@ -817,7 +817,7 @@
         <button class="tab-btn active" onclick="switchTab('stats')">Season Stats</button>
         <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
         <button class="tab-btn" onclick="switchTab('league')">League</button>
-        <button class="tab-btn" onclick="switchTab('submit')">Submit Result</button>
+        <button class="tab-btn" onclick="switchTab('submit')">Submissions</button>
       </div>
       <div id="edition-toggle" style="display:flex;background:var(--surface2);border-radius:6px;padding:3px;gap:2px;border:1px solid var(--border);">
         <button id="ed-10" onclick="switchEdition(10)" style="font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:500;padding:5px 12px;border:none;border-radius:4px;cursor:pointer;transition:all 0.15s;">10th Ed</button>
@@ -948,24 +948,6 @@
     <div id="season-timeline" style="margin-bottom:2rem;"></div>
   </div>
 
-  <!-- Who's Going -->
-  <div class="section-head" onclick="toggleSection('sec-whos-going')" style="cursor:pointer;">
-    <div class="section-title">Who's Going?</div>
-    <div class="section-rule"></div>
-    <span id="sec-whos-going-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
-  </div>
-  <div id="sec-whos-going">
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">Mark yourself as going to upcoming events. PIN required.</div>
-    <div id="whos-going-gate">
-      <input type="password" id="whos-going-pin" maxlength="4" placeholder="Enter PIN"
-        style="width:100px;text-align:center;font-size:1.2rem;letter-spacing:0.3em;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);outline:none;"
-        oninput="checkWhosGoingPin(this.value)"/>
-      <div id="whos-going-pin-error" style="font-size:0.78rem;color:var(--loss);display:none;margin-top:6px;">Incorrect PIN</div>
-    </div>
-    <div id="whos-going-content" style="display:none;">
-      <div id="whos-going-grid"></div>
-    </div>
-  </div>
 
 </main>
 
@@ -1057,7 +1039,7 @@
   <div id="pin-gate" style="max-width:400px;margin:3rem auto 0;">
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2rem;text-align:center;">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:0.06em;color:var(--text);margin-bottom:0.5rem;">Team Access</div>
-      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Enter your 4-digit team PIN to submit a result</div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Enter your 4-digit team PIN to access submissions and sign up for events</div>
       <input type="password" id="pin-input" maxlength="4" placeholder="••••"
         autocomplete="new-password"
         style="width:120px;text-align:center;font-size:1.4rem;letter-spacing:0.3em;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);outline:none;margin-bottom:1rem;display:block;margin-left:auto;margin-right:auto;"
@@ -1069,11 +1051,24 @@
   <!-- Main content (shown after PIN) -->
   <div id="submit-form" style="display:none;">
 
+    <!-- WHO'S GOING -->
+    <div class="section-head" style="margin-top:0;cursor:pointer;" onclick="toggleSection('sec-whos-going')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+      <div class="section-title">Who's Going?</div>
+      <div class="section-rule"></div>
+      <span id="sec-whos-going-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
+    </div>
+    <div id="sec-whos-going">
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">Mark yourself as going to upcoming events. Everyone with the team PIN can see this.</div>
+      <div id="whos-going-grid"></div>
+    </div>
+
     <!-- WIZARD -->
-    <div class="section-head" style="margin-top:0;">
+    <div class="section-head" style="margin-top:2rem;cursor:pointer;" onclick="toggleSection('sec-submit-wizard')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
       <div class="section-title">Submit a Result</div>
       <div class="section-rule"></div>
+      <span id="sec-submit-wizard-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
     </div>
+    <div id="sec-submit-wizard">
     <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Start by choosing what type of result you're submitting.</div>
 
     <!-- Result type selector -->
@@ -1255,6 +1250,7 @@
         </div>
       </div>
     </div>
+    </div> <!-- end sec-submit-wizard -->
 
     <!-- ADMIN SECTION -->
     <div style="margin-top:3rem;padding-top:2rem;border-top:2px solid var(--border);">
@@ -2429,6 +2425,15 @@ function switchChamTab(tab) {
   if (tab === 'factions') buildFactionStats();
 }
 
+function toggleCalWho(id) {
+  const el = document.getElementById(id);
+  const arrow = document.getElementById(id + '-arrow');
+  if (!el) return;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.style.transform = open ? '' : 'rotate(180deg)';
+}
+
 // ── tab switching ──
 function switchTab(tab) {
   const tabs = ['stats','calendar','league','club','more','submit'];
@@ -2452,7 +2457,8 @@ function checkPin(val) {
   if (val === '1719') {
     document.getElementById('pin-gate').style.display = 'none';
     document.getElementById('submit-form').style.display = 'block';
-    // load db events for wizard search
+    // Load attendance for who's going and db events for wizard
+    renderWhosGoing();
     loadDbEvents();
   } else {
     document.getElementById('pin-error').style.display = 'block';
@@ -2472,8 +2478,11 @@ function switchCalView(view) {
   renderCalendar();
 }
 
-function renderCalendar() {
+async function renderCalendar() {
   const el = document.getElementById('calendar-grid');
+  el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);">Loading...</div>`;
+  // Load fresh attendance data so calendar shows who's going
+  await loadAttendance();
   el.innerHTML = '';
   const TODAY = getTodaySortDate();
 
@@ -2513,6 +2522,43 @@ function renderCalendar() {
       const borderW   = attended ? '2px' : '1px';
       const opacity   = isPast && !attended ? '0.45' : '1';
 
+      // Who's going for this event
+      const going = D.players.map(p => p.name).filter(n =>
+        attendanceData[`${n}_${ev.sortDate}`] === 'yes'
+      );
+      const maybe = D.players.map(p => p.name).filter(n =>
+        attendanceData[`${n}_${ev.sortDate}`] === 'maybe'
+      );
+      const total = going.length + maybe.length;
+
+      const whoId = `who-${ev.sortDate}`;
+      const whoHtml = total > 0 ? `
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);" id="${whoId}">
+          ${going.length ? `
+            <div style="margin-bottom:4px;">
+              <span style="font-size:0.62rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--win);">Going (${going.length})</span>
+              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;">
+                ${going.map(n => `<span style="font-size:0.72rem;padding:2px 7px;background:var(--win-bg);border:1px solid var(--win);border-radius:3px;color:var(--win);">${n}</span>`).join('')}
+              </div>
+            </div>` : ''}
+          ${maybe.length ? `
+            <div>
+              <span style="font-size:0.62rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#c9a227;">Maybe (${maybe.length})</span>
+              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;">
+                ${maybe.map(n => `<span style="font-size:0.72rem;padding:2px 7px;background:#2a2000;border:1px solid #c9a227;border-radius:3px;color:#c9a227;">${n}</span>`).join('')}
+              </div>
+            </div>` : ''}
+        </div>` : '';
+
+      // Attendance pill shown even if nobody signed up yet (for upcoming events)
+      const attendanceSummary = !isPast ? `
+        <div onclick="toggleCalWho('${whoId}')" style="display:flex;align-items:center;gap:5px;cursor:${total > 0 ? 'pointer' : 'default'};">
+          ${going.length ? `<span style="font-size:0.7rem;padding:2px 8px;border-radius:3px;background:var(--win-bg);color:var(--win);">✓ ${going.length} going</span>` : ''}
+          ${maybe.length ? `<span style="font-size:0.7rem;padding:2px 8px;border-radius:3px;background:#2a2000;color:#c9a227;">? ${maybe.length} maybe</span>` : ''}
+          ${total === 0 ? `<span style="font-size:0.7rem;color:var(--faint);">No sign-ups yet</span>` : ''}
+          ${total > 0 ? `<span id="${whoId}-arrow" style="font-size:0.65rem;color:var(--muted);transition:transform 0.2s;display:inline-block;">▼</span>` : ''}
+        </div>` : '';
+
       const statusTag = attended
         ? `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--accent-bg);color:var(--accent);letter-spacing:0.04em;">PSSN attended</span>`
         : isPast
@@ -2522,15 +2568,21 @@ function renderCalendar() {
       const typeTag = `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:${typeBg[ev.type] || 'var(--surface2)'};color:${typeColor[ev.type] || 'var(--muted)'};">${ev.type}</span>`;
 
       html += `
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:var(--surface);border:${borderW} solid ${borderCol};border-radius:4px;opacity:${opacity};">
-          <div>
-            <div style="font-size:0.9rem;font-weight:400;color:var(--text);">${ev.name}</div>
-            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">${ev.dates}</div>
+        <div style="background:var(--surface);border:${borderW} solid ${borderCol};border-radius:4px;opacity:${opacity};padding:10px 14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div>
+              <div style="font-size:0.9rem;font-weight:400;color:var(--text);">${ev.name}</div>
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">${ev.dates}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
+              <div style="display:flex;gap:6px;align-items:center;">
+                ${typeTag}
+                ${statusTag}
+              </div>
+              ${attendanceSummary}
+            </div>
           </div>
-          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
-            ${typeTag}
-            ${statusTag}
-          </div>
+          ${whoHtml}
         </div>`;
     });
     html += `</div></div>`;
@@ -2614,19 +2666,6 @@ function renderTimeline() {
         <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);display:inline-block;"></span>Upcoming</span>
       </div>
     </div>`;
-}
-
-function checkWhosGoingPin(val) {
-  if (val.length < 4) return;
-  if (val === '1719') {
-    document.getElementById('whos-going-gate').style.display = 'none';
-    document.getElementById('whos-going-content').style.display = 'block';
-    renderWhosGoing();
-  } else {
-    document.getElementById('whos-going-pin-error').style.display = 'block';
-    document.getElementById('whos-going-pin').value = '';
-    setTimeout(() => { document.getElementById('whos-going-pin-error').style.display = 'none'; }, 2000);
-  }
 }
 
 // ── who's going — API backed ──
