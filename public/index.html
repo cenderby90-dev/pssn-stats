@@ -833,97 +833,83 @@
   <!-- ── NOW PANEL ── -->
   <div id="now-panel" style="margin-bottom:2rem;"></div>
 
-  <div class="section-head" onclick="toggleSection('sec-gt')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-    <div class="section-title">Grand Tournaments</div>
+  <!-- ── TOURNAMENTS PANEL ── -->
+  <div class="section-head" style="cursor:pointer;" onclick="toggleSection('sec-tournaments')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+    <div class="section-title">Tournaments</div>
     <div class="section-rule"></div>
-    <span id="sec-gt-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
+    <span id="sec-tournaments-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
   </div>
-  <div id="sec-gt" style="display:block;">
-    <div class="summary-block"><div class="summary-strip" id="summary-gt"></div></div>
+  <div id="sec-tournaments" style="display:block;">
+    <!-- Tab bar -->
+    <div style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:1.25rem;">
+      <button id="trn-btn-gt"    class="tab-btn active" onclick="switchTrnTab('gt')">Grand Tournaments</button>
+      <button id="trn-btn-rtt"   class="tab-btn"        onclick="switchTrnTab('rtt')">RTTs</button>
+      <button id="trn-btn-teams" class="tab-btn"        onclick="switchTrnTab('teams')">Teams</button>
+    </div>
+    <!-- GT pane -->
+    <div id="trn-gt">
+      <div class="summary-block"><div class="summary-strip" id="summary-gt"></div></div>
+      <div id="trn-gt-results" style="margin-top:1rem;"></div>
+    </div>
+    <!-- RTT pane -->
+    <div id="trn-rtt" style="display:none;">
+      <div class="summary-block"><div class="summary-strip" id="summary-rtt"></div></div>
+      <div id="trn-rtt-results" style="margin-top:1rem;"></div>
+    </div>
+    <!-- Teams pane -->
+    <div id="trn-teams" style="display:none;">
+      <div class="summary-block"><div class="summary-strip" id="summary-teams"></div></div>
+      <div id="trn-teams-results" style="margin-top:1rem;"></div>
+    </div>
   </div>
 
-  <div class="section-head" onclick="toggleSection('sec-rtt')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-    <div class="section-title">RTTs</div>
-    <div class="section-rule"></div>
-    <span id="sec-rtt-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
-  </div>
-  <div id="sec-rtt" style="display:block;">
-    <div class="summary-block"><div class="summary-strip" id="summary-rtt"></div></div>
-  </div>
-
-  <div class="section-head" onclick="toggleSection('sec-teams')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-    <div class="section-title">Teams Events</div>
-    <div class="section-rule"></div>
-    <span id="sec-teams-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
-  </div>
-  <div id="sec-teams" style="display:block;">
-    <div class="summary-block"><div class="summary-strip" id="summary-teams"></div></div>
-  </div>
-
-  <div class="section-head" onclick="toggleSection('sec-leaderboard')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+  <!-- ── CHAMPIONS OF SHAME PANEL ── -->
+  <div class="section-head" style="cursor:pointer;margin-top:2rem;" onclick="toggleSection('sec-champions')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
     <div class="section-title">Champions of Shame</div>
     <div class="section-rule"></div>
-    <span id="sec-leaderboard-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+    <span id="sec-champions-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
   </div>
-  <div id="sec-leaderboard" style="display:none;">
-    <div style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;margin-top:8px;line-height:1.5;">A celebration of everyone turning up and rolling dice. Rankings use quality-weighted win rates — bigger events count more. Attend 2+ events to leave provisional. <button onclick="toggleSection('sec-methodology')" style="background:none;border:none;color:var(--accent);font-size:0.78rem;cursor:pointer;padding:0;text-decoration:underline;">How rankings work ↓</button></div>
+  <div id="sec-champions" style="display:none;">
+    <!-- Tab bar -->
+    <div style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:1rem;">
+      <button id="cham-btn-players"  class="tab-btn active" onclick="switchChamTab('players')">Players</button>
+      <button id="cham-btn-factions" class="tab-btn"        onclick="switchChamTab('factions')">Factions</button>
+    </div>
 
-    <!-- Methodology panel -->
-    <div id="sec-methodology" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;margin-bottom:1rem;font-size:0.82rem;color:var(--text);line-height:1.6;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.06em;margin-bottom:10px;color:var(--text);">How Champions of Shame Rankings Work</div>
-      <div style="display:grid;gap:10px;">
-        <div>
-          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Event Quality Multiplier</div>
-          <div style="color:var(--muted);">Not all events are equal. A win at a 1,000-player GT carries more weight than a win at a 24-player club RTT. We scale each event using <span style="color:var(--text);font-family:monospace;">log(players) / log(100)</span> — so a 100-player event is 1.0×, a 1,000-player event is ~1.5×, and a 24-player event is ~0.7×. The quality multiplier for each event is shown when you expand a player's card.</div>
-        </div>
-        <div>
-          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Bayesian Win Rate</div>
-          <div style="color:var(--muted);">Raw win rate rewards players who play fewer, carefully chosen events. We use a Bayesian adjustment (weight = ${BAYES_WEIGHT}) to pull small samples toward the team average — the more you play, the more your actual rate matters. Someone who goes 5-0 at one event ranks lower than someone consistently winning across multiple events.</div>
-        </div>
-        <div>
-          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Provisional Threshold</div>
-          <div style="color:var(--muted);">Players who have attended fewer than ${PROVISIONAL_MIN_EVENTS} events are listed as provisional at the bottom of the leaderboard. A single strong performance at one event isn't enough to earn a ranked position.</div>
-        </div>
-        <div>
-          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Form Guide Dots</div>
-          <div style="color:var(--muted);">Each dot represents one event (not one game). Green = winning record at that event, red = losing record. Dot size scales with event size — a larger dot means a bigger event.</div>
-        </div>
-        <div>
-          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Teams Events</div>
-          <div style="color:var(--muted);">Teams event results are excluded from the Singles, GT and RTT tabs. They appear only in the Teams tab and in each player's individual event history. This ensures team format performance doesn't inflate individual rankings.</div>
+    <!-- Players pane -->
+    <div id="cham-players">
+      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;line-height:1.5;">A celebration of everyone turning up and rolling dice. Rankings use quality-weighted win rates — bigger events count more. Attend 2+ events to leave provisional. <button onclick="toggleSection('sec-methodology')" style="background:none;border:none;color:var(--accent);font-size:0.78rem;cursor:pointer;padding:0;text-decoration:underline;">How rankings work ↓</button></div>
+      <!-- Methodology panel -->
+      <div id="sec-methodology" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;margin-bottom:1rem;font-size:0.82rem;color:var(--text);line-height:1.6;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.06em;margin-bottom:10px;color:var(--text);">How Champions of Shame Rankings Work</div>
+        <div style="display:grid;gap:10px;">
+          <div>
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Event Quality Multiplier</div>
+            <div style="color:var(--muted);">Not all events are equal. A win at a 1,000-player GT carries more weight than a win at a 24-player club RTT. We scale each event using <span style="color:var(--text);font-family:monospace;">log(players) / log(100)</span> — so a 100-player event is 1.0×, a 1,000-player event is ~1.5×, and a 24-player event is ~0.7×.</div>
+          </div>
+          <div>
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Bayesian Win Rate</div>
+            <div style="color:var(--muted);">Raw win rate rewards players who play fewer, carefully chosen events. We use a Bayesian adjustment to pull small samples toward the team average — the more you play, the more your actual rate matters.</div>
+          </div>
+          <div>
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Provisional Threshold</div>
+            <div style="color:var(--muted);">Players who have attended fewer than 2 events are listed as provisional. A single strong performance isn't enough to earn a ranked position.</div>
+          </div>
+          <div>
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Teams Events</div>
+            <div style="color:var(--muted);">Teams event results are excluded from the Singles, GT and RTT tabs. They appear only in the Teams tab and in each player's individual event history.</div>
+          </div>
         </div>
       </div>
+      <div id="lb-filters" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;"></div>
+      <div class="leaderboard" id="leaderboard" style="max-height:600px;overflow-y:auto;border-radius:6px;"></div>
     </div>
-    <div id="lb-filters" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;"></div>
-    <div class="leaderboard" id="leaderboard" style="max-height:600px;overflow-y:auto;border-radius:6px;"></div>
-  </div>
 
-  <div class="section-head" onclick="toggleSection('sec-results')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-    <div class="section-title">Tournament Results</div>
-    <div class="section-rule"></div>
-    <span id="sec-results-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
-  </div>
-  <div id="sec-results" style="display:none;">
-    <div id="format-groups"></div>
-  </div>
-
-  <div class="section-head" style="margin-top:2rem;" onclick="toggleSection('sec-highlights')" style="cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-    <div class="section-title">Season Highlights</div>
-    <div class="section-rule"></div>
-    <span id="sec-highlights-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
-  </div>
-  <div id="sec-highlights" style="display:none;">
-    <div id="highlights"></div>
-  </div>
-
-  <div class="section-head" style="margin-top:2rem;cursor:pointer;" onclick="toggleSection('sec-factions')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-    <div class="section-title">Faction Win Rates</div>
-    <div class="section-rule"></div>
-    <span id="sec-factions-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
-  </div>
-  <div id="sec-factions" style="display:block;">
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">How each army is performing across PSSN this season. Bayesian weighted — more games = more reliable.</div>
-    <div id="faction-stats"></div>
+    <!-- Factions pane -->
+    <div id="cham-factions" style="display:none;">
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">How each army is performing across PSSN this season. Bayesian weighted — more games = more reliable.</div>
+      <div id="faction-stats"></div>
+    </div>
   </div>
 
 </main>
@@ -1498,7 +1484,6 @@ async function loadApprovedSubmissions() {
 async function initSite() {
   await loadApprovedSubmissions();
   rebuildStats();      // refresh all stats now D.events is fully populated
-  buildFactionStats(); // faction section
   buildNowPanel();
   loadLeagueData().then(() => { leagueLoaded = true; });
 }
@@ -1871,8 +1856,7 @@ function rebuildStats() {
   renderLeaderboard(activeFilter);
 
   // rebuild format groups
-  const fmtGroupEl = document.getElementById('format-groups');
-  fmtGroupEl.innerHTML = '';
+  ['gt','rtt','teams'].forEach(k => { const el = document.getElementById('trn-'+k+'-results'); if(el) el.innerHTML=''; });
   teamsCardCount = 0;
   buildFormatGroups();
 
@@ -2010,7 +1994,7 @@ function buildNowPanel() {
         </div>`
       ).join('')}
       <div style="margin-top:8px;">
-        <button onclick="toggleSection('sec-${lastEvent.format==='GT'?'gt':lastEvent.format==='RTT'?'rtt':'teams'}')" 
+        <button onclick="toggleSection('sec-tournaments');switchTrnTab('${lastEvent.format==='GT'?'gt':lastEvent.format==='RTT'?'rtt':'teams'}');" 
           style="font-size:0.72rem;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;">
           See full results ↓
         </button>
@@ -2032,7 +2016,7 @@ function buildNowPanel() {
       <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Champions of Shame — Top 3</div>
       ${top3}
       <div style="margin-top:8px;">
-        <button onclick="const el=document.getElementById('sec-leaderboard');el.style.display='block';el.scrollIntoView({behavior:'smooth'});" 
+        <button onclick="toggleSection('sec-champions');document.getElementById('sec-champions').scrollIntoView({behavior:'smooth'});" 
           style="font-size:0.72rem;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;">
           Full rankings ↓
         </button>
@@ -2254,7 +2238,6 @@ filters.forEach(f => {
 renderLeaderboard('Singles');
 
 // ── format groups with collapsible events ──
-const fmtGroupEl = document.getElementById('format-groups');
 const formatOrder = ['GT', 'RTT', 'Teams'];
 let teamsCardCount = 0;
 
@@ -2367,16 +2350,20 @@ formatOrder.forEach(fmt => {
       </div>`;
   }).join('');
 
-  fmtGroupEl.innerHTML += `
-    <div class="fmt-group">
-      <div class="fmt-group-head" onclick="toggleFmtGroup('${groupId}')">
-        <div>
-          <span class="fmt-group-title">${fmtLabel}</span>
-          <span class="fmt-group-meta" style="margin-left:12px;">${fmtEvents.length} event${fmtEvents.length !== 1 ? 's' : ''}</span>
-        </div>
-        <span id="${groupId}-arrow" style="color:var(--muted);font-size:0.8rem;transition:transform 0.2s;">▼</span>
+  // Write events into per-format results container with a collapsible wrapper
+  const fmtKey = fmt === 'GT' ? 'gt' : fmt === 'RTT' ? 'rtt' : 'teams';
+  const resultEl = document.getElementById('trn-' + fmtKey + '-results');
+  if (resultEl) resultEl.innerHTML = `
+    <div style="margin-top:1rem;">
+      <div onclick="toggleTrnResults('${fmtKey}')"
+        style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer;border-top:1px solid var(--border);"
+        onmouseover="this.style.opacity='0.75'" onmouseout="this.style.opacity='1'">
+        <span style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);">
+          Event Results <span style="color:var(--faint);">(${fmtEvents.length})</span>
+        </span>
+        <span id="trn-${fmtKey}-arrow" style="color:var(--muted);font-size:0.75rem;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
       </div>
-      <div id="${groupId}" class="fmt-group-body open">
+      <div id="trn-${fmtKey}-evlist" style="display:none;">
         ${eventsHtml}
       </div>
     </div>`;
@@ -2412,6 +2399,34 @@ function toggleSubteam(id) {
   const open = el.style.display === 'block';
   el.style.display = open ? 'none' : 'block';
   arrow.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+// ── tournament tab switcher ──
+let activeTrnTab = 'gt';
+function switchTrnTab(tab) {
+  activeTrnTab = tab;
+  ['gt','rtt','teams'].forEach(t => {
+    document.getElementById('trn-' + t).style.display = t === tab ? '' : 'none';
+    document.getElementById('trn-btn-' + t).classList.toggle('active', t === tab);
+  });
+}
+
+function toggleTrnResults(fmtKey) {
+  const list = document.getElementById('trn-' + fmtKey + '-evlist');
+  const arrow = document.getElementById('trn-' + fmtKey + '-arrow');
+  const open = list.style.display !== 'none';
+  list.style.display = open ? 'none' : 'block';
+  arrow.style.transform = open ? 'rotate(-90deg)' : '';
+}
+
+// ── champions tab switcher ──
+function switchChamTab(tab) {
+  ['players','factions'].forEach(t => {
+    document.getElementById('cham-' + t).style.display = t === tab ? '' : 'none';
+    document.getElementById('cham-btn-' + t).classList.toggle('active', t === tab);
+  });
+  // build faction stats on first switch to factions tab
+  if (tab === 'factions') buildFactionStats();
 }
 
 // ── tab switching ──
