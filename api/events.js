@@ -14,7 +14,7 @@ export default async function handler(req, res) {
         SELECT * FROM events ORDER BY sort_date DESC
       `;
       const { rows: results } = await sql`
-        SELECT * FROM event_results ORDER BY "placing" ASC
+        SELECT * FROM event_results ORDER BY place ASC
       `;
       const eventsWithResults = events.map(ev => ({
         ...ev,
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
       if (results && results.length) {
         for (const r of results) {
           await sql`
-            INSERT INTO event_results (event_id, player_name, faction, "placing", wins, losses, draws, subteam, shadow, dropped)
+            INSERT INTO event_results (event_id, player_name, faction, place, wins, losses, draws, subteam, shadow, dropped)
             VALUES (
               ${eventId},
               ${r.player_name},
@@ -75,4 +75,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err) {
     console.error(err);
-    return re
+    return res.status(500).json({ error: 'Database error', detail: err.message });
+  }
+}
