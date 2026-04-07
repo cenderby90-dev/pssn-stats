@@ -2791,8 +2791,6 @@ const DEFAULT_ITT_TEAMS = [
 // Key format: team_list_SORTDATE → JSON array of team names
 
 async function saveTeamData(sortDate, teams) {
-  // Save each team's roster as a single attendance record
-  // player_name = '_team_json', event_sort_date = sortDate, status = JSON blob
   try {
     await fetch(`${API}/attendance`, {
       method: 'POST',
@@ -2809,12 +2807,46 @@ async function saveTeamData(sortDate, teams) {
   }
 }
 
+// Registry — master list of all team names ever used
+const HISTORICAL_TEAM_NAMES = [
+  'Pile of Shame Support Network',
+  '[C]lap or Be Clapped',
+  'The Sh[a]meful Suspects',
+  'Shame before [B]eauty',
+  "[D]a Empuror's Shamepions",
+  '[E]verlasting Shame'
+];
+
+function getTeamRegistry() {
+  const raw = attendanceData['_team_registry_0'];
+  if (raw) {
+    try { return JSON.parse(raw); } catch(e) {}
+  }
+  return [...HISTORICAL_TEAM_NAMES];
+}
+
+async function saveTeamRegistry(names) {
+  try {
+    await fetch(`${API}/attendance`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        player_name: '_team_registry_0',
+        event_sort_date: 0,
+        status: JSON.stringify(names)
+      })
+    });
+    await loadAttendance();
+  } catch(e) {
+    console.error('Failed to save team registry', e);
+  }
+}
+
 function getTeamsForEvent(sortDate) {
   const raw = attendanceData[`_teams_${sortDate}`];
   if (raw) {
     try { return JSON.parse(raw); } catch(e) {}
   }
-  // Return defaults
   return JSON.parse(JSON.stringify(DEFAULT_ITT_TEAMS));
 }
 
@@ -2833,14 +2865,17 @@ async function renderTeamsSignup() {
     return;
   }
 
-  // Render just the first upcoming ITT by default with a selector
   let activeIttIdx = 0;
-
   const allPlayers = D.players.map(p => p.name).filter(Boolean).sort();
 
   function renderIttEvent(idx) {
     const ev = ittEvents[idx];
     const teams = getTeamsForEvent(ev.sortDate);
+    const registry = getTeamRegistry();
+
+    // Names not yet on this event's active teams
+    const activeNames = teams.map(t => t.name);
+    const availableFromRegistry = registry.filter(n => !activeNames.includes(n));
 
     const eventSelector = ittEvents.length > 1 ? `
       <div style="display:flex;gap:6px;margin-bottom:1.25rem;flex-wrap:wrap;">
@@ -2855,29 +2890,29 @@ async function renderTeamsSignup() {
       </div>` : `<div style="font-size:0.88rem;color:var(--text);margin-bottom:1.25rem;font-weight:400;">${ev.name} · ${ev.dates}</div>`;
 
     const teamsHtml = teams.map((team, ti) => {
-      const playersInOtherTeams = teams.filter((_,i)=>i!==ti).flatMap(t=>t.players);
+      const playersInOtherTeams = teams.filter((_,i) => i !== ti).flatMap(t => t.players);
       const available = allPlayers.filter(p => !playersInOtherTeams.includes(p) && !team.players.includes(p));
 
       return `
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;margin-bottom:10px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;">
-            <input id="team-name-${ev.sortDate}-${ti}" value="${team.name}"
+            <input id="team-name-${ev.sortDate}-${ti}" value="${team.name.replace(/"/g,'&quot;')}"
               style="flex:1;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.04em;
                      background:transparent;border:none;border-bottom:1px solid var(--border);
                      color:var(--text);padding:2px 4px;outline:none;"
               onchange="updateTeamName(${ev.sortDate},${ti},this.value)"/>
             <button onclick="removeTeam(${ev.sortDate},${ti})"
               style="font-size:0.7rem;padding:3px 8px;background:transparent;border:1px solid var(--loss);
-                     border-radius:3px;color:var(--loss);cursor:pointer;flex-shrink:0;">Remove team</button>
+                     border-radius:3px;color:var(--loss);cursor:pointer;flex-shrink:0;">Remove</button>
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;">
-            ${team.players.map((p,pi) => `
+            ${team.players.length ? team.players.map(p => `
               <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);
                           border:1px solid var(--border);border-radius:4px;padding:3px 8px;">
                 <span style="font-size:0.78rem;color:var(--text);">${p}</span>
                 <button onclick="removePlayerFromTeam(${ev.sortDate},${ti},'${p.replace(/'/g,"\\'")}')"
                   style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;line-height:1;padding:0 2px;">✕</button>
-              </div>`).join('')}
+              </div>`).join('') : `<span style="font-size:0.75rem;color:var(--faint);">No players yet</span>`}
           </div>
           ${available.length ? `
           <div style="display:flex;align-items:center;gap:6px;">
@@ -2885,7 +2920,7 @@ async function renderTeamsSignup() {
               style="flex:1;padding:5px 8px;background:var(--surface2);border:1px solid var(--border);
                      border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
               <option value="">Add player...</option>
-              ${available.map(p=>`<option value="${p}">${p}</option>`).join('')}
+              ${available.map(p => `<option value="${p}">${p}</option>`).join('')}
             </select>
             <button onclick="addPlayerToTeam(${ev.sortDate},${ti})"
               style="padding:5px 12px;background:var(--accent);border:none;border-radius:4px;
@@ -2894,56 +2929,120 @@ async function renderTeamsSignup() {
         </div>`;
     }).join('');
 
-    el.innerHTML = `
-      ${eventSelector}
-      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;">
-        Set up your ITT teams. Player names are editable — click team name to rename. Changes save automatically.
-      </div>
-      ${teamsHtml}
-      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-        <button onclick="addNewTeam(${ev.sortDate})"
-          style="padding:7px 14px;background:transparent;border:1px dashed var(--border);border-radius:4px;
+    // Add team controls — dropdown from registry + new name option
+    const addTeamHtml = `
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;">
+        <select id="add-team-select-${ev.sortDate}"
+          style="padding:6px 10px;background:var(--surface2);border:1px dashed var(--border);border-radius:4px;
+                 color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;min-width:200px;">
+          <option value="">Select or type a team name...</option>
+          ${availableFromRegistry.map(n => `<option value="${n}">${n}</option>`).join('')}
+          <option value="__new__">+ New team name...</option>
+        </select>
+        <button onclick="addTeamFromDropdown(${ev.sortDate})"
+          style="padding:6px 14px;background:transparent;border:1px dashed var(--border);border-radius:4px;
                  color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;"
           onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
           + Add team
         </button>
         <button onclick="copyTeamsFromLastItt(${ev.sortDate})"
-          style="padding:7px 14px;background:transparent;border:1px solid var(--border);border-radius:4px;
+          style="padding:6px 14px;background:transparent;border:1px solid var(--border);border-radius:4px;
                  color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;"
           onmouseover="this.style.borderColor='var(--faint)';this.style.color='var(--text)'"
           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
           ↩ Reset to last ITT roster
         </button>
+      </div>
+      <!-- Registry viewer -->
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+        <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">
+          All known team names (${registry.length})
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">
+          ${registry.map(n => `
+            <div style="display:flex;align-items:center;gap:3px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:2px 8px;">
+              <span style="font-size:0.72rem;color:${activeNames.includes(n)?'var(--accent)':'var(--muted)'};">${n}</span>
+              <button onclick="removeFromRegistry('${n.replace(/'/g,"\\'")}')"
+                title="Remove from registry" style="background:none;border:none;color:var(--faint);cursor:pointer;font-size:0.75rem;padding:0 1px;line-height:1;">✕</button>
+            </div>`).join('')}
+        </div>
+        <div style="font-size:0.68rem;color:var(--faint);margin-top:5px;">Orange = active in this event. ✕ removes from the registry permanently.</div>
       </div>`;
 
-    // Store current state globally for mutation functions
+    el.innerHTML = `
+      ${eventSelector}
+      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;">
+        Build your ITT teams. Click a team name to rename it. Changes save automatically.
+      </div>
+      ${teamsHtml}
+      ${addTeamHtml}`;
+
     window._ittState = { sortDate: ev.sortDate, teams, idx };
   }
 
   window.renderIttIdx = (idx) => { activeIttIdx = idx; renderIttEvent(idx); };
   renderIttEvent(activeIttIdx);
 
-  // Mutation helpers — all save and re-render
+  // ── Mutation helpers ──
+
   window.updateTeamName = async (sortDate, ti, newName) => {
+    if (!newName.trim()) return;
     const teams = getTeamsForEvent(sortDate);
-    teams[ti].name = newName;
+    const oldName = teams[ti].name;
+    teams[ti].name = newName.trim();
     await saveTeamData(sortDate, teams);
+    // Add to registry if new
+    const registry = getTeamRegistry();
+    if (!registry.includes(newName.trim())) {
+      registry.push(newName.trim());
+      // Remove old name from registry if it was auto-generated
+      if (oldName === 'New Team') {
+        const idx = registry.indexOf('New Team');
+        if (idx > -1) registry.splice(idx, 1);
+      }
+      await saveTeamRegistry(registry);
+    }
     renderIttEvent(activeIttIdx);
   };
+
+  window.addTeamFromDropdown = async (sortDate) => {
+    const sel = document.getElementById(`add-team-select-${sortDate}`);
+    let name = sel?.value;
+    if (!name) return;
+    if (name === '__new__') {
+      name = prompt('Enter new team name:')?.trim();
+      if (!name) return;
+    }
+    const teams = getTeamsForEvent(sortDate);
+    if (teams.some(t => t.name === name)) return; // already exists
+    teams.push({ name, players: [] });
+    await saveTeamData(sortDate, teams);
+    // Add to registry
+    const registry = getTeamRegistry();
+    if (!registry.includes(name)) {
+      registry.push(name);
+      await saveTeamRegistry(registry);
+    }
+    renderIttEvent(activeIttIdx);
+  };
+
   window.removeTeam = async (sortDate, ti) => {
-    if (!confirm('Remove this team?')) return;
+    if (!confirm('Remove this team from this event?')) return;
     const teams = getTeamsForEvent(sortDate);
     teams.splice(ti, 1);
     await saveTeamData(sortDate, teams);
+    // Registry unchanged — team name stays for future use
     renderIttEvent(activeIttIdx);
   };
-  window.addNewTeam = async (sortDate) => {
-    const teams = getTeamsForEvent(sortDate);
-    teams.push({ name: 'New Team', players: [] });
-    await saveTeamData(sortDate, teams);
+
+  window.removeFromRegistry = async (name) => {
+    if (!confirm(`Remove "${name}" from the team registry permanently?`)) return;
+    const registry = getTeamRegistry().filter(n => n !== name);
+    await saveTeamRegistry(registry);
     renderIttEvent(activeIttIdx);
   };
+
   window.addPlayerToTeam = async (sortDate, ti) => {
     const sel = document.getElementById(`add-player-${sortDate}-${ti}`);
     const player = sel?.value;
@@ -2953,14 +3052,16 @@ async function renderTeamsSignup() {
     await saveTeamData(sortDate, teams);
     renderIttEvent(activeIttIdx);
   };
+
   window.removePlayerFromTeam = async (sortDate, ti, player) => {
     const teams = getTeamsForEvent(sortDate);
     teams[ti].players = teams[ti].players.filter(p => p !== player);
     await saveTeamData(sortDate, teams);
     renderIttEvent(activeIttIdx);
   };
+
   window.copyTeamsFromLastItt = async (sortDate) => {
-    if (!confirm('Reset to last recorded ITT roster? This will overwrite current team setup.')) return;
+    if (!confirm('Reset to last recorded ITT roster? This will overwrite the current setup.')) return;
     await saveTeamData(sortDate, JSON.parse(JSON.stringify(DEFAULT_ITT_TEAMS)));
     renderIttEvent(activeIttIdx);
   };
