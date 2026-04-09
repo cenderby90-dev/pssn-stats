@@ -1231,15 +1231,24 @@
         <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Your result will go to the admin for approval before appearing in the standings.</div>
         <div style="display:grid;gap:12px;">
           <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your pod</label>
+            <select id="lg-sub-pod" onchange="updateLeagueSubDropdowns()"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select your pod...</option>
+            </select>
+          </div>
+          <div>
             <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your name</label>
-            <select id="lg-sub-me" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-              <option value="">Select your name...</option>
+            <select id="lg-sub-me" onchange="updateLeagueSubOpponent()"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select pod first...</option>
             </select>
           </div>
           <div>
             <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Opponent</label>
-            <select id="lg-sub-opponent" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-              <option value="">Select opponent...</option>
+            <select id="lg-sub-opponent"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select your name first...</option>
             </select>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -1265,6 +1274,85 @@
     </div>
     </div> <!-- end sec-submit-wizard -->
 
+    <!-- DATA CORRECTIONS -->
+    <div class="section-head" style="margin-top:2rem;cursor:pointer;" onclick="toggleSection('sec-corrections')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+      <div>
+        <div class="section-title">Report a Data Error</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Something wrong with your stats? Flag it here for the admin to review</div>
+      </div>
+      <div class="section-rule"></div>
+      <span id="sec-corrections-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+    </div>
+    <div id="sec-corrections" style="display:none;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;max-width:500px;margin-top:8px;">
+        <div style="display:grid;gap:12px;">
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your name</label>
+            <select id="corr-player" onchange="loadCorrectionEvents()"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select your name...</option>
+            </select>
+          </div>
+          <div id="corr-events-wrap" style="display:none;">
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event</label>
+            <select id="corr-event" onchange="loadCorrectionCurrent()"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select event...</option>
+            </select>
+          </div>
+          <div id="corr-current-wrap" style="display:none;">
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Currently recorded as</div>
+            <div id="corr-current" style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-size:0.82rem;color:var(--text);"></div>
+          </div>
+          <div id="corr-fields-wrap" style="display:none;">
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">What should it be?</div>
+            <div style="display:grid;gap:10px;">
+              <div>
+                <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Faction (if wrong)</label>
+                <select id="corr-faction"
+                  style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
+                  <option value="">No change</option>
+                </select>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                <div>
+                  <label style="font-size:0.72rem;color:var(--win);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Wins</label>
+                  <input id="corr-w" type="number" min="0" placeholder="—"
+                    style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+                </div>
+                <div>
+                  <label style="font-size:0.72rem;color:var(--loss);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Losses</label>
+                  <input id="corr-l" type="number" min="0" placeholder="—"
+                    style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+                </div>
+                <div>
+                  <label style="font-size:0.72rem;color:var(--draw);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Draws</label>
+                  <input id="corr-d" type="number" min="0" placeholder="—"
+                    style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+                </div>
+              </div>
+              <div>
+                <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Placing (if wrong)</label>
+                <input id="corr-placing" type="number" min="1" placeholder="—"
+                  style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+              </div>
+              <div>
+                <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Note <span style="color:var(--faint);text-transform:none;">(explain what's wrong)</span></label>
+                <textarea id="corr-note" rows="2" placeholder="e.g. My placing was 34 not 41, BCP link shows correct result"
+                  style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;resize:vertical;"></textarea>
+              </div>
+              <button onclick="submitCorrection()"
+                style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;"
+                onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                Submit Correction
+              </button>
+              <div id="corr-message" style="font-size:0.82rem;display:none;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ADMIN SECTION -->
     <div style="margin-top:3rem;padding-top:2rem;border-top:2px solid var(--border);">
       <div style="font-size:0.72rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Admin Access</div>
@@ -1285,6 +1373,14 @@
         </div>
         <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Results submitted by team members waiting for your approval.</div>
         <div id="sheet-submissions"></div>
+
+        <!-- Pending corrections -->
+        <div class="section-head" style="margin-top:2rem;">
+          <div class="section-title">Pending Corrections</div>
+          <div class="section-rule"></div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Data error reports submitted by members. Review, apply the fix to the HTML, then dismiss.</div>
+        <div id="admin-corrections"></div>
 
         <!-- Add event -->
         <div class="section-head" style="margin-top:2.5rem;">
@@ -2081,6 +2177,38 @@ buildStrip('summary-teams', fmtStats['Teams'], 'Teams');
 // Build now panel — will refresh with league data once loaded
 // buildNowPanel called from initSite after all vars declared
 
+// ── Champions of Shame opt-in ──
+// Stored as _cos_optin_19700101 → JSON array of player names who have opted in
+function getCosOptins() {
+  const raw = attendanceData['_cos_optin_19700101'];
+  if (raw) { try { return new Set(JSON.parse(raw)); } catch(e) {} }
+  return new Set();
+}
+
+async function saveCosOptins(names) {
+  try {
+    await fetch(`${API}/attendance`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        player_name: '_cos_optin_19700101',
+        event_sort_date: 19700101,
+        status: JSON.stringify([...names])
+      })
+    });
+    await loadAttendance();
+  } catch(e) {
+    console.warn('Failed to save CoS optins', e);
+  }
+}
+
+async function toggleCosOptin(name) {
+  const optins = getCosOptins();
+  if (optins.has(name)) optins.delete(name); else optins.add(name);
+  await saveCosOptins(optins);
+  renderLeaderboard(activeFilter);
+}
+
 function renderLeaderboard(filter) {
   if (filter === 'Teams') { renderTeamsLeaderboard(); return; }
   const lbEl = document.getElementById('leaderboard');
@@ -2092,10 +2220,15 @@ function renderLeaderboard(filter) {
 
   const map = filter === 'Singles' ? singlesStats : filter === 'All' ? allStats : fmtStats[filter];
   const teamAvg = getTeamAvg(map);
+  const optins = getCosOptins();
 
-  // Provisional = fewer than PROVISIONAL_MIN_EVENTS events attended
-  const qualified   = ranked.filter(s => (s.events?.size || 0) >= PROVISIONAL_MIN_EVENTS);
-  const provisional = ranked.filter(s => (s.events?.size || 0) < PROVISIONAL_MIN_EVENTS && s.games > 0);
+  // Only show opted-in players on the leaderboard; others are hidden but ranked internally
+  const optedIn = ranked.filter(s => optins.has(s.name));
+  const optedOut = ranked.filter(s => !optins.has(s.name) && s.games > 0);
+
+  // Qualified/provisional split within opted-in only
+  const qualified   = optedIn.filter(s => (s.events?.size || 0) >= PROVISIONAL_MIN_EVENTS);
+  const provisional = optedIn.filter(s => (s.events?.size || 0) < PROVISIONAL_MIN_EVENTS);
 
   function buildRow(s, i, isProvisional) {
     const rawWr = s.games ? Math.round((s.w / s.games) * 100) : 0;
@@ -2209,13 +2342,44 @@ function renderLeaderboard(filter) {
     </div>`;
   }
 
-  let html = qualified.map((s, i) => buildRow(s, i, false)).join('');
+  let html = '';
 
-  if (provisional.length) {
+  if (!optedIn.length) {
+    html = `<div style="padding:1.5rem;text-align:center;">
+      <div style="font-size:0.88rem;color:var(--text);margin-bottom:6px;">No one has opted in yet</div>
+      <div style="font-size:0.78rem;color:var(--muted);">Open your player card and tick "Show on leaderboard" to appear here.</div>
+    </div>`;
+  } else {
+    html = qualified.map((s, i) => buildRow(s, i, false)).join('');
+    if (provisional.length) {
+      html += `
+        <div style="margin-top:1rem;padding:8px 0 6px;border-top:1px solid var(--border);">
+          <div style="font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:0 4px 8px;">Provisional — fewer than ${PROVISIONAL_MIN_EVENTS} events attended</div>
+          ${provisional.map((s, i) => buildRow(s, i, true)).join('')}
+        </div>`;
+    }
+  }
+
+  // Opted-out section — show all with opt-in prompt
+  if (optedOut.length) {
     html += `
-      <div style="margin-top:1rem;padding:8px 0 6px;border-top:1px solid var(--border);">
-        <div style="font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:0 4px 8px;">Provisional — fewer than ${PROVISIONAL_MIN_EVENTS} events attended</div>
-        ${provisional.map((s, i) => buildRow(s, i, true)).join('')}
+      <div style="margin-top:1rem;padding:10px 14px;border-top:1px solid var(--border);">
+        <div style="font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">
+          Not on leaderboard (${optedOut.length}) — click to opt in
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;">
+          ${optedOut.map(s => {
+            const wr = Math.round(bayesianWinRate(s, teamAvg) * 100);
+            return `<button onclick="toggleCosOptin('${s.name.replace(/'/g,"\\'")}') "
+              style="font-size:0.75rem;padding:3px 10px;background:var(--surface2);border:1px solid var(--border);
+                     border-radius:3px;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+              ${s.name} <span style="color:var(--faint);">${wr}%</span>
+            </button>`;
+          }).join('')}
+        </div>
+        <div style="font-size:0.68rem;color:var(--faint);margin-top:6px;">Win rates calculated but hidden until player opts in. You can also opt in from your player card.</div>
       </div>`;
   }
 
@@ -2429,13 +2593,16 @@ function toggleTrnResults(fmtKey) {
 }
 
 // ── champions tab switcher ──
-function switchChamTab(tab) {
+async function switchChamTab(tab) {
   ['players','factions'].forEach(t => {
     document.getElementById('cham-' + t).style.display = t === tab ? '' : 'none';
     document.getElementById('cham-btn-' + t).classList.toggle('active', t === tab);
   });
-  // build faction stats on first switch to factions tab
   if (tab === 'factions') buildFactionStats();
+  if (tab === 'players') {
+    await loadAttendance();
+    renderLeaderboard(activeFilter);
+  }
 }
 
 function toggleCalWho(id) {
@@ -2474,6 +2641,24 @@ function checkPin(val) {
     renderWhosGoing();
     renderTeamsSignup();
     loadDbEvents();
+    // Populate correction player dropdown
+    const corrSel = document.getElementById('corr-player');
+    if (corrSel && corrSel.options.length <= 1) {
+      D.players.sort((a,b) => a.name.localeCompare(b.name)).forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.name; opt.textContent = p.name;
+        corrSel.appendChild(opt);
+      });
+    }
+    // Populate correction faction dropdown
+    const corrFac = document.getElementById('corr-faction');
+    if (corrFac && corrFac.options.length <= 1) {
+      ALL_FACTIONS.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f; opt.textContent = f;
+        corrFac.appendChild(opt);
+      });
+    }
   } else {
     document.getElementById('pin-error').style.display = 'block';
     document.getElementById('pin-input').value = '';
@@ -2689,13 +2874,18 @@ let attendanceData = {};
 async function loadAttendance() {
   try {
     const res = await fetch(`${API}/attendance`);
+    const ct = res.headers.get('content-type') || '';
+    if (!res.ok || !ct.includes('application/json')) {
+      console.warn('Attendance API unavailable:', res.status);
+      return;
+    }
     const data = await res.json();
     attendanceData = {};
-    data.attendance.forEach(row => {
+    (data.attendance || []).forEach(row => {
       attendanceData[`${row.player_name}_${row.event_sort_date}`] = row.status;
     });
   } catch(e) {
-    console.error('Failed to load attendance', e);
+    console.warn('Failed to load attendance:', e.message);
   }
 }
 
@@ -2769,6 +2959,226 @@ function switchWgTab(tab) {
   if (tab === 'teams') renderTeamsSignup();
 }
 
+// ── Data corrections ──
+
+function loadCorrectionEvents() {
+  const name = document.getElementById('corr-player').value;
+  const evWrap = document.getElementById('corr-events-wrap');
+  const evSel = document.getElementById('corr-event');
+  const curWrap = document.getElementById('corr-current-wrap');
+  const fldWrap = document.getElementById('corr-fields-wrap');
+
+  curWrap.style.display = 'none';
+  fldWrap.style.display = 'none';
+  evSel.innerHTML = '<option value="">Select event...</option>';
+
+  if (!name) { evWrap.style.display = 'none'; return; }
+
+  // Find all events this player appeared in
+  const playerEvents = getActiveEvents().filter(ev =>
+    ev.results.some(r => r.player === name)
+  );
+
+  if (!playerEvents.length) {
+    evWrap.style.display = 'none'; return;
+  }
+
+  playerEvents.forEach(ev => {
+    const opt = document.createElement('option');
+    opt.value = ev.name; opt.textContent = `${ev.name} (${ev.date})`;
+    evSel.appendChild(opt);
+  });
+  evWrap.style.display = 'block';
+}
+
+function loadCorrectionCurrent() {
+  const name = document.getElementById('corr-player').value;
+  const evName = document.getElementById('corr-event').value;
+  const curWrap = document.getElementById('corr-current-wrap');
+  const fldWrap = document.getElementById('corr-fields-wrap');
+  const curEl = document.getElementById('corr-current');
+
+  if (!evName) { curWrap.style.display = 'none'; fldWrap.style.display = 'none'; return; }
+
+  const ev = getActiveEvents().find(e => e.name === evName);
+  const r = ev?.results.find(r => r.player === name);
+  if (!r) { curWrap.style.display = 'none'; fldWrap.style.display = 'none'; return; }
+
+  const total = ev.format === 'Teams' ? ev.totalTeams : ev.totalPlayers;
+  curEl.innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+      <span style="color:var(--text);">${r.faction}</span>
+      <span style="color:var(--muted);">Placing: ${r.placing}/${total}</span>
+      <span style="display:flex;gap:4px;">
+        <span style="font-size:0.7rem;padding:2px 6px;border-radius:3px;background:var(--win-bg);color:var(--win);">${r.w}W</span>
+        <span style="font-size:0.7rem;padding:2px 6px;border-radius:3px;background:var(--loss-bg);color:var(--loss);">${r.l}L</span>
+        ${r.d > 0 ? `<span style="font-size:0.7rem;padding:2px 6px;border-radius:3px;background:#152030;color:var(--draw);">${r.d}D</span>` : ''}
+      </span>
+      ${r.subteam ? `<span style="color:var(--muted);font-size:0.78rem;">${r.subteam}</span>` : ''}
+    </div>`;
+
+  // Pre-fill correction fields with current values
+  document.getElementById('corr-w').value = r.w;
+  document.getElementById('corr-l').value = r.l;
+  document.getElementById('corr-d').value = r.d;
+  document.getElementById('corr-placing').value = r.placing;
+  // Set faction select to current
+  const facSel = document.getElementById('corr-faction');
+  facSel.value = r.faction;
+
+  curWrap.style.display = 'block';
+  fldWrap.style.display = 'block';
+}
+
+async function submitCorrection() {
+  const msg = document.getElementById('corr-message');
+  const player = document.getElementById('corr-player').value;
+  const evName = document.getElementById('corr-event').value;
+  const note = document.getElementById('corr-note').value.trim();
+
+  if (!player || !evName) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Please select your name and event.'; return;
+  }
+  if (!note) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Please add a note explaining what\'s wrong.'; return;
+  }
+
+  const ev = getActiveEvents().find(e => e.name === evName);
+  const current = ev?.results.find(r => r.player === player);
+
+  const correction = {
+    player, evName,
+    current: { faction: current?.faction, w: current?.w, l: current?.l, d: current?.d, placing: current?.placing },
+    proposed: {
+      faction: document.getElementById('corr-faction').value || current?.faction,
+      w: parseInt(document.getElementById('corr-w').value) ?? current?.w,
+      l: parseInt(document.getElementById('corr-l').value) ?? current?.l,
+      d: parseInt(document.getElementById('corr-d').value) ?? current?.d,
+      placing: parseInt(document.getElementById('corr-placing').value) || current?.placing,
+    },
+    note,
+    submittedAt: new Date().toISOString(),
+    status: 'pending'
+  };
+
+  // Save using attendance API — key: _corr_TIMESTAMP
+  const ts = Date.now();
+  try {
+    msg.style.display = 'block'; msg.style.color = 'var(--muted)';
+    msg.textContent = 'Submitting...';
+    const res = await fetch(`${API}/attendance`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        player_name: `_corr_${ts}`,
+        event_sort_date: 19700101,
+        status: JSON.stringify(correction)
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.style.color = 'var(--win)';
+      msg.textContent = '✓ Correction submitted — the admin will review it shortly.';
+      document.getElementById('corr-note').value = '';
+      document.getElementById('corr-player').value = '';
+      document.getElementById('corr-events-wrap').style.display = 'none';
+      document.getElementById('corr-current-wrap').style.display = 'none';
+      document.getElementById('corr-fields-wrap').style.display = 'none';
+    } else {
+      msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown');
+    }
+  } catch(e) {
+    msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error — try again.';
+  }
+}
+
+async function loadAdminCorrections() {
+  const el = document.getElementById('admin-corrections');
+  if (!el) return;
+  await loadAttendance();
+
+  const corrections = Object.entries(attendanceData)
+    .filter(([k]) => k.startsWith('_corr_'))
+    .map(([k, v]) => {
+      try { return { key: k, ts: parseInt(k.replace('_corr_','')), ...JSON.parse(v) }; }
+      catch(e) { return null; }
+    })
+    .filter(Boolean)
+    .filter(c => c.status === 'pending')
+    .sort((a, b) => b.ts - a.ts);
+
+  if (!corrections.length) {
+    el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">No pending corrections.</div>`;
+    return;
+  }
+
+  el.innerHTML = corrections.map(c => {
+    const date = new Date(c.submittedAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    const changes = [];
+    if (c.proposed.faction !== c.current.faction) changes.push(`Faction: ${c.current.faction} → <strong>${c.proposed.faction}</strong>`);
+    if (c.proposed.w !== c.current.w) changes.push(`Wins: ${c.current.w} → <strong>${c.proposed.w}</strong>`);
+    if (c.proposed.l !== c.current.l) changes.push(`Losses: ${c.current.l} → <strong>${c.proposed.l}</strong>`);
+    if (c.proposed.d !== c.current.d) changes.push(`Draws: ${c.current.d} → <strong>${c.proposed.d}</strong>`);
+    if (c.proposed.placing !== c.current.placing) changes.push(`Placing: ${c.current.placing} → <strong>${c.proposed.placing}</strong>`);
+
+    return `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:0.9rem;font-weight:400;color:var(--text);">${c.player} — <span style="color:var(--muted);">${c.evName}</span></div>
+            <div style="font-size:0.72rem;color:var(--faint);margin-top:2px;">Submitted ${date}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="dismissCorrection('${c.key}')"
+              style="font-size:0.72rem;padding:4px 12px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;"
+              onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+              Dismiss
+            </button>
+          </div>
+        </div>
+        ${changes.length ? `
+          <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);">
+            <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;">Proposed changes</div>
+            ${changes.map(ch => `<div style="font-size:0.8rem;color:var(--text);padding:2px 0;">${ch}</div>`).join('')}
+          </div>` : ''}
+        <div style="margin-top:8px;padding:8px 10px;background:var(--surface2);border-radius:4px;font-size:0.8rem;color:var(--muted);">
+          <span style="color:var(--text);">Note:</span> ${c.note}
+        </div>
+        <div style="margin-top:8px;font-size:0.72rem;color:var(--faint);">
+          ⚠️ To apply this fix, update the player's result in the HTML data block and redeploy. Then dismiss this correction.
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function dismissCorrection(key) {
+  // Update status to dismissed
+  const raw = attendanceData[key];
+  if (!raw) return;
+  try {
+    const c = JSON.parse(raw);
+    c.status = 'dismissed';
+    const ts = parseInt(key.replace('_corr_', ''));
+    await fetch(`${API}/attendance`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        player_name: key,
+        event_sort_date: 19700101,
+        status: JSON.stringify(c)
+      })
+    });
+    await loadAdminCorrections();
+  } catch(e) {
+    console.error('Failed to dismiss correction', e);
+  }
+}
+
 // ── ITT teams sign-up ──
 // Default teams seeded from the last recorded ITT (Winter ITT Feb 2026)
 const DEFAULT_ITT_TEAMS = [
@@ -2818,7 +3228,7 @@ const HISTORICAL_TEAM_NAMES = [
 ];
 
 function getTeamRegistry() {
-  const raw = attendanceData['_team_registry_0'];
+  const raw = attendanceData['_team_registry_19700101'];
   if (raw) {
     try { return JSON.parse(raw); } catch(e) {}
   }
@@ -2831,8 +3241,8 @@ async function saveTeamRegistry(names) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        player_name: '_team_registry_0',
-        event_sort_date: 0,
+        player_name: '_team_registry_19700101',
+        event_sort_date: 19700101,
         status: JSON.stringify(names)
       })
     });
@@ -4020,41 +4430,72 @@ function setWizardType(type) {
   document.getElementById('wiz-type-league').style.borderColor = isTournament ? 'var(--border)' : 'var(--accent)';
   document.getElementById('wiz-type-league').style.color = isTournament ? 'var(--muted)' : '#fff';
 
-  // populate league player dropdowns from leagueData
+  // Populate pod dropdown when switching to league
   if (!isTournament && leagueData) {
-    const allPlayers = [...new Set((leagueData.players || []).map(p => p.player_name))].sort();
-    const opts = `<option value="">Select...</option>` + allPlayers.map(p => `<option value="${p}">${p}</option>`).join('');
-    const meEl = document.getElementById('lg-sub-me');
-    const oppEl = document.getElementById('lg-sub-opponent');
-    if (meEl && meEl.options.length <= 1) meEl.innerHTML = opts;
-    if (oppEl && oppEl.options.length <= 1) oppEl.innerHTML = opts;
+    const podSel = document.getElementById('lg-sub-pod');
+    if (podSel && podSel.options.length <= 1) {
+      (leagueData.pods || []).forEach(pod => {
+        const opt = document.createElement('option');
+        opt.value = pod.id;
+        opt.textContent = pod.name;
+        podSel.appendChild(opt);
+      });
+    }
   }
+}
+
+// When pod changes — populate "Your name" with pod players
+function updateLeagueSubDropdowns() {
+  const podId = parseInt(document.getElementById('lg-sub-pod').value);
+  const meEl = document.getElementById('lg-sub-me');
+  const oppEl = document.getElementById('lg-sub-opponent');
+  meEl.innerHTML = '<option value="">Select your name...</option>';
+  oppEl.innerHTML = '<option value="">Select your name first...</option>';
+  if (!podId || !leagueData) return;
+  const podPlayers = (leagueData.players || [])
+    .filter(p => p.pod_id === podId)
+    .map(p => p.player_name)
+    .sort();
+  podPlayers.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    meEl.appendChild(opt);
+  });
+}
+
+// When "Your name" changes — populate opponent with remaining pod players
+function updateLeagueSubOpponent() {
+  const podId = parseInt(document.getElementById('lg-sub-pod').value);
+  const me = document.getElementById('lg-sub-me').value;
+  const oppEl = document.getElementById('lg-sub-opponent');
+  oppEl.innerHTML = '<option value="">Select opponent...</option>';
+  if (!podId || !me || !leagueData) return;
+  const podPlayers = (leagueData.players || [])
+    .filter(p => p.pod_id === podId && p.player_name !== me)
+    .map(p => p.player_name)
+    .sort();
+  podPlayers.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    oppEl.appendChild(opt);
+  });
 }
 
 async function submitLeagueGameAsPlayer() {
   const msg = document.getElementById('lg-sub-message');
+  const pod_id = parseInt(document.getElementById('lg-sub-pod').value);
   const me = document.getElementById('lg-sub-me').value;
   const opponent = document.getElementById('lg-sub-opponent').value;
   const mybp = parseInt(document.getElementById('lg-sub-mybp').value);
   const oppbp = parseInt(document.getElementById('lg-sub-oppbp').value);
 
-  if (!me || !opponent || isNaN(mybp) || isNaN(oppbp)) {
+  if (!pod_id || !me || !opponent || isNaN(mybp) || isNaN(oppbp)) {
     msg.style.display = 'block'; msg.style.color = 'var(--loss)';
     msg.textContent = 'Please fill in all fields.'; return;
   }
   if (me === opponent) {
     msg.style.display = 'block'; msg.style.color = 'var(--loss)';
     msg.textContent = 'You can\'t play yourself!'; return;
-  }
-
-  // find the pod these two players share
-  const myPods = (leagueData.players || []).filter(p => p.player_name === me).map(p => p.pod_id);
-  const oppPods = (leagueData.players || []).filter(p => p.player_name === opponent).map(p => p.pod_id);
-  const sharedPod = myPods.find(id => oppPods.includes(id));
-
-  if (!sharedPod) {
-    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
-    msg.textContent = 'These players are not in the same pod.'; return;
   }
 
   msg.style.display = 'block'; msg.style.color = 'var(--muted)';
@@ -4064,14 +4505,15 @@ async function submitLeagueGameAsPlayer() {
     const res = await fetch(`${API}/league`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: '1719', pod_id: sharedPod, player1: me, player2: opponent, bp1: mybp, bp2: oppbp })
+      body: JSON.stringify({ pin: '1719', pod_id, player1: me, player2: opponent, bp1: mybp, bp2: oppbp })
     });
     const data = await res.json();
     if (data.success) {
       msg.style.color = 'var(--win)';
       msg.textContent = '✓ League result submitted! Pending admin approval before it appears in standings.';
-      document.getElementById('lg-sub-me').value = '';
-      document.getElementById('lg-sub-opponent').value = '';
+      document.getElementById('lg-sub-pod').value = '';
+      document.getElementById('lg-sub-me').innerHTML = '<option value="">Select pod first...</option>';
+      document.getElementById('lg-sub-opponent').innerHTML = '<option value="">Select your name first...</option>';
       document.getElementById('lg-sub-mybp').value = '';
       document.getElementById('lg-sub-oppbp').value = '';
     } else {
@@ -4295,6 +4737,7 @@ function checkAdminPin(val) {
           document.getElementById('admin-gate').style.display = 'none';
           document.getElementById('admin-content').style.display = 'block';
           loadSheetSubmissions();
+          loadAdminCorrections();
           loadDbEvents();
         } else {
           errEl.style.display = 'block';
@@ -4738,14 +5181,19 @@ function openPlayerPanel(name) {
     ? `<span style="color:var(--accent);">${mainFaction}</span>${s.factions.size > 1 ? ` <span style="color:var(--muted);font-size:0.72rem;">· also: ${[...s.factions].filter(f => f !== mainFaction).join(', ')}</span>` : ''}`
     : allFactions;
 
-  // Add champions rank to header
+  // Add champions rank + opt-in toggle to header
   const singlesRanked = getRanked('Singles');
   const champPos = singlesRanked.findIndex(p => p.name === name);
+  const optins = getCosOptins();
+  const isOptedIn = optins.has(name);
   const champRankHtml = champPos >= 0 ? `
-    <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">
-      #${champPos + 1} Champions of Shame
-      ${champPos < singlesRanked.filter(p => (p.events?.size||0) >= PROVISIONAL_MIN_EVENTS).length
-        ? '' : ' <span style="color:var(--faint);">(provisional)</span>'}
+    <div style="font-size:0.7rem;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span>#${champPos + 1} Champions of Shame${champPos < singlesRanked.filter(p => (p.events?.size||0) >= PROVISIONAL_MIN_EVENTS).length ? '' : ' <span style="color:var(--faint);">(provisional)</span>'}</span>
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:2px 8px;border-radius:3px;background:${isOptedIn?'var(--accent-bg)':'var(--surface2)'};border:1px solid ${isOptedIn?'var(--accent-muted)':'var(--border)'};">
+        <input type="checkbox" ${isOptedIn?'checked':''} onchange="(async()=>{await toggleCosOptin('${name.replace(/'/g,"\\'")}');openPlayerPanel('${name.replace(/'/g,"\\'")}');})()"
+          style="accent-color:var(--accent);cursor:pointer;"/>
+        <span style="font-size:0.68rem;color:${isOptedIn?'var(--accent)':'var(--muted)'};">${isOptedIn?'On leaderboard':'Show on leaderboard'}</span>
+      </label>
     </div>` : '';
   document.getElementById('panel-factions').innerHTML += champRankHtml;
 
