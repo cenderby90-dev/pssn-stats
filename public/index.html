@@ -2293,7 +2293,7 @@ async function saveCosOptins(names) {
         status: JSON.stringify([...names])
       })
     });
-    await loadAttendance();
+    await loadAttendance(true); // force reload after write
   } catch(e) {
     console.warn('Failed to save CoS optins', e);
   }
@@ -3137,9 +3137,14 @@ function renderTimeline() {
 
 // ── who's going — API backed ──
 
-async function loadAttendance() {
+let _attendanceLastFetch = 0;
+const ATTENDANCE_CACHE_TTL = 30000; // 30 seconds
+
+async function loadAttendance(forceReload = false) {
+  const now = Date.now();
+  if (!forceReload && now - _attendanceLastFetch < ATTENDANCE_CACHE_TTL && Object.keys(attendanceData).length) return;
   try {
-    const res = await fetch(`${API}/attendance`);
+    const res = await fetch(`${API}/attendance`, { cache: 'no-store' });
     const ct = res.headers.get('content-type') || '';
     if (!res.ok || !ct.includes('application/json')) {
       console.warn('Attendance API unavailable:', res.status);
@@ -3150,6 +3155,7 @@ async function loadAttendance() {
     (data.attendance || []).forEach(row => {
       attendanceData[`${row.player_name}_${row.event_sort_date}`] = row.status;
     });
+    _attendanceLastFetch = Date.now();
   } catch(e) {
     console.warn('Failed to load attendance:', e.message);
   }
