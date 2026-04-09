@@ -69,7 +69,6 @@ export default async function handler(req, res) {
         sql`SELECT id, label, data, created_at FROM league_archive ORDER BY created_at DESC`,
       ]);
 
-      // Fetch allPlayers separately with fallback
       let allPlayers = [];
       try {
         const { rows } = await sql`SELECT * FROM league_players WHERE active = true ORDER BY name`;
@@ -80,7 +79,6 @@ export default async function handler(req, res) {
 
       const seedings = calcSeedings(pods, players, games);
 
-      // Overlay playoff results onto bracket
       const bracket = seedings.bracket;
       playoffs.forEach(m => {
         const key = `${m.round}${m.match_number}`;
@@ -107,7 +105,6 @@ export default async function handler(req, res) {
       if (!pin || (pin !== TEAM_PIN && pin !== ADMIN_PIN)) return res.status(401).json({ error: 'Unauthorised' });
       const approved = pin === ADMIN_PIN;
 
-      // Add league player (admin only)
       if (type === 'add_player') {
         if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
         const { name } = req.body;
@@ -116,7 +113,6 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true });
       }
 
-      // Playoff result
       if (type === 'playoff') {
         const { season_id, round, match_number, player1, player2, bp1, bp2, winner } = req.body;
         if (!round || !match_number || !player1 || !player2 || bp1 === undefined || bp2 === undefined || !winner)
@@ -129,25 +125,20 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true, approved });
       }
 
-      // Regular league game
       const { pod_id, player1, player2, bp1, bp2 } = req.body;
       if (!pod_id || !player1 || !player2 || bp1 === undefined || bp2 === undefined)
         return res.status(400).json({ error: 'Missing required fields' });
-
-      // BP validation
       if (bp1 < 0 || bp1 > 100 || bp2 < 0 || bp2 > 100)
         return res.status(400).json({ error: 'Battle Points must be between 0 and 100' });
 
       const { rows: pods } = await sql`SELECT season_id FROM league_pods WHERE id = ${pod_id}`;
       if (!pods.length) return res.status(400).json({ error: 'Pod not found' });
 
-      // Pod membership check
       const { rows: members } = await sql`SELECT player_name FROM league_pod_players WHERE pod_id = ${pod_id}`;
       const memberNames = members.map(m => m.player_name);
       if (!memberNames.includes(player1)) return res.status(400).json({ error: `${player1} is not in this pod` });
       if (!memberNames.includes(player2)) return res.status(400).json({ error: `${player2} is not in this pod` });
 
-      // Duplicate check
       const { rows: dupes } = await sql`
         SELECT id FROM league_games 
         WHERE pod_id = ${pod_id} AND approved = true
@@ -161,15 +152,26 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, approved });
     }
 
-    // ── PATCH — approve/reject, or toggle player ──
+    // ── PATCH — approve/reject, edit scores, or toggle player ──
     if (req.method === 'PATCH') {
-      const { pin, gameId, playoffId, playerId, active, approved } = req.body;
+      const { pin, gameId, playoffId, playerId, active, approved, bp1, bp2 } = req.body;
       if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
 
+      // Toggle player active state
       if (playerId !== undefined) {
         await sql`UPDATE league_players SET active = ${active} WHERE id = ${playerId}`;
         return res.status(200).json({ success: true });
       }
+
+      // Edit existing game scores
+      if (gameId && bp1 !== undefined && bp2 !== undefined) {
+        if (bp1 < 0 || bp1 > 100 || bp2 < 0 || bp2 > 100)
+          return res.status(400).json({ error: 'Battle Points must be between 0 and 100' });
+        await sql`UPDATE league_games SET bp1 = ${bp1}, bp2 = ${bp2} WHERE id = ${gameId}`;
+        return res.status(200).json({ success: true });
+      }
+
+      // Approve/reject game or playoff
       if (playoffId) {
         if (approved) await sql`UPDATE league_playoff_matches SET approved = true WHERE id = ${playoffId}`;
         else await sql`DELETE FROM league_playoff_matches WHERE id = ${playoffId}`;
@@ -201,11 +203,9 @@ export default async function handler(req, res) {
       const { pin, label, snapshot } = req.body;
       if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
 
-      // Get active season id directly from DB
       const { rows: activeSeason } = await sql`SELECT id FROM league_seasons WHERE active = true LIMIT 1`;
       const seasonId = activeSeason[0]?.id;
 
-      // Fetch playoff results
       let playoffResults = [];
       if (seasonId) {
         const { rows } = await sql`
@@ -216,7 +216,6 @@ export default async function handler(req, res) {
       }
 
       const fullSnapshot = { ...snapshot, playoffs: playoffResults };
-
       await sql`INSERT INTO league_archive (label, data) VALUES (${label}, ${JSON.stringify(fullSnapshot)})`;
       await sql`UPDATE league_seasons SET active = false`;
       return res.status(200).json({ success: true });
