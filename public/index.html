@@ -817,6 +817,7 @@
         <button class="tab-btn active" onclick="switchTab('stats')">Season Stats</button>
         <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
         <button class="tab-btn" onclick="switchTab('league')">League</button>
+        <button class="tab-btn" onclick="switchTab('members')">Members</button>
         <button class="tab-btn" onclick="switchTab('submit')">Submissions</button>
       </div>
       <div id="edition-toggle" style="display:flex;background:var(--surface2);border-radius:6px;padding:3px;gap:2px;border:1px solid var(--border);">
@@ -910,6 +911,68 @@
       <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">How each army is performing across PSSN this season. Bayesian weighted — more games = more reliable.</div>
       <div id="faction-stats"></div>
     </div>
+  </div>
+
+</main>
+
+<!-- ── MEMBERS TAB ── -->
+<main class="page" id="tab-members" style="display:none;">
+
+  <div class="section-head" style="margin-top:0;">
+    <div class="section-title">Members</div>
+    <div class="section-rule"></div>
+  </div>
+
+  <!-- Identity selector -->
+  <div id="members-identify">
+    <div style="font-size:0.85rem;color:var(--muted);margin-bottom:1.25rem;">
+      Select your name to personalise the site and manage your Champions of Shame visibility.
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;max-width:700px;" id="members-name-list"></div>
+    <div style="font-size:0.72rem;color:var(--faint);margin-top:12px;">Your selection is saved locally to this device.</div>
+  </div>
+
+  <!-- Profile (shown once identified) -->
+  <div id="members-profile" style="display:none;margin-top:2rem;">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:1.5rem;">
+      <div>
+        <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Signed in as</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;color:var(--text);" id="members-name-display"></div>
+      </div>
+      <button onclick="clearMemberIdentity()"
+        style="font-size:0.75rem;padding:6px 14px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;cursor:pointer;"
+        onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+        Not you?
+      </button>
+    </div>
+
+    <!-- Champions opt-in -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;margin-bottom:1rem;max-width:480px;">
+      <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Champions of Shame</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+          <div style="font-size:0.88rem;color:var(--text);margin-bottom:3px;" id="members-cos-label">Show my ranking on the leaderboard</div>
+          <div style="font-size:0.75rem;color:var(--muted);">Your ranking is always calculated — this controls whether it's visible to others</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;cursor:pointer;">
+          <input type="checkbox" id="members-cos-toggle" onchange="handleCosToggle(this.checked)"
+            style="opacity:0;width:0;height:0;position:absolute;"/>
+          <span id="members-cos-track" style="position:absolute;inset:0;border-radius:12px;background:var(--surface2);border:1px solid var(--border);transition:all 0.2s;"></span>
+          <span id="members-cos-thumb" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:all 0.2s;"></span>
+        </label>
+      </div>
+      <div id="members-cos-status" style="font-size:0.72rem;margin-top:8px;display:none;"></div>
+    </div>
+
+    <!-- View my stats -->
+    <button onclick="openPlayerPanel(window._memberName)"
+      style="padding:9px 20px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;margin-bottom:1rem;"
+      onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+      View my player card →
+    </button>
+
   </div>
 
 </main>
@@ -2616,9 +2679,115 @@ function toggleCalWho(id) {
   if (arrow) arrow.style.transform = open ? '' : 'rotate(180deg)';
 }
 
+// ── Members tab ──
+
+function initMembersTab() {
+  buildMemberNameList();
+  const stored = localStorage.getItem('pssn_member');
+  if (stored && D.players.some(p => p.name === stored)) {
+    showMemberProfile(stored);
+  }
+}
+
+function buildMemberNameList() {
+  const el = document.getElementById('members-name-list');
+  if (!el || el.children.length) return; // only build once
+  const stored = localStorage.getItem('pssn_member');
+  [...D.players].sort((a,b) => a.name.localeCompare(b.name)).forEach(p => {
+    const btn = document.createElement('button');
+    const isMe = p.name === stored;
+    btn.textContent = p.name;
+    btn.style.cssText = `
+      padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:0.82rem;
+      border-radius:4px;cursor:pointer;transition:all 0.15s;
+      background:${isMe ? 'var(--accent)' : 'var(--surface)'};
+      border:1px solid ${isMe ? 'var(--accent)' : 'var(--border)'};
+      color:${isMe ? '#fff' : 'var(--text)'};
+    `;
+    btn.onclick = () => selectMember(p.name);
+    btn.id = `member-btn-${p.name.replace(/\s+/g,'-').toLowerCase()}`;
+    el.appendChild(btn);
+  });
+}
+
+function selectMember(name) {
+  localStorage.setItem('pssn_member', name);
+  window._memberName = name;
+  // Update button styles
+  D.players.forEach(p => {
+    const btn = document.getElementById(`member-btn-${p.name.replace(/\s+/g,'-').toLowerCase()}`);
+    if (!btn) return;
+    const isMe = p.name === name;
+    btn.style.background = isMe ? 'var(--accent)' : 'var(--surface)';
+    btn.style.borderColor = isMe ? 'var(--accent)' : 'var(--border)';
+    btn.style.color = isMe ? '#fff' : 'var(--text)';
+  });
+  showMemberProfile(name);
+}
+
+async function showMemberProfile(name) {
+  window._memberName = name;
+  document.getElementById('members-name-display').textContent = name;
+  document.getElementById('members-profile').style.display = 'block';
+
+  // Load opt-in state
+  await loadAttendance();
+  const optins = getCosOptins();
+  const isOptedIn = optins.has(name);
+  updateCosToggleUI(isOptedIn);
+}
+
+function updateCosToggleUI(isOptedIn) {
+  const toggle = document.getElementById('members-cos-toggle');
+  const track = document.getElementById('members-cos-track');
+  const thumb = document.getElementById('members-cos-thumb');
+  const label = document.getElementById('members-cos-label');
+  if (!toggle) return;
+  toggle.checked = isOptedIn;
+  track.style.background = isOptedIn ? 'var(--accent)' : 'var(--surface2)';
+  track.style.borderColor = isOptedIn ? 'var(--accent)' : 'var(--border)';
+  thumb.style.background = isOptedIn ? '#fff' : 'var(--muted)';
+  thumb.style.left = isOptedIn ? '23px' : '3px';
+  label.textContent = isOptedIn ? 'Showing on leaderboard' : 'Show my ranking on the leaderboard';
+}
+
+async function handleCosToggle(checked) {
+  const name = window._memberName;
+  if (!name) return;
+  const status = document.getElementById('members-cos-status');
+  status.style.display = 'block';
+  status.style.color = 'var(--muted)';
+  status.textContent = 'Saving...';
+
+  await toggleCosOptin(name);
+  const optins = getCosOptins();
+  const isOptedIn = optins.has(name);
+  updateCosToggleUI(isOptedIn);
+
+  status.style.color = 'var(--win)';
+  status.textContent = isOptedIn
+    ? '✓ You are now visible on the Champions of Shame leaderboard'
+    : '✓ Removed from the leaderboard';
+  setTimeout(() => { status.style.display = 'none'; }, 3000);
+}
+
+function clearMemberIdentity() {
+  localStorage.removeItem('pssn_member');
+  window._memberName = null;
+  document.getElementById('members-profile').style.display = 'none';
+  // Reset all buttons
+  D.players.forEach(p => {
+    const btn = document.getElementById(`member-btn-${p.name.replace(/\s+/g,'-').toLowerCase()}`);
+    if (!btn) return;
+    btn.style.background = 'var(--surface)';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.color = 'var(--text)';
+  });
+}
+
 // ── tab switching ──
 function switchTab(tab) {
-  const tabs = ['stats','calendar','league','club','more','submit'];
+  const tabs = ['stats','calendar','league','club','more','submit','members'];
   tabs.forEach(t => {
     const el = document.getElementById('tab-' + t);
     if (el) el.style.display = t === tab ? '' : 'none';
@@ -2631,6 +2800,7 @@ function switchTab(tab) {
   if (tab === 'league') renderLeague();
   if (tab === 'more') { buildAwards(); buildMilestones(); }
   if (tab === 'stats') buildNowPanel();
+  if (tab === 'members') initMembersTab();
 }
 
 // ── PIN gate ──
@@ -2646,7 +2816,7 @@ function checkPin(val) {
     // Populate correction player dropdown
     const corrSel = document.getElementById('corr-player');
     if (corrSel && corrSel.options.length <= 1) {
-      D.players.sort((a,b) => a.name.localeCompare(b.name)).forEach(p => {
+      [...D.players].sort((a,b) => a.name.localeCompare(b.name)).forEach(p => {
         const opt = document.createElement('option');
         opt.value = p.name; opt.textContent = p.name;
         corrSel.appendChild(opt);
@@ -5668,6 +5838,9 @@ function closePanel() {
   document.getElementById('ed-11').style.background = ed === 11 ? 'var(--accent)' : 'transparent';
   document.getElementById('ed-11').style.color = ed === 11 ? '#fff' : 'var(--muted)';
 })();
+
+// Restore member identity on page load
+window._memberName = localStorage.getItem('pssn_member') || null;
 
 initSite();
 </script>
