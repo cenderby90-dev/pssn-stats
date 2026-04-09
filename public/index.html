@@ -1492,6 +1492,8 @@
 const D = JSON.parse(document.getElementById('data').textContent);
 // ── edition state ──
 let ACTIVE_EDITION = D.currentEdition || 10;
+const API = '/api';
+let attendanceData = {};
 
 // ── approved submissions merged into events ──
 async function loadApprovedSubmissions() {
@@ -2868,8 +2870,6 @@ function renderTimeline() {
 }
 
 // ── who's going — API backed ──
-const API = '/api';
-let attendanceData = {};
 
 async function loadAttendance() {
   try {
