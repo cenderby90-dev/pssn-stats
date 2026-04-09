@@ -2275,24 +2275,42 @@ buildStrip('summary-teams', fmtStats['Teams'], 'Teams');
 // buildNowPanel called from initSite after all vars declared
 
 // ── Champions of Shame opt-in ──
-// Stored as _cos_optin_19700101 → JSON array of player names who have opted in
+// CoS opt-ins stored as individual rows: player_name = name, event_sort_date = 19700102, status = 'cos_optin'
+// Using 19700102 to distinguish from other special keys that use 19700101
 function getCosOptins() {
-  const raw = attendanceData['_cos_optin_19700101'];
-  if (raw) { try { return new Set(JSON.parse(raw)); } catch(e) {} }
-  return new Set();
+  const optins = new Set();
+  Object.entries(attendanceData).forEach(([key, val]) => {
+    if (val === 'cos_optin') {
+      const name = key.replace(/_19700102$/, '');
+      optins.add(name);
+    }
+  });
+  return optins;
 }
 
 async function saveCosOptins(names) {
+  // Get current opted-in set from DB to diff against
+  const current = getCosOptins();
+  const toAdd = [...names].filter(n => !current.has(n));
+  const toRemove = [...current].filter(n => !names.has(n));
+
   try {
-    await fetch(`${API}/attendance`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        player_name: '_cos_optin_19700101',
-        event_sort_date: 19700101,
-        status: JSON.stringify([...names])
-      })
-    });
+    // Add new opt-ins
+    for (const name of toAdd) {
+      await fetch(`${API}/attendance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ player_name: name, event_sort_date: 19700102, status: 'cos_optin' })
+      });
+    }
+    // Remove opt-outs
+    for (const name of toRemove) {
+      await fetch(`${API}/attendance`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ player_name: name, event_sort_date: 19700102 })
+      });
+    }
     await loadAttendance(true); // force reload after write
   } catch(e) {
     console.warn('Failed to save CoS optins', e);
