@@ -4004,6 +4004,71 @@ function buildLeagueAdmin() {
         </div>`).join('')}`;
   }
 
+  // Approved games — per pod, with edit buttons
+  const games = leagueData.games || [];
+  if (games.length) {
+    const podMap = {};
+    games.forEach(g => {
+      if (!podMap[g.pod_id]) podMap[g.pod_id] = [];
+      podMap[g.pod_id].push(g);
+    });
+    html += `
+      <div class="section-head" style="margin-top:2.5rem;">
+        <div class="section-title">Approved Games</div>
+        <div class="section-rule"></div>
+      </div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">All recorded league games. Click Edit to correct Battle Points if something was entered incorrectly.</div>`;
+
+    (leagueData.pods || []).forEach(pod => {
+      const podGames = podMap[pod.id] || [];
+      if (!podGames.length) return;
+      html += `
+        <div style="margin-bottom:1.5rem;">
+          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">${pod.name}</div>
+          ${podGames.map(g => `
+            <div id="game-row-${g.id}" style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:8px 12px;margin-bottom:6px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                <div>
+                  <div style="font-size:0.85rem;color:var(--text);">${g.player1} vs ${g.player2}</div>
+                  <div id="game-score-${g.id}" style="font-size:0.72rem;color:var(--muted);margin-top:2px;">${g.bp1}–${g.bp2}</div>
+                </div>
+                <button onclick="openEditGame(${g.id},'${g.player1.replace(/'/g,"\\'")}','${g.player2.replace(/'/g,"\\'")}',${g.bp1},${g.bp2})"
+                  style="font-size:0.7rem;padding:3px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;"
+                  onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+                  onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+                  ✎ Edit
+                </button>
+              </div>
+              <div id="game-edit-${g.id}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                  <div>
+                    <label style="font-size:0.65rem;color:var(--win);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">${g.player1} BP</label>
+                    <input id="edit-bp1-${g.id}" type="number" min="0" max="100" value="${g.bp1}"
+                      style="width:100%;padding:6px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+                  </div>
+                  <div>
+                    <label style="font-size:0.65rem;color:var(--loss);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">${g.player2} BP</label>
+                    <input id="edit-bp2-${g.id}" type="number" min="0" max="100" value="${g.bp2}"
+                      style="width:100%;padding:6px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button onclick="saveEditGame(${g.id})"
+                    style="padding:5px 14px;background:var(--accent);border:none;border-radius:3px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;">
+                    Save
+                  </button>
+                  <button onclick="closeEditGame(${g.id})"
+                    style="padding:5px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;">
+                    Cancel
+                  </button>
+                  <div id="edit-msg-${g.id}" style="font-size:0.75rem;color:var(--muted);align-self:center;display:none;"></div>
+                </div>
+              </div>
+            </div>`).join('')}
+        </div>`;
+    });
+  }
+
   // New season creator
   html += `
     <div class="section-head" style="margin-top:2.5rem;">
@@ -4187,6 +4252,55 @@ async function submitLeagueGame() {
   } catch(e) {
     msg.style.color = 'var(--loss)';
     msg.textContent = 'Network error.';
+  }
+}
+
+function openEditGame(id) {
+  document.getElementById(`game-edit-${id}`).style.display = 'block';
+}
+
+function closeEditGame(id) {
+  document.getElementById(`game-edit-${id}`).style.display = 'none';
+  const msg = document.getElementById(`edit-msg-${id}`);
+  if (msg) msg.style.display = 'none';
+}
+
+async function saveEditGame(id) {
+  const bp1 = parseInt(document.getElementById(`edit-bp1-${id}`).value);
+  const bp2 = parseInt(document.getElementById(`edit-bp2-${id}`).value);
+  const msg = document.getElementById(`edit-msg-${id}`);
+  const adminPin = getLeagueAdminPin();
+
+  if (isNaN(bp1) || isNaN(bp2) || bp1 < 0 || bp1 > 100 || bp2 < 0 || bp2 > 100) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'BP must be 0–100'; return;
+  }
+
+  msg.style.display = 'block'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Saving...';
+
+  try {
+    const res = await fetch(`${API}/league`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: adminPin, gameId: id, bp1, bp2 })
+    });
+    const data = await res.json();
+    if (data.success) {
+      // Update score display inline without full rebuild
+      document.getElementById(`game-score-${id}`).textContent = `${bp1}–${bp2}`;
+      closeEditGame(id);
+      // Refresh league data in background so standings update
+      leagueLoaded = false;
+      await loadLeagueData();
+      buildLeagueAdmin();
+    } else {
+      msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown');
+    }
+  } catch(e) {
+    msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error';
   }
 }
 
