@@ -922,58 +922,90 @@
     <div class="section-title">Members</div>
     <div class="section-rule"></div>
   </div>
+  <div style="font-size:0.85rem;color:var(--muted);margin-bottom:1.5rem;">Select your name to personalise the site and manage your Champions of Shame visibility.</div>
 
-  <!-- Identity selector -->
-  <div id="members-identify">
-    <div style="font-size:0.85rem;color:var(--muted);margin-bottom:1.25rem;">
-      Select your name to personalise the site and manage your Champions of Shame visibility.
-    </div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;max-width:700px;" id="members-name-list"></div>
-    <div style="font-size:0.72rem;color:var(--faint);margin-top:12px;">Your selection is saved locally to this device.</div>
-  </div>
+  <div style="display:grid;grid-template-columns:220px 1fr;gap:1.5rem;align-items:start;">
 
-  <!-- Profile (shown once identified) -->
-  <div id="members-profile" style="display:none;margin-top:2rem;">
-
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:1.5rem;">
-      <div>
-        <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Signed in as</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;color:var(--text);" id="members-name-display"></div>
-      </div>
-      <button onclick="clearMemberIdentity()"
-        style="font-size:0.75rem;padding:6px 14px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;cursor:pointer;"
-        onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
-        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-        Not you?
-      </button>
+    <!-- Left: name list -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);">Who are you?</div>
+      <div style="max-height:520px;overflow-y:auto;" id="members-name-list"></div>
     </div>
 
-    <!-- Champions opt-in -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;margin-bottom:1rem;max-width:480px;">
-      <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Champions of Shame</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <div>
-          <div style="font-size:0.88rem;color:var(--text);margin-bottom:3px;" id="members-cos-label">Show my ranking on the leaderboard</div>
-          <div style="font-size:0.75rem;color:var(--muted);">Your ranking is always calculated — this controls whether it's visible to others</div>
+    <!-- Right: profile panel -->
+    <div id="members-profile" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+
+        <!-- Champions opt-in card -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;">
+          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Champions of Shame</div>
+          <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;line-height:1.5;">Control whether your ranking appears on the public leaderboard. Your rank is always calculated either way.</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <span id="members-cos-label" style="font-size:0.85rem;color:var(--text);">Show on leaderboard</span>
+            <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;cursor:pointer;">
+              <input type="checkbox" id="members-cos-toggle" onchange="handleCosToggle(this.checked)"
+                style="opacity:0;width:0;height:0;position:absolute;"/>
+              <span id="members-cos-track" style="position:absolute;inset:0;border-radius:12px;background:var(--surface2);border:1px solid var(--border);transition:all 0.2s;"></span>
+              <span id="members-cos-thumb" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:all 0.2s;"></span>
+            </label>
+          </div>
+          <div id="members-cos-status" style="font-size:0.72rem;margin-top:10px;display:none;"></div>
         </div>
-        <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;cursor:pointer;">
-          <input type="checkbox" id="members-cos-toggle" onchange="handleCosToggle(this.checked)"
-            style="opacity:0;width:0;height:0;position:absolute;"/>
-          <span id="members-cos-track" style="position:absolute;inset:0;border-radius:12px;background:var(--surface2);border:1px solid var(--border);transition:all 0.2s;"></span>
-          <span id="members-cos-thumb" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:all 0.2s;"></span>
-        </label>
+
+        <!-- Quick actions card -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;">
+          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Quick Actions</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button onclick="openPlayerPanel(window._memberName)"
+              style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;text-align:left;padding-left:14px;"
+              onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+              📊 View my player card
+            </button>
+            <button onclick="switchTab('submit')"
+              style="width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;text-align:left;padding-left:14px;"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
+              ✎ Submit a result
+            </button>
+            <button onclick="switchTab('calendar')"
+              style="width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;text-align:left;padding-left:14px;"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
+              📅 View calendar
+            </button>
+            <button onclick="clearMemberIdentity()"
+              style="width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;text-align:left;padding-left:14px;margin-top:4px;"
+              onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+              ✕ Not you? Clear selection
+            </button>
+          </div>
+        </div>
+
       </div>
-      <div id="members-cos-status" style="font-size:0.72rem;margin-top:8px;display:none;"></div>
+
+      <!-- Player card inline -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);">Season Stats</div>
+        <div id="members-stats-preview" style="padding:1.25rem;"></div>
+      </div>
     </div>
 
-    <!-- View my stats -->
-    <button onclick="openPlayerPanel(window._memberName)"
-      style="padding:9px 20px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;margin-bottom:1rem;"
-      onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-      View my player card →
-    </button>
+    <!-- Right placeholder when no name selected -->
+    <div id="members-placeholder" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3rem;text-align:center;color:var(--muted);">
+      <div style="font-size:2rem;margin-bottom:8px;">👈</div>
+      <div style="font-size:0.85rem;">Select your name to get started</div>
+    </div>
 
   </div>
+
+  <!-- Mobile: stack vertically below 700px -->
+  <style>
+    @media (max-width: 700px) {
+      #tab-members > div:last-child { grid-template-columns: 1fr !important; }
+      #members-name-list { max-height: 200px !important; }
+    }
+  </style>
 
 </main>
 
@@ -2412,7 +2444,7 @@ function renderLeaderboard(filter) {
   if (!optedIn.length) {
     html = `<div style="padding:1.5rem;text-align:center;">
       <div style="font-size:0.88rem;color:var(--text);margin-bottom:6px;">No one has opted in yet</div>
-      <div style="font-size:0.78rem;color:var(--muted);">Open your player card and tick "Show on leaderboard" to appear here.</div>
+      <div style="font-size:0.78rem;color:var(--muted);">Go to the <button onclick="switchTab('members')" style="background:none;border:none;color:var(--accent);font-size:0.78rem;cursor:pointer;padding:0;text-decoration:underline;">Members tab</button> to add yourself to the leaderboard.</div>
     </div>`;
   } else {
     html = qualified.map((s, i) => buildRow(s, i, false)).join('');
@@ -2423,29 +2455,6 @@ function renderLeaderboard(filter) {
           ${provisional.map((s, i) => buildRow(s, i, true)).join('')}
         </div>`;
     }
-  }
-
-  // Opted-out section — show all with opt-in prompt
-  if (optedOut.length) {
-    html += `
-      <div style="margin-top:1rem;padding:10px 14px;border-top:1px solid var(--border);">
-        <div style="font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">
-          Not on leaderboard (${optedOut.length}) — click to opt in
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px;">
-          ${optedOut.map(s => {
-            const wr = Math.round(bayesianWinRate(s, teamAvg) * 100);
-            return `<button onclick="toggleCosOptin('${s.name.replace(/'/g,"\\'")}') "
-              style="font-size:0.75rem;padding:3px 10px;background:var(--surface2);border:1px solid var(--border);
-                     border-radius:3px;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;"
-              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-              ${s.name} <span style="color:var(--faint);">${wr}%</span>
-            </button>`;
-          }).join('')}
-        </div>
-        <div style="font-size:0.68rem;color:var(--faint);margin-top:6px;">Win rates calculated but hidden until player opts in. You can also opt in from your player card.</div>
-      </div>`;
   }
 
   lbEl.innerHTML = html;
@@ -2685,6 +2694,7 @@ function initMembersTab() {
   buildMemberNameList();
   const stored = localStorage.getItem('pssn_member');
   if (stored && D.players.some(p => p.name === stored)) {
+    document.getElementById('members-placeholder').style.display = 'none';
     showMemberProfile(stored);
   }
 }
@@ -2698,12 +2708,15 @@ function buildMemberNameList() {
     const isMe = p.name === stored;
     btn.textContent = p.name;
     btn.style.cssText = `
-      padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:0.82rem;
-      border-radius:4px;cursor:pointer;transition:all 0.15s;
-      background:${isMe ? 'var(--accent)' : 'var(--surface)'};
-      border:1px solid ${isMe ? 'var(--accent)' : 'var(--border)'};
-      color:${isMe ? '#fff' : 'var(--text)'};
+      display:block;width:100%;text-align:left;
+      padding:9px 14px;font-family:'DM Sans',sans-serif;font-size:0.82rem;
+      border:none;border-bottom:1px solid var(--border);cursor:pointer;transition:all 0.15s;
+      background:${isMe ? 'var(--accent-bg)' : 'transparent'};
+      color:${isMe ? 'var(--accent)' : 'var(--text)'};
+      border-left:${isMe ? '3px solid var(--accent)' : '3px solid transparent'};
     `;
+    btn.onmouseover = () => { if (p.name !== window._memberName) { btn.style.background = 'var(--surface2)'; } };
+    btn.onmouseout = () => { if (p.name !== window._memberName) { btn.style.background = 'transparent'; } };
     btn.onclick = () => selectMember(p.name);
     btn.id = `member-btn-${p.name.replace(/\s+/g,'-').toLowerCase()}`;
     el.appendChild(btn);
@@ -2714,27 +2727,100 @@ function selectMember(name) {
   localStorage.setItem('pssn_member', name);
   window._memberName = name;
   // Update button styles
-  D.players.forEach(p => {
+  [...D.players].forEach(p => {
     const btn = document.getElementById(`member-btn-${p.name.replace(/\s+/g,'-').toLowerCase()}`);
     if (!btn) return;
     const isMe = p.name === name;
-    btn.style.background = isMe ? 'var(--accent)' : 'var(--surface)';
-    btn.style.borderColor = isMe ? 'var(--accent)' : 'var(--border)';
-    btn.style.color = isMe ? '#fff' : 'var(--text)';
+    btn.style.background = isMe ? 'var(--accent-bg)' : 'transparent';
+    btn.style.color = isMe ? 'var(--accent)' : 'var(--text)';
+    btn.style.borderLeft = isMe ? '3px solid var(--accent)' : '3px solid transparent';
   });
+  document.getElementById('members-placeholder').style.display = 'none';
   showMemberProfile(name);
 }
 
 async function showMemberProfile(name) {
   window._memberName = name;
-  document.getElementById('members-name-display').textContent = name;
   document.getElementById('members-profile').style.display = 'block';
 
-  // Load opt-in state
+  // Always load fresh attendance before reading opt-in state
   await loadAttendance();
   const optins = getCosOptins();
+  updateCosToggleUI(optins.has(name));
+
+  // Populate inline stats preview
+  buildMemberStatsPreview(name);
+}
+
+function buildMemberStatsPreview(name) {
+  const el = document.getElementById('members-stats-preview');
+  if (!el) return;
+
+  const s = allStats[name];
+  if (!s || !s.games) {
+    el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">No results recorded yet.</div>`;
+    return;
+  }
+
+  const wr = Math.round((s.w / s.games) * 100);
+  const wrColor = wr >= 60 ? '#ff6a00' : wr >= 40 ? 'var(--text)' : 'var(--loss)';
+  const playerEvents = getActiveEvents().filter(ev => ev.results.some(r => r.player === name && !r.dropped));
+  const mainFaction = mostPlayedFaction(name);
+
+  // Champions rank
+  const singlesRanked = getRanked('Singles');
+  const champPos = singlesRanked.findIndex(p => p.name === name);
+  const optins = getCosOptins();
   const isOptedIn = optins.has(name);
-  updateCosToggleUI(isOptedIn);
+
+  const bestResult = getActiveEvents().reduce((best, ev) => {
+    const r = ev.results.find(r => r.player === name);
+    if (!r || r.dropped) return best;
+    const total = ev.format === 'Teams' ? ev.totalTeams : ev.totalPlayers;
+    const pct = r.placing / total;
+    if (!best || pct < best.pct) return { pct, placing: r.placing, total, event: ev.name };
+    return best;
+  }, null);
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:1.25rem;">
+      <div style="background:var(--surface2);border-radius:4px;padding:10px 12px;">
+        <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Win Rate</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:${wrColor};line-height:1;">${wr}%</div>
+        <div style="font-size:0.65rem;color:var(--faint);">${s.games} games</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:4px;padding:10px 12px;">
+        <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Record</div>
+        <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;">
+          <span style="font-size:0.72rem;padding:2px 6px;border-radius:3px;background:var(--win-bg);color:var(--win);">${s.w}W</span>
+          <span style="font-size:0.72rem;padding:2px 6px;border-radius:3px;background:var(--loss-bg);color:var(--loss);">${s.l}L</span>
+          ${s.d > 0 ? `<span style="font-size:0.72rem;padding:2px 6px;border-radius:3px;background:#152030;color:var(--draw);">${s.d}D</span>` : ''}
+        </div>
+      </div>
+      <div style="background:var(--surface2);border-radius:4px;padding:10px 12px;">
+        <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Events</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;line-height:1;">${playerEvents.length}</div>
+      </div>
+      ${champPos >= 0 ? `
+      <div style="background:var(--surface2);border-radius:4px;padding:10px 12px;">
+        <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">CoS Rank</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:${isOptedIn ? 'var(--accent)' : 'var(--muted)'};line-height:1;">${isOptedIn ? '#' + (champPos+1) : '—'}</div>
+        <div style="font-size:0.65rem;color:var(--faint);">${isOptedIn ? 'visible' : 'opted out'}</div>
+      </div>` : ''}
+    </div>
+    ${mainFaction ? `<div style="font-size:0.78rem;color:var(--muted);margin-bottom:6px;">Main faction: <span style="color:var(--text);">${mainFaction}</span></div>` : ''}
+    ${bestResult ? `<div style="font-size:0.78rem;color:var(--muted);">Best result: <span style="color:${bestResult.pct <= 0.1 ? 'var(--accent)' : 'var(--text)'};">${bestResult.placing}/${bestResult.total} at ${bestResult.event.replace(' — 40k Main Event','').replace(' Grand Tournament','')}</span></div>` : ''}
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+      <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Recent events</div>
+      ${playerEvents.slice(-4).reverse().map(ev => {
+        const r = ev.results.find(r => r.player === name);
+        const total = ev.format === 'Teams' ? ev.totalTeams : ev.totalPlayers;
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:0.78rem;">
+          <span style="color:var(--text);">${ev.name.replace(' — 40k Main Event','').replace(' Grand Tournament',' GT')}</span>
+          <span style="color:var(--muted);">${r.placing}/${total} · ${r.w}W ${r.l}L</span>
+        </div>`;
+      }).join('')}
+    </div>`;
 }
 
 function updateCosToggleUI(isOptedIn) {
@@ -2759,9 +2845,14 @@ async function handleCosToggle(checked) {
   status.style.color = 'var(--muted)';
   status.textContent = 'Saving...';
 
-  await toggleCosOptin(name);
+  // Set state directly based on checkbox value — don't toggle, set explicitly
   const optins = getCosOptins();
-  const isOptedIn = optins.has(name);
+  if (checked) optins.add(name); else optins.delete(name);
+  await saveCosOptins(optins);
+
+  // Read back from freshly loaded attendanceData to confirm
+  const confirmed = getCosOptins();
+  const isOptedIn = confirmed.has(name);
   updateCosToggleUI(isOptedIn);
 
   status.style.color = 'var(--win)';
@@ -2769,19 +2860,24 @@ async function handleCosToggle(checked) {
     ? '✓ You are now visible on the Champions of Shame leaderboard'
     : '✓ Removed from the leaderboard';
   setTimeout(() => { status.style.display = 'none'; }, 3000);
+
+  // Refresh the leaderboard and stats preview
+  renderLeaderboard(activeFilter);
+  buildMemberStatsPreview(name);
 }
 
 function clearMemberIdentity() {
   localStorage.removeItem('pssn_member');
   window._memberName = null;
   document.getElementById('members-profile').style.display = 'none';
+  document.getElementById('members-placeholder').style.display = 'block';
   // Reset all buttons
-  D.players.forEach(p => {
+  [...D.players].forEach(p => {
     const btn = document.getElementById(`member-btn-${p.name.replace(/\s+/g,'-').toLowerCase()}`);
     if (!btn) return;
-    btn.style.background = 'var(--surface)';
-    btn.style.borderColor = 'var(--border)';
+    btn.style.background = 'transparent';
     btn.style.color = 'var(--text)';
+    btn.style.borderLeft = '3px solid transparent';
   });
 }
 
