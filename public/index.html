@@ -3389,7 +3389,7 @@ async function submitCorrection() {
 async function loadAdminCorrections() {
   const el = document.getElementById('admin-corrections');
   if (!el) return;
-  await loadAttendance();
+  await loadAttendance(true); // always force fresh fetch for admin view
 
   const corrections = Object.entries(attendanceData)
     .filter(([k]) => k.startsWith('_corr_'))
@@ -3447,13 +3447,11 @@ async function loadAdminCorrections() {
 }
 
 async function dismissCorrection(key) {
-  // Update status to dismissed
   const raw = attendanceData[key];
   if (!raw) return;
   try {
     const c = JSON.parse(raw);
     c.status = 'dismissed';
-    const ts = parseInt(key.replace('_corr_', ''));
     await fetch(`${API}/attendance`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -3463,7 +3461,7 @@ async function dismissCorrection(key) {
         status: JSON.stringify(c)
       })
     });
-    await loadAdminCorrections();
+    await loadAdminCorrections(); // already force-reloads internally
   } catch(e) {
     console.error('Failed to dismiss correction', e);
   }
