@@ -1684,7 +1684,8 @@ async function loadApprovedSubmissions() {
 
 async function initSite() {
   await loadApprovedSubmissions();
-  rebuildStats();      // refresh all stats now D.events is fully populated
+  await loadAttendance();          // load opt-ins before building leaderboard
+  rebuildStats();
   buildNowPanel();
   loadLeagueData().then(() => { leagueLoaded = true; });
 }
@@ -2508,7 +2509,7 @@ filters.forEach(f => {
   };
   filterEl.appendChild(btn);
 });
-renderLeaderboard('Singles');
+// renderLeaderboard called from initSite after attendance is loaded
 
 // ── format groups with collapsible events ──
 const formatOrder = ['GT', 'RTT', 'Teams'];
