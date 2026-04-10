@@ -2134,9 +2134,18 @@ function buildNowPanel() {
   const el = document.getElementById('now-panel');
   if (!el) return;
 
-  // Last event played
+  // Parse "Mon YYYY" display date into a sortable number
+  const MONTHS = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
+  function evSortKey(ev) {
+    if (ev.sortDate) return ev.sortDate;
+    const m = (ev.date||'').match(/([A-Za-z]+)\s+(\d{4})/);
+    if (m) return parseInt(m[2]) * 100 + (MONTHS[m[1]] || 0);
+    return 0;
+  }
+
+  // Last event played — most recent by date
   const events = getActiveEvents();
-  const lastEvent = [...events].sort((a,b) => (b.sortDate||0)-(a.sortDate||0))[0];
+  const lastEvent = [...events].sort((a,b) => evSortKey(b) - evSortKey(a))[0];
 
   // Next calendar event
   const todayNum = getTodaySortDate ? getTodaySortDate() : parseInt(new Date().toISOString().slice(0,10).replace(/-/g,''));
