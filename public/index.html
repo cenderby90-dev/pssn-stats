@@ -5134,12 +5134,12 @@ function checkAdminPin(val) {
     const errEl = document.getElementById('admin-pin-error');
     fetch(`${API}/submissions?pin=${encodeURIComponent(val)}`)
       .then(r => r.json())
-      .then(data => {
+      .then(async data => {
         if (data.submissions !== undefined) {
           document.getElementById('admin-gate').style.display = 'none';
           document.getElementById('admin-content').style.display = 'block';
           loadSheetSubmissions();
-          loadAdminCorrections();
+          await loadAdminCorrections();
           loadDbEvents();
         } else {
           errEl.style.display = 'block';
