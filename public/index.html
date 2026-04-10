@@ -3414,6 +3414,7 @@ async function loadAdminCorrections() {
     if (c.proposed.l !== c.current.l) changes.push(`Losses: ${c.current.l} → <strong>${c.proposed.l}</strong>`);
     if (c.proposed.d !== c.current.d) changes.push(`Draws: ${c.current.d} → <strong>${c.proposed.d}</strong>`);
     if (c.proposed.placing !== c.current.placing) changes.push(`Placing: ${c.current.placing} → <strong>${c.proposed.placing}</strong>`);
+    const keyStr = c.key.replace(/'/g, "\\'");
 
     return `
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:10px;">
@@ -3423,7 +3424,12 @@ async function loadAdminCorrections() {
             <div style="font-size:0.72rem;color:var(--faint);margin-top:2px;">Submitted ${date}</div>
           </div>
           <div style="display:flex;gap:6px;">
-            <button onclick="dismissCorrection('${c.key}')"
+            <button onclick="approveCorrection('${keyStr}')"
+              style="font-size:0.72rem;padding:4px 12px;background:var(--win-bg);border:1px solid var(--win);border-radius:3px;color:var(--win);cursor:pointer;"
+              onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+              ✓ Approve
+            </button>
+            <button onclick="dismissCorrection('${keyStr}')"
               style="font-size:0.72rem;padding:4px 12px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;"
               onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
               onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
@@ -3439,11 +3445,64 @@ async function loadAdminCorrections() {
         <div style="margin-top:8px;padding:8px 10px;background:var(--surface2);border-radius:4px;font-size:0.8rem;color:var(--muted);">
           <span style="color:var(--text);">Note:</span> ${c.note}
         </div>
-        <div style="margin-top:8px;font-size:0.72rem;color:var(--faint);">
-          ⚠️ To apply this fix, update the player's result in the HTML data block and redeploy. Then dismiss this correction.
-        </div>
+        <div id="corr-approve-msg-${c.ts}" style="display:none;margin-top:8px;font-size:0.72rem;padding:8px 10px;background:var(--win-bg);border:1px solid var(--win);border-radius:4px;color:var(--win);"></div>
       </div>`;
   }).join('');
+}
+
+async function approveCorrection(key) {
+  const raw = attendanceData[key];
+  if (!raw) return;
+
+  try {
+    const c = JSON.parse(raw);
+    const { player, evName, proposed } = c;
+    const ts = parseInt(key.replace('_corr_', ''));
+
+    // Apply change to D.events in memory
+    const ev = D.events.find(e => e.name === evName);
+    if (ev) {
+      const r = ev.results.find(r => r.player === player);
+      if (r) {
+        if (proposed.faction !== undefined) r.faction = proposed.faction;
+        if (proposed.w !== undefined) r.w = proposed.w;
+        if (proposed.l !== undefined) r.l = proposed.l;
+        if (proposed.d !== undefined) r.d = proposed.d;
+        if (proposed.placing !== undefined) r.placing = proposed.placing;
+      }
+    }
+
+    // Rebuild allStats in place so changes are reflected immediately
+    Object.keys(allStats).forEach(k => delete allStats[k]);
+    getActiveEvents().forEach(ev => {
+      ev.results.forEach(r => {
+        if (!allStats[r.player]) allStats[r.player] = { w:0, l:0, d:0, games:0 };
+        allStats[r.player].w += r.w; allStats[r.player].l += r.l;
+        allStats[r.player].d += r.d; allStats[r.player].games += (r.w + r.l + r.d);
+      });
+    });
+
+    // Show confirmation in the card
+    const msgEl = document.getElementById(`corr-approve-msg-${ts}`);
+    if (msgEl) {
+      msgEl.style.display = 'block';
+      msgEl.textContent = `✓ Applied in memory. Remember to update the HTML data block and redeploy to make this permanent.`;
+    }
+
+    // Mark as approved in DB
+    c.status = 'approved';
+    await fetch(`${API}/attendance`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ player_name: key, event_sort_date: 19700101, status: JSON.stringify(c) })
+    });
+
+    // Reload corrections (will no longer show approved ones)
+    await loadAdminCorrections();
+
+  } catch(e) {
+    console.error('Failed to approve correction', e);
+  }
 }
 
 async function dismissCorrection(key) {
