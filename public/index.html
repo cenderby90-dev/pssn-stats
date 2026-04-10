@@ -1366,7 +1366,6 @@
           <div id="lg-sub-message" style="font-size:0.82rem;display:none;"></div>
         </div>
       </div>
-    </div>
     </div> <!-- end sec-submit-wizard -->
 
     <!-- DATA CORRECTIONS -->
@@ -3234,6 +3233,7 @@ async function setGoing(name, sortDate, status) {
         body: JSON.stringify({ player_name: name, event_sort_date: sortDate, status })
       });
     }
+    await loadAttendance(true); // force reload so tick updates immediately
     await renderWhosGoing();
   } catch(e) {
     console.error('Failed to update attendance', e);
