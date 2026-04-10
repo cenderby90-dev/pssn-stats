@@ -2990,6 +2990,7 @@ function checkMemberAdminPin(val) {
     .then(data => {
       if (data.submissions !== undefined) {
         window._adminPin = val;
+        sessionStorage.setItem('pssn_admin_pin', val);
         document.getElementById('member-admin-gate').style.display = 'none';
         document.getElementById('member-admin-content').style.display = 'block';
       } else {
@@ -5483,6 +5484,7 @@ function checkAdminPin(val) {
       .then(async data => {
         if (data.submissions !== undefined) {
           window._adminPin = val; // cache for later use
+          sessionStorage.setItem('pssn_admin_pin', val);
           document.getElementById('admin-gate').style.display = 'none';
           document.getElementById('admin-content').style.display = 'block';
           await loadAdminCorrections();
@@ -5545,7 +5547,10 @@ function getLeagueAdminPin() {
 }
 
 function getAdminPin() {
-  return document.getElementById('admin-pin-input')?.value || window._adminPin || '';
+  return document.getElementById('admin-pin-input')?.value 
+    || window._adminPin 
+    || sessionStorage.getItem('pssn_admin_pin') 
+    || '';
 }
 
 // ── event entry ──
