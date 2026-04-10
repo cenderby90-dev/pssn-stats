@@ -3463,6 +3463,9 @@ async function approveCorrection(key) {
   const raw = attendanceData[key];
   if (!raw) return;
 
+  // key in attendanceData is "_corr_TIMESTAMP_19700101" — strip the _19700101 to get the DB player_name
+  const dbPlayerName = key.replace(/_19700101$/, '');
+
   try {
     const c = JSON.parse(raw);
     const { player, evName, proposed } = c;
@@ -3491,22 +3494,15 @@ async function approveCorrection(key) {
       });
     });
 
-    // Show confirmation in the card
-    const msgEl = document.getElementById(`corr-approve-msg-${ts}`);
-    if (msgEl) {
-      msgEl.style.display = 'block';
-      msgEl.textContent = `✓ Applied in memory. Remember to update the HTML data block and redeploy to make this permanent.`;
-    }
-
-    // Mark as approved in DB
+    // Mark as approved in DB using correct player_name
     c.status = 'approved';
     await fetch(`${API}/attendance`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ player_name: key, event_sort_date: 19700101, status: JSON.stringify(c) })
+      body: JSON.stringify({ player_name: dbPlayerName, event_sort_date: 19700101, status: JSON.stringify(c) })
     });
 
-    // Reload corrections (will no longer show approved ones)
+    // Reload corrections (approved ones filtered out)
     await loadAdminCorrections();
 
   } catch(e) {
@@ -3517,6 +3513,7 @@ async function approveCorrection(key) {
 async function dismissCorrection(key) {
   const raw = attendanceData[key];
   if (!raw) return;
+  const dbPlayerName = key.replace(/_19700101$/, '');
   try {
     const c = JSON.parse(raw);
     c.status = 'dismissed';
@@ -3524,7 +3521,7 @@ async function dismissCorrection(key) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        player_name: key,
+        player_name: dbPlayerName,
         event_sort_date: 19700101,
         status: JSON.stringify(c)
       })
