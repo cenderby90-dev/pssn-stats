@@ -492,7 +492,7 @@
         <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
         <button class="tab-btn" onclick="switchTab('league')">League</button>
         <button class="tab-btn" onclick="switchTab('members')">Members</button>
-        <button class="tab-btn" onclick="switchTab('submit')">Submissions</button>
+        <button class="tab-btn" id="tab-btn-submit" onclick="switchTab('submit')">Submissions <span id="pending-badge" style="display:none;background:var(--loss);color:#fff;font-size:0.6rem;padding:1px 5px;border-radius:10px;margin-left:4px;font-family:'DM Sans',sans-serif;vertical-align:middle;"></span></button>
       </div>
       <div id="edition-toggle" style="display:flex;background:var(--surface2);border-radius:6px;padding:3px;gap:2px;border:1px solid var(--border);">
         <button id="ed-10" onclick="switchEdition(10)" style="font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:500;padding:5px 12px;border:none;border-radius:4px;cursor:pointer;transition:all 0.15s;">10th Ed</button>
@@ -839,7 +839,7 @@
   <div id="pin-gate" style="max-width:400px;margin:3rem auto 0;">
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2rem;text-align:center;">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:0.06em;color:var(--text);margin-bottom:0.5rem;">Team Access</div>
-      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Enter your 4-digit team PIN to access submissions and sign up for events</div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Enter the team PIN to sign up for events and submit results</div>
       <input type="password" id="pin-input" maxlength="4" placeholder="••••"
         autocomplete="new-password"
         style="width:120px;text-align:center;font-size:1.4rem;letter-spacing:0.3em;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);outline:none;margin-bottom:1rem;display:block;margin-left:auto;margin-right:auto;"
@@ -1077,7 +1077,7 @@
     <div class="section-head" style="margin-top:2rem;cursor:pointer;" onclick="toggleSection('sec-corrections')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
       <div>
         <div class="section-title">Report a Data Error</div>
-        <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Something wrong with your stats? Flag it here for the admin to review</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Wrong W/L, faction or placing recorded? Submit a correction — the admin will review it and update your stats</div>
       </div>
       <div class="section-rule"></div>
       <span id="sec-corrections-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
@@ -1156,7 +1156,7 @@
     <div style="margin-top:3rem;padding-top:2rem;border-top:2px solid var(--border);">
       <div style="font-size:0.72rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Admin Access</div>
       <div id="admin-gate">
-        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Enter admin PIN to manage submissions and events.</div>
+        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Admin PIN required — approve submissions, manage events, add members. Different to the team PIN.</div>
         <input type="password" id="admin-pin-input" maxlength="8" placeholder="Admin PIN"
           autocomplete="new-password"
           style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;width:160px;letter-spacing:0.2em;outline:none;"
@@ -1171,7 +1171,9 @@
           <div class="section-rule"></div>
         </div>
         <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Results submitted by team members waiting for your approval.</div>
-        <div id="sheet-submissions"></div>
+        <div id="sheet-submissions">
+          <div style="font-size:0.82rem;color:var(--muted);">Loading...</div>
+        </div>
 
         <!-- Pending corrections -->
         <div class="section-head" style="margin-top:2rem;">
@@ -1446,6 +1448,8 @@ async function initSite() {
   rebuildStats();
   buildNowPanel();
   loadLeagueData().then(() => { leagueLoaded = true; });
+  // Show badge if admin has cached PIN from previous session
+  if (sessionStorage.getItem('pssn_admin_pin')) updatePendingBadge();
 }
 
 
@@ -3228,6 +3232,131 @@ async function submitCorrection() {
   }
 }
 
+
+// ── Pending result submissions (from members) ──
+async function loadResultSubmissions() {
+  const el = document.getElementById('sheet-submissions');
+  if (!el) return;
+  try {
+    const res = await fetch(`${API}/submissions?pin=${encodeURIComponent(getAdminPin())}`);
+    const ct = res.headers.get('content-type') || '';
+    if (!res.ok || !ct.includes('application/json')) {
+      el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);">Could not load submissions.</div>`;
+      return;
+    }
+    const data = await res.json();
+    const pending = (data.submissions || []).filter(s => !s.approved);
+    updatePendingBadge();
+    if (!pending.length) {
+      el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">No pending result submissions.</div>`;
+      return;
+    }
+    el.innerHTML = pending.map(s => `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:0.9rem;font-weight:400;color:var(--text);">
+              ${s.player_name} — <span style="color:var(--muted);">${s.event_name}</span>
+              <span style="font-size:0.65rem;background:var(--surface2);padding:1px 6px;border-radius:3px;margin-left:6px;">${s.event_format}</span>
+            </div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:4px;">
+              ${s.faction} · ${s.place || '?'}/${s.total_players || '?'} · ${s.wins}W ${s.losses}L ${s.draws}D
+              ${s.subteam ? ` · <span style="color:var(--text);">${s.subteam}</span>` : ''}
+            </div>
+            <div style="font-size:0.65rem;color:var(--faint);margin-top:2px;">
+              Submitted ${new Date(s.submitted_at).toLocaleDateString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button onclick="approveResultSubmission(${s.id})"
+              style="font-size:0.72rem;padding:4px 12px;background:var(--win-bg);border:1px solid var(--win);border-radius:3px;color:var(--win);cursor:pointer;"
+              onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+              ✓ Approve
+            </button>
+            <button onclick="rejectResultSubmission(${s.id})"
+              style="font-size:0.72rem;padding:4px 12px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;"
+              onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+              ✗ Reject
+            </button>
+          </div>
+        </div>
+        <div id="sub-msg-${s.id}" style="display:none;margin-top:8px;font-size:0.72rem;padding:6px 10px;border-radius:4px;"></div>
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = `<div style="font-size:0.82rem;color:var(--loss);">Error loading submissions.</div>`;
+  }
+}
+
+async function approveResultSubmission(id) {
+  const msg = document.getElementById(`sub-msg-${id}`);
+  if (msg) { msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)'; msg.textContent='Approving...'; }
+  try {
+    const res = await fetch(`${API}/submissions`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: getAdminPin(), id, approved: true })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (msg) { msg.style.background='var(--win-bg)'; msg.style.color='var(--win)'; msg.textContent='✓ Approved and added to results.'; }
+      setTimeout(() => loadResultSubmissions(), 1200);
+      updatePendingBadge();
+    } else {
+      if (msg) { msg.style.background='var(--loss-bg)'; msg.style.color='var(--loss)'; msg.textContent='Error: ' + (data.error||'Unknown'); }
+    }
+  } catch(e) {
+    if (msg) { msg.style.background='var(--loss-bg)'; msg.style.color='var(--loss)'; msg.textContent='Network error.'; }
+  }
+}
+
+async function rejectResultSubmission(id) {
+  if (!confirm('Reject and delete this submission?')) return;
+  const msg = document.getElementById(`sub-msg-${id}`);
+  try {
+    const res = await fetch(`${API}/submissions`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: getAdminPin(), id, approved: false })
+    });
+    const data = await res.json();
+    if (data.success) setTimeout(() => loadResultSubmissions(), 600);
+    updatePendingBadge();
+  } catch(e) { console.error(e); }
+}
+
+// ── Pending badge — shows count on Submissions tab button ──
+async function updatePendingBadge() {
+  const badge = document.getElementById('pending-badge');
+  if (!badge) return;
+  try {
+    // Count pending submissions + pending corrections + pending event submissions
+    const [subRes] = await Promise.all([
+      fetch(`${API}/submissions?pin=${encodeURIComponent(getAdminPin())}`)
+    ]);
+    const subData = await subRes.json();
+    const pendingSubs = (subData.submissions || []).filter(s => !s.approved).length;
+
+    // Count corrections from attendanceData
+    await loadAttendance();
+    const pendingCorrs = Object.entries(attendanceData)
+      .filter(([k, v]) => {
+        if (!k.startsWith('_corr_') && !k.startsWith('_pending_event_')) return false;
+        try { return JSON.parse(v).status === 'pending'; } catch(e) { return false; }
+      }).length;
+
+    const total = pendingSubs + pendingCorrs;
+    if (total > 0) {
+      badge.style.display = 'inline';
+      badge.textContent = total;
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(e) {
+    badge.style.display = 'none';
+  }
+}
+
 async function loadAdminCorrections() {
   const el = document.getElementById('admin-corrections');
   if (!el) return;
@@ -3295,16 +3424,45 @@ async function loadAdminCorrections() {
 async function approveCorrection(key) {
   const raw = attendanceData[key];
   if (!raw) return;
-
-  // key in attendanceData is "_corr_TIMESTAMP_19700101" — strip the _19700101 to get the DB player_name
   const dbPlayerName = key.replace(/_19700101$/, '');
 
   try {
     const c = JSON.parse(raw);
     const { player, evName, proposed } = c;
-    const ts = parseInt(key.replace('_corr_', ''));
 
-    // Apply change to D.events in memory
+    // 1. Write correction to event_results in Neon
+    // Find the event_id by fetching events API
+    try {
+      const evRes = await fetch(`${API}/events`);
+      const evData = await evRes.json();
+      const dbEv = (evData.events || []).find(e =>
+        e.name.toLowerCase() === evName.toLowerCase()
+      );
+      if (dbEv) {
+        const dbResult = (dbEv.results || []).find(r => r.player_name === player);
+        if (dbResult) {
+          await fetch(`${API}/events`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              pin: window._adminPin || sessionStorage.getItem('pssn_admin_pin'),
+              resultId: dbResult.id,
+              updates: {
+                ...(proposed.faction !== undefined && { faction: proposed.faction }),
+                ...(proposed.w !== undefined && { wins: proposed.w }),
+                ...(proposed.l !== undefined && { losses: proposed.l }),
+                ...(proposed.d !== undefined && { draws: proposed.d }),
+                ...(proposed.placing !== undefined && { place: proposed.placing }),
+              }
+            })
+          });
+        }
+      }
+    } catch(dbErr) {
+      console.warn('Could not write correction to DB:', dbErr);
+    }
+
+    // 2. Apply change to D.events in memory for immediate UI update
     const ev = D.events.find(e => e.name === evName);
     if (ev) {
       const r = ev.results.find(r => r.player === player);
@@ -3317,17 +3475,10 @@ async function approveCorrection(key) {
       }
     }
 
-    // Rebuild allStats in place so changes are reflected immediately
-    Object.keys(allStats).forEach(k => delete allStats[k]);
-    getActiveEvents().forEach(ev => {
-      ev.results.forEach(r => {
-        if (!allStats[r.player]) allStats[r.player] = { w:0, l:0, d:0, games:0 };
-        allStats[r.player].w += r.w; allStats[r.player].l += r.l;
-        allStats[r.player].d += r.d; allStats[r.player].games += (r.w + r.l + r.d);
-      });
-    });
+    // 3. Rebuild stats
+    rebuildStats();
 
-    // Mark as approved in DB using correct player_name
+    // 4. Mark as approved in attendance DB
     c.status = 'approved';
     await fetch(`${API}/attendance`, {
       method: 'POST',
@@ -3335,7 +3486,6 @@ async function approveCorrection(key) {
       body: JSON.stringify({ player_name: dbPlayerName, event_sort_date: 19700101, status: JSON.stringify(c) })
     });
 
-    // Reload corrections (approved ones filtered out)
     await loadAdminCorrections();
 
   } catch(e) {
@@ -3359,29 +3509,7 @@ async function dismissCorrection(key) {
         status: JSON.stringify(c)
       })
     });
-    await loadAdminCorrections(); // already force-reloads internally
-  } catch(e) {
-    console.error('Failed to dismiss correction', e);
-  }
-}
-
-async function dismissCorrection(key) {
-  const raw = attendanceData[key];
-  if (!raw) return;
-  const dbPlayerName = key.replace(/_19700101$/, '');
-  try {
-    const c = JSON.parse(raw);
-    c.status = 'dismissed';
-    await fetch(`${API}/attendance`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        player_name: dbPlayerName,
-        event_sort_date: 19700101,
-        status: JSON.stringify(c)
-      })
-    });
-    await loadAdminCorrections(); // already force-reloads internally
+    await loadAdminCorrections();
   } catch(e) {
     console.error('Failed to dismiss correction', e);
   }
@@ -5105,6 +5233,15 @@ async function wizardSubmitResult() {
     msg.textContent = 'Please select your name and faction.';
     return;
   }
+  // Sanity check W/L/D vs format
+  const totalGames = wins + losses + draws;
+  const expectedRounds = wizardEventFormat === 'GT' ? 6 : wizardEventFormat === 'RTT' ? 3 : null;
+  if (expectedRounds && totalGames > expectedRounds) {
+    msg.style.display = 'block'; msg.style.color = '#f0c040';
+    msg.textContent = `⚠️ ${totalGames} games entered but ${wizardEventFormat}s typically have ${expectedRounds} rounds — double check your record.`;
+    // Don't block — just warn. Allow submit after 2 seconds
+    await new Promise(r => setTimeout(r, 2000));
+  }
 
   msg.style.display = 'block'; msg.style.color = 'var(--muted)';
   msg.textContent = 'Submitting...';
@@ -5121,13 +5258,17 @@ async function wizardSubmitResult() {
         submittedAt: new Date().toISOString(),
         status: 'pending'
       };
-      const res = await fetch(`${API}/attendance`, {
+      const res = await fetch(`${API}/submissions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          player_name: `_pending_event_${ts}`,
-          event_sort_date: 19700101,
-          status: JSON.stringify(submission)
+          player_name: player,
+          event_name: wizardNewEventData.name,
+          event_format: wizardNewEventData.format || 'GT',
+          faction,
+          place: placing,
+          total_players: wizardNewEventData.total_players || 0,
+          wins, losses, draws, subteam
         })
       });
       const data = await res.json();
@@ -5186,6 +5327,7 @@ function checkAdminPin(val) {
           document.getElementById('admin-content').style.display = 'block';
           await loadAdminCorrections();
           await loadAdminEventSubmissions();
+          await loadResultSubmissions();
           loadDbEvents();
           loadAndRenderMembers();
         } else {
@@ -5251,7 +5393,27 @@ function getAdminPin() {
     || '';
 }
 
-// ── event entry ──
+// ── Refresh all player dropdowns across the site after member changes ──
+function refreshPlayerDropdowns() {
+  const playerNames = D.players.map(p => p.name).filter(Boolean).sort();
+  const playerOpts = `<option value="">Select player...</option>` + playerNames.map(n => `<option value="${n}">${n}</option>`).join('');
+  // Wizard player dropdown
+  const wizPlayer = document.getElementById('wiz-player');
+  if (wizPlayer) wizPlayer.innerHTML = playerOpts;
+  // League submit dropdowns
+  const lgMe = document.getElementById('lg-sub-me');
+  if (lgMe) lgMe.innerHTML = `<option value="">Select pod first...</option>`;
+  // Correction player dropdown
+  const corrPlayer = document.getElementById('corr-player');
+  if (corrPlayer) {
+    corrPlayer.innerHTML = `<option value="">Select your name...</option>` + playerNames.map(n => `<option value="${n}">${n}</option>`).join('');
+  }
+  // Who's going grid — re-render if visible
+  const wgGrid = document.getElementById('whos-going-grid');
+  if (wgGrid && wgGrid.innerHTML.length > 100) renderWhosGoing();
+}
+
+
 const ALL_FACTIONS = [
   'Adepta Sororitas','Adeptus Custodes','Adeptus Mechanicus','Aeldari',
   'Astra Militarum','Black Templars','Blood Angels','Chaos Daemons',
@@ -5344,8 +5506,17 @@ async function addMember() {
       msg.style.display = 'block'; msg.style.color = 'var(--win)';
       msg.textContent = `✓ ${name} added.`;
       input.value = '';
-      // Refresh D.players in memory
-      D.players.push({ name, factions: [] });
+      // Refresh D.players in memory and reload from DB
+      await loadPlayers();
+      // Refresh player dropdowns across the site
+      refreshPlayerDropdowns();
+      // Refresh wizard player dropdown if already populated
+      const wizSel = document.getElementById('wiz-player');
+      if (wizSel && wizSel.options.length > 1) {
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        wizSel.appendChild(opt);
+      }
       await loadAndRenderMembers();
       setTimeout(() => { msg.style.display = 'none'; }, 3000);
     } else {
