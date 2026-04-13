@@ -1031,19 +1031,13 @@
         <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Your result will go to the admin for approval before appearing in the standings.</div>
         <div style="display:grid;gap:12px;">
           <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your pod</label>
-            <select id="lg-sub-pod" onchange="updateLeagueSubDropdowns()"
-              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-              <option value="">Select your pod...</option>
-            </select>
-          </div>
-          <div>
             <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your name</label>
-            <select id="lg-sub-me" onchange="updateLeagueSubOpponent()"
+            <select id="lg-sub-me" onchange="autoDetectPodAndOpponents()"
               style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-              <option value="">Select pod first...</option>
+              <option value="">Select your name...</option>
             </select>
           </div>
+          <div id="lg-sub-pod-info" style="display:none;font-size:0.78rem;padding:6px 10px;background:var(--surface2);border-radius:4px;color:var(--muted);"></div>
           <div>
             <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Opponent</label>
             <select id="lg-sub-opponent"
@@ -1051,6 +1045,8 @@
               <option value="">Select your name first...</option>
             </select>
           </div>
+          <!-- Hidden pod selector — auto-set by autoDetectPodAndOpponents -->
+          <select id="lg-sub-pod" style="display:none;"></select>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <div>
               <label style="font-size:0.75rem;color:var(--win);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your Battle Points</label>
@@ -1076,13 +1072,13 @@
     <!-- DATA CORRECTIONS -->
     <div class="section-head" style="margin-top:2rem;cursor:pointer;" onclick="toggleSection('sec-corrections')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
       <div>
-        <div class="section-title">Report a Data Error</div>
-        <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Wrong W/L, faction or placing recorded? Submit a correction — the admin will review it and update your stats</div>
+        <div class="section-title">Fix an Error in My Stats <span style="font-size:0.65rem;background:var(--accent);color:#fff;padding:1px 7px;border-radius:10px;margin-left:8px;vertical-align:middle;font-weight:400;letter-spacing:0;">New</span></div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Wrong W/L, faction or placing in your record? Submit it here — the admin will review and update your stats within 24hrs</div>
       </div>
       <div class="section-rule"></div>
-      <span id="sec-corrections-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+      <span id="sec-corrections-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
     </div>
-    <div id="sec-corrections" style="display:none;">
+    <div id="sec-corrections" style="display:block;">
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;max-width:500px;margin-top:8px;">
         <div style="display:grid;gap:12px;">
           <div>
@@ -2760,6 +2756,7 @@ function switchTab(tab) {
   if (tab === 'more') { buildAwards(); buildMilestones(); }
   if (tab === 'stats') buildNowPanel();
   if (tab === 'members') initMembersTab();
+  if (tab === 'submit') updatePendingBadge();
 }
 
 // ── PIN gate ──
@@ -3097,7 +3094,7 @@ function switchWgTab(tab) {
 
 // ── Data corrections ──
 
-function loadCorrectionEvents() {
+async function loadCorrectionEvents() {
   const name = document.getElementById('corr-player').value;
   const evWrap = document.getElementById('corr-events-wrap');
   const evSel = document.getElementById('corr-event');
@@ -3106,25 +3103,38 @@ function loadCorrectionEvents() {
 
   curWrap.style.display = 'none';
   fldWrap.style.display = 'none';
-  evSel.innerHTML = '<option value="">Select event...</option>';
+  evSel.innerHTML = '<option value="">Loading events...</option>';
 
   if (!name) { evWrap.style.display = 'none'; return; }
 
-  // Find all events this player appeared in
-  const playerEvents = getActiveEvents().filter(ev =>
-    ev.results.some(r => r.player === name)
-  );
+  try {
+    // Always fetch from API — D.events is empty since migration
+    const res = await fetch(`${API}/events`);
+    const data = await res.json();
+    const allEvents = data.events || [];
 
-  if (!playerEvents.length) {
-    evWrap.style.display = 'none'; return;
+    const playerEvents = allEvents.filter(ev =>
+      (ev.results || []).some(r => r.player_name === name)
+    ).sort((a, b) => (b.sort_date || 0) - (a.sort_date || 0));
+
+    evSel.innerHTML = '<option value="">Select event...</option>';
+    if (!playerEvents.length) { evWrap.style.display = 'none'; return; }
+
+    playerEvents.forEach(ev => {
+      const opt = document.createElement('option');
+      opt.value = ev.name;
+      opt.textContent = `${ev.name} (${ev.event_date})`;
+      opt.dataset.eventId = ev.id;
+      evSel.appendChild(opt);
+    });
+    evWrap.style.display = 'block';
+
+    // Cache for loadCorrectionCurrent
+    window._corrEventsCache = allEvents;
+  } catch(e) {
+    evSel.innerHTML = '<option value="">Could not load events</option>';
+    console.warn('loadCorrectionEvents error:', e);
   }
-
-  playerEvents.forEach(ev => {
-    const opt = document.createElement('option');
-    opt.value = ev.name; opt.textContent = `${ev.name} (${ev.date})`;
-    evSel.appendChild(opt);
-  });
-  evWrap.style.display = 'block';
 }
 
 function loadCorrectionCurrent() {
@@ -3136,31 +3146,37 @@ function loadCorrectionCurrent() {
 
   if (!evName) { curWrap.style.display = 'none'; fldWrap.style.display = 'none'; return; }
 
-  const ev = getActiveEvents().find(e => e.name === evName);
-  const r = ev?.results.find(r => r.player === name);
+  // Use cached events from API fetch in loadCorrectionEvents
+  const allEvents = window._corrEventsCache || [];
+  const ev = allEvents.find(e => e.name === evName);
+  const r = (ev?.results || []).find(r => r.player_name === name);
+
   if (!r) { curWrap.style.display = 'none'; fldWrap.style.display = 'none'; return; }
 
-  const total = ev.format === 'Teams' ? ev.totalTeams : ev.totalPlayers;
+  const total = ev.format === 'Teams' ? ev.total_teams : ev.total_players;
   curEl.innerHTML = `
     <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
       <span style="color:var(--text);">${r.faction}</span>
-      <span style="color:var(--muted);">Placing: ${r.placing}/${total}</span>
+      <span style="color:var(--muted);">Placing: ${r.place}/${total}</span>
       <span style="display:flex;gap:4px;">
-        <span style="font-size:0.7rem;padding:2px 6px;border-radius:3px;background:var(--win-bg);color:var(--win);">${r.w}W</span>
-        <span style="font-size:0.7rem;padding:2px 6px;border-radius:3px;background:var(--loss-bg);color:var(--loss);">${r.l}L</span>
-        ${r.d > 0 ? `<span style="font-size:0.7rem;padding:2px 6px;border-radius:3px;background:#152030;color:var(--draw);">${r.d}D</span>` : ''}
+        <span style="font-size:0.7rem;padding:2px 6px;border-radius:3px;background:var(--win-bg);color:var(--win);">${r.wins}W</span>
+        <span style="font-size:0.7rem;padding:2px 6px;border-radius:3px;background:var(--loss-bg);color:var(--loss);">${r.losses}L</span>
+        ${r.draws > 0 ? `<span style="font-size:0.7rem;padding:2px 6px;border-radius:3px;background:#152030;color:var(--draw);">${r.draws}D</span>` : ''}
       </span>
       ${r.subteam ? `<span style="color:var(--muted);font-size:0.78rem;">${r.subteam}</span>` : ''}
     </div>`;
 
-  // Pre-fill correction fields with current values
-  document.getElementById('corr-w').value = r.w;
-  document.getElementById('corr-l').value = r.l;
-  document.getElementById('corr-d').value = r.d;
-  document.getElementById('corr-placing').value = r.placing;
-  // Set faction select to current
+  // Pre-fill correction fields with current DB values
+  document.getElementById('corr-w').value = r.wins;
+  document.getElementById('corr-l').value = r.losses;
+  document.getElementById('corr-d').value = r.draws;
+  document.getElementById('corr-placing').value = r.place;
   const facSel = document.getElementById('corr-faction');
   facSel.value = r.faction;
+
+  // Store result ID for the correction submission
+  window._corrResultId = r.id;
+  window._corrCurrent = { faction: r.faction, w: r.wins, l: r.losses, d: r.draws, placing: r.place };
 
   curWrap.style.display = 'block';
   fldWrap.style.display = 'block';
@@ -3181,18 +3197,17 @@ async function submitCorrection() {
     msg.textContent = 'Please add a note explaining what\'s wrong.'; return;
   }
 
-  const ev = getActiveEvents().find(e => e.name === evName);
-  const current = ev?.results.find(r => r.player === player);
+  const current = window._corrCurrent || {};
 
   const correction = {
     player, evName,
-    current: { faction: current?.faction, w: current?.w, l: current?.l, d: current?.d, placing: current?.placing },
+    current: { faction: current.faction, w: current.w, l: current.l, d: current.d, placing: current.placing },
     proposed: {
-      faction: document.getElementById('corr-faction').value || current?.faction,
-      w: parseInt(document.getElementById('corr-w').value) ?? current?.w,
-      l: parseInt(document.getElementById('corr-l').value) ?? current?.l,
-      d: parseInt(document.getElementById('corr-d').value) ?? current?.d,
-      placing: parseInt(document.getElementById('corr-placing').value) || current?.placing,
+      faction: document.getElementById('corr-faction').value || current.faction,
+      w: parseInt(document.getElementById('corr-w').value) ?? current.w,
+      l: parseInt(document.getElementById('corr-l').value) ?? current.l,
+      d: parseInt(document.getElementById('corr-d').value) ?? current.d,
+      placing: parseInt(document.getElementById('corr-placing').value) || current.placing,
     },
     note,
     submittedAt: new Date().toISOString(),
@@ -4998,48 +5013,76 @@ function setWizardType(type) {
 
   // Populate pod dropdown when switching to league
   if (!isTournament && leagueData) {
-    const podSel = document.getElementById('lg-sub-pod');
-    if (podSel && podSel.options.length <= 1) {
-      (leagueData.pods || []).forEach(pod => {
-        const opt = document.createElement('option');
-        opt.value = pod.id;
-        opt.textContent = pod.name;
-        podSel.appendChild(opt);
-      });
-    }
+    initLeagueSubMe();
   }
 }
 
 // When pod changes — populate "Your name" with pod players
 function updateLeagueSubDropdowns() {
-  const podId = parseInt(document.getElementById('lg-sub-pod').value);
+  // Legacy — now handled by autoDetectPodAndOpponents
+  autoDetectPodAndOpponents();
+}
+
+function updateLeagueSubOpponent() {
+  // Legacy — now handled by autoDetectPodAndOpponents
+  autoDetectPodAndOpponents();
+}
+
+// Populate "Your name" dropdown with all league players, then auto-detect pod on selection
+function initLeagueSubMe() {
   const meEl = document.getElementById('lg-sub-me');
-  const oppEl = document.getElementById('lg-sub-opponent');
+  if (!meEl || !leagueData) return;
+  const allPlayers = (leagueData.players || []).map(p => p.player_name).sort();
   meEl.innerHTML = '<option value="">Select your name...</option>';
-  oppEl.innerHTML = '<option value="">Select your name first...</option>';
-  if (!podId || !leagueData) return;
-  const podPlayers = (leagueData.players || [])
-    .filter(p => p.pod_id === podId)
-    .map(p => p.player_name)
-    .sort();
-  podPlayers.forEach(name => {
+  allPlayers.forEach(name => {
     const opt = document.createElement('option');
     opt.value = name; opt.textContent = name;
     meEl.appendChild(opt);
   });
 }
 
-// When "Your name" changes — populate opponent with remaining pod players
-function updateLeagueSubOpponent() {
-  const podId = parseInt(document.getElementById('lg-sub-pod').value);
+// Auto-detect pod from selected player name, show pod info, populate opponents
+function autoDetectPodAndOpponents() {
   const me = document.getElementById('lg-sub-me').value;
   const oppEl = document.getElementById('lg-sub-opponent');
+  const podInfoEl = document.getElementById('lg-sub-pod-info');
+  const podSel = document.getElementById('lg-sub-pod');
+
   oppEl.innerHTML = '<option value="">Select opponent...</option>';
-  if (!podId || !me || !leagueData) return;
+  if (podInfoEl) podInfoEl.style.display = 'none';
+
+  if (!me || !leagueData) return;
+
+  // Find the player's pod
+  const playerEntry = (leagueData.players || []).find(p => p.player_name === me);
+  if (!playerEntry) {
+    if (podInfoEl) { podInfoEl.style.display = 'block'; podInfoEl.textContent = '⚠️ You are not registered in any league pod this season.'; }
+    return;
+  }
+
+  const podId = playerEntry.pod_id;
+  const pod = (leagueData.pods || []).find(p => p.id === podId);
+  const podName = pod?.name || `Pod ${podId}`;
+
+  // Set hidden pod selector
+  if (podSel) { podSel.innerHTML = `<option value="${podId}" selected>${podName}</option>`; }
+
+  // Show pod info
+  if (podInfoEl) {
+    podInfoEl.style.display = 'block';
+    podInfoEl.innerHTML = `📍 You are in <strong style="color:var(--text);">${podName}</strong>`;
+  }
+
+  // Populate opponents from same pod
   const podPlayers = (leagueData.players || [])
     .filter(p => p.pod_id === podId && p.player_name !== me)
     .map(p => p.player_name)
     .sort();
+
+  if (!podPlayers.length) {
+    oppEl.innerHTML = '<option value="">No other players in your pod</option>';
+    return;
+  }
   podPlayers.forEach(name => {
     const opt = document.createElement('option');
     opt.value = name; opt.textContent = name;
@@ -5055,16 +5098,15 @@ async function submitLeagueGameAsPlayer() {
   const mybp = parseInt(document.getElementById('lg-sub-mybp').value);
   const oppbp = parseInt(document.getElementById('lg-sub-oppbp').value);
 
-  if (!pod_id || !me || !opponent || isNaN(mybp) || isNaN(oppbp)) {
-    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
-    msg.textContent = 'Please fill in all fields.'; return;
-  }
-  if (me === opponent) {
-    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
-    msg.textContent = 'You can\'t play yourself!'; return;
-  }
+  msg.style.display = 'block';
+  if (!me) { msg.style.color='var(--loss)'; msg.textContent='Please select your name.'; return; }
+  if (!pod_id) { msg.style.color='var(--loss)'; msg.textContent='Could not detect your pod — are you registered in the league this season?'; return; }
+  if (!opponent) { msg.style.color='var(--loss)'; msg.textContent='Please select your opponent.'; return; }
+  if (isNaN(mybp) || isNaN(oppbp)) { msg.style.color='var(--loss)'; msg.textContent='Please enter battle points for both players.'; return; }
+  if (mybp < 0 || mybp > 100 || oppbp < 0 || oppbp > 100) { msg.style.color='var(--loss)'; msg.textContent='Battle points must be between 0 and 100.'; return; }
+  if (me === opponent) { msg.style.color='var(--loss)'; msg.textContent="You can't play yourself!"; return; }
 
-  msg.style.display = 'block'; msg.style.color = 'var(--muted)';
+  msg.style.color = 'var(--muted)';
   msg.textContent = 'Submitting...';
 
   try {
@@ -5077,9 +5119,10 @@ async function submitLeagueGameAsPlayer() {
     if (data.success) {
       msg.style.color = 'var(--win)';
       msg.textContent = '✓ League result submitted! Pending admin approval before it appears in standings.';
-      document.getElementById('lg-sub-pod').value = '';
-      document.getElementById('lg-sub-me').innerHTML = '<option value="">Select pod first...</option>';
+      document.getElementById('lg-sub-pod').innerHTML = '';
+      document.getElementById('lg-sub-me').value = '';
       document.getElementById('lg-sub-opponent').innerHTML = '<option value="">Select your name first...</option>';
+      document.getElementById('lg-sub-pod-info').style.display = 'none';
       document.getElementById('lg-sub-mybp').value = '';
       document.getElementById('lg-sub-oppbp').value = '';
     } else {
@@ -5747,14 +5790,140 @@ function renderDbEvents() {
     return;
   }
   el.innerHTML = dbEvents.map(ev => `
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-      <div>
-        <div style="font-size:0.88rem;color:var(--text);">${ev.name}</div>
-        <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">${ev.event_date} · ${ev.format} · ${ev.results.length} result${ev.results.length !== 1 ? 's' : ''}</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;">
+      <div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;"
+           onclick="toggleDbEventResults('dber-${ev.id}')">
+        <div>
+          <div style="font-size:0.88rem;color:var(--text);">${ev.name}</div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">${ev.event_date} · ${ev.format} · ${ev.results.length} result${ev.results.length !== 1 ? 's' : ''}</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="font-size:0.7rem;color:var(--muted);">▼</span>
+          <button onclick="event.stopPropagation();deleteDbEvent(${ev.id})"
+            style="font-size:0.72rem;padding:4px 10px;background:var(--loss-bg);border:1px solid var(--loss);border-radius:3px;color:var(--loss);cursor:pointer;">Delete</button>
+        </div>
       </div>
-      <button onclick="deleteDbEvent(${ev.id})" style="font-size:0.72rem;padding:4px 10px;background:var(--loss-bg);border:1px solid var(--loss);border-radius:3px;color:var(--loss);cursor:pointer;flex-shrink:0;">Delete</button>
+      <div id="dber-${ev.id}" style="display:none;border-top:1px solid var(--border);padding:10px 14px;">
+        ${ev.results.length ? ev.results.map(r => `
+          <div id="dber-row-${r.id}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">
+            <div style="font-size:0.82rem;color:var(--text);min-width:120px;">${r.player_name}</div>
+            <div style="font-size:0.78rem;color:var(--muted);flex:1;">${r.faction}</div>
+            <div style="font-size:0.72rem;color:var(--muted);">${r.place || '?'}/${ev.total_players || ev.total_teams || '?'}</div>
+            <div style="font-size:0.72rem;">
+              <span style="color:var(--win);">${r.wins}W</span>
+              <span style="color:var(--loss);margin:0 2px;">${r.losses}L</span>
+              <span style="color:var(--draw);">${r.draws}D</span>
+            </div>
+            ${r.dropped ? `<span style="font-size:0.65rem;color:var(--loss);border:1px solid var(--loss);border-radius:3px;padding:1px 5px;">dropped</span>` : ''}
+            <button onclick="openEditResult(${r.id}, '${r.player_name.replace(/'/g,"\\'")}', '${r.faction.replace(/'/g,"\\'")}', ${r.place||0}, ${r.wins}, ${r.losses}, ${r.draws}, ${r.dropped})"
+              style="font-size:0.65rem;padding:2px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;white-space:nowrap;"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Edit</button>
+          </div>`).join('')
+        : '<div style="font-size:0.82rem;color:var(--muted);">No results recorded.</div>'}
+      </div>
     </div>`).join('');
 }
+
+function toggleDbEventResults(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function openEditResult(id, player, faction, place, wins, losses, draws, dropped) {
+  // Create/show inline edit modal
+  let modal = document.getElementById('edit-result-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'edit-result-modal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;max-width:420px;width:100%;">
+      <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Edit Result</div>
+      <div style="font-size:0.95rem;color:var(--text);margin-bottom:16px;font-weight:500;">${player}</div>
+      <div style="display:grid;gap:10px;">
+        <div>
+          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Faction</label>
+          <select id="er-faction" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+            ${['Adepta Sororitas','Adeptus Custodes','Adeptus Mechanicus','Aeldari','Astra Militarum','Black Templars','Blood Angels','Chaos Daemons','Chaos Knights','Chaos Space Marines','Dark Angels','Death Guard','Deathwatch','Drukhari',"Emperor's Children",'Genestealer Cult','Grey Knights','Imperial Knights','Leagues of Votann','Necrons','Orks','Space Marines',"T'au Empire",'Thousand Sons','Tyranids','World Eaters'].map(f => `<option value="${f}" ${f===faction?'selected':''}>${f}</option>`).join('')}
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
+          <div>
+            <label style="font-size:0.72rem;color:var(--win);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Wins</label>
+            <input id="er-wins" type="number" min="0" value="${wins}" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div>
+            <label style="font-size:0.72rem;color:var(--loss);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Losses</label>
+            <input id="er-losses" type="number" min="0" value="${losses}" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div>
+            <label style="font-size:0.72rem;color:var(--draw);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Draws</label>
+            <input id="er-draws" type="number" min="0" value="${draws}" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div>
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Place</label>
+            <input id="er-place" type="number" min="1" value="${place}" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input id="er-dropped" type="checkbox" ${dropped?'checked':''} style="width:16px;height:16px;cursor:pointer;"/>
+          <label for="er-dropped" style="font-size:0.82rem;color:var(--muted);cursor:pointer;">Dropped from event</label>
+        </div>
+        <div id="er-msg" style="display:none;font-size:0.78rem;padding:6px 10px;border-radius:4px;"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
+          <button onclick="document.getElementById('edit-result-modal').style.display='none'"
+            style="padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.85rem;cursor:pointer;">Cancel</button>
+          <button onclick="saveDbResult(${id})"
+            style="padding:8px 16px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;">Save Changes</button>
+        </div>
+      </div>
+    </div>`;
+  modal.style.display = 'flex';
+  // Close on backdrop click
+  modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+}
+
+async function saveDbResult(id) {
+  const msg = document.getElementById('er-msg');
+  const updates = {
+    faction: document.getElementById('er-faction').value,
+    wins:    parseInt(document.getElementById('er-wins').value),
+    losses:  parseInt(document.getElementById('er-losses').value),
+    draws:   parseInt(document.getElementById('er-draws').value),
+    place:   parseInt(document.getElementById('er-place').value),
+    dropped: document.getElementById('er-dropped').checked,
+  };
+  msg.style.display = 'block'; msg.style.background = 'var(--surface2)'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Saving...';
+  try {
+    const res = await fetch(`${API}/events`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: getAdminPin(), resultId: id, updates })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.style.background = 'var(--win-bg)'; msg.style.color = 'var(--win)';
+      msg.textContent = '✓ Saved — reloading stats...';
+      // Refresh events cache and re-render
+      await loadApprovedSubmissions();
+      rebuildStats();
+      await loadDbEvents();
+      setTimeout(() => { document.getElementById('edit-result-modal').style.display = 'none'; }, 800);
+    } else {
+      msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown');
+    }
+  } catch(e) {
+    msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error.';
+  }
+}
+
 function buildFactionStats() {
   const el = document.getElementById('faction-stats');
   if (!el) return;
