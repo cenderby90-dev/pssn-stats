@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -37,430 +36,427 @@
       min-height: 100vh;
     }
 
-```
-/* ── HEADER ── */
-.site-header {
-  border-bottom: 1px solid var(--border);
-  padding: 3rem 2rem 2rem;
-}
-.site-header-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-.header-eyebrow {
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 0.5rem;
-}
-.header-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(2.8rem, 6vw, 5rem);
-  letter-spacing: 0.04em;
-  color: var(--text);
-  line-height: 0.95;
-  margin-bottom: 1rem;
-}
-.header-meta {
-  font-size: 0.8rem;
-  color: var(--muted);
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-}
-.header-meta span { display: flex; align-items: center; gap: 6px; }
-.header-meta span::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--faint); display: inline-block; }
+    /* ── HEADER ── */
+    .site-header {
+      border-bottom: 1px solid var(--border);
+      padding: 3rem 2rem 2rem;
+    }
+    .site-header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .header-eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    .header-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      letter-spacing: 0.04em;
+      color: var(--text);
+      line-height: 0.95;
+      margin-bottom: 1rem;
+    }
+    .header-meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .header-meta span { display: flex; align-items: center; gap: 6px; }
+    .header-meta span::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--faint); display: inline-block; }
 
-/* ── PAGE ── */
-.page { max-width: 1200px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
+    /* ── PAGE ── */
+    .page { max-width: 1200px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
 
-/* ── SECTION LABELS ── */
-.section-head {
-  display: flex;
-  align-items: baseline;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-  margin-top: 3rem;
-}
-.section-head:first-child { margin-top: 0; }
-.section-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.4rem;
-  letter-spacing: 0.06em;
-  color: var(--text);
-}
-.section-rule { flex: 1; height: 1px; background: var(--border); }
+    /* ── SECTION LABELS ── */
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      margin-top: 3rem;
+    }
+    .section-head:first-child { margin-top: 0; }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.06em;
+      color: var(--text);
+    }
+    .section-rule { flex: 1; height: 1px; background: var(--border); }
 
-/* ── SEASON SUMMARY ── */
-.summary-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 1px;
-  background: var(--border);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
-}
-.stat-cell {
-  background: var(--surface);
-  padding: 1.25rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.stat-label { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-.stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 0.04em; line-height: 1; color: var(--text); }
-.stat-value.w { color: var(--win); }
-.stat-value.l { color: var(--loss); }
-.stat-value.d { color: var(--draw); }
+    /* ── SEASON SUMMARY ── */
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .stat-cell {
+      background: var(--surface);
+      padding: 1.25rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-label { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 0.04em; line-height: 1; color: var(--text); }
+    .stat-value.w { color: var(--win); }
+    .stat-value.l { color: var(--loss); }
+    .stat-value.d { color: var(--draw); }
 
-/* ── FILTER BUTTONS ── */
-.filter-btn {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 400;
-  letter-spacing: 0.05em;
-  padding: 5px 14px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.filter-btn:hover { border-color: var(--faint); color: var(--text); }
-.filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    /* ── FILTER BUTTONS ── */
+    .filter-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 400;
+      letter-spacing: 0.05em;
+      padding: 5px 14px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover { border-color: var(--faint); color: var(--text); }
+    .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-/* ── LEADERBOARD ── */
-.leaderboard { display: flex; flex-direction: column; gap: 2px; }
-.leaderboard::-webkit-scrollbar { width: 6px; }
-.leaderboard::-webkit-scrollbar-track { background: var(--surface2); border-radius: 3px; }
-.leaderboard::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 3px; }
-.leaderboard::-webkit-scrollbar-thumb:hover { background: var(--muted); }
-.lb-row {
-  display: grid;
-  grid-template-columns: 32px 1fr 120px 90px 70px;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: var(--surface);
-  border-radius: 4px;
-  border: 1px solid transparent;
-  transition: border-color 0.15s;
-}
-.lb-row:hover { border-color: var(--border); }
-.lb-row.top3 { border-color: var(--faint); }
-.lb-row.top3:nth-child(1) { background: var(--accent-bg); border-color: var(--accent-muted); }
-.lb-rank {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.1rem;
-  color: var(--muted);
-  text-align: center;
-}
-.lb-row.top3:nth-child(1) .lb-rank { color: var(--accent); }
-.lb-name { font-size: 0.9rem; font-weight: 400; color: var(--text); }
-.lb-faction { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
-.lb-record { display: flex; gap: 6px; }
+    /* ── LEADERBOARD ── */
+    .leaderboard { display: flex; flex-direction: column; gap: 2px; }
+    .leaderboard::-webkit-scrollbar { width: 6px; }
+    .leaderboard::-webkit-scrollbar-track { background: var(--surface2); border-radius: 3px; }
+    .leaderboard::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 3px; }
+    .leaderboard::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+    .lb-row {
+      display: grid;
+      grid-template-columns: 32px 1fr 120px 90px 70px;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-radius: 4px;
+      border: 1px solid transparent;
+      transition: border-color 0.15s;
+    }
+    .lb-row:hover { border-color: var(--border); }
+    .lb-row.top3 { border-color: var(--faint); }
+    .lb-row.top3:nth-child(1) { background: var(--accent-bg); border-color: var(--accent-muted); }
+    .lb-rank {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    .lb-row.top3:nth-child(1) .lb-rank { color: var(--accent); }
+    .lb-name { font-size: 0.9rem; font-weight: 400; color: var(--text); }
+    .lb-faction { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+    .lb-record { display: flex; gap: 6px; }
 
-/* lb-inner — responsive grid for leaderboard rows */
-.lb-inner {
-  display: grid;
-  grid-template-columns: 32px 1fr 120px 90px 20px;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-}
-.rec-badge {
-  font-size: 0.7rem;
-  font-weight: 500;
-  padding: 2px 7px;
-  border-radius: 3px;
-  letter-spacing: 0.03em;
-}
-.rec-w { background: var(--win-bg); color: var(--win); }
-.rec-l { background: var(--loss-bg); color: var(--loss); }
-.rec-d { background: var(--draw-bg); color: var(--draw); }
-.lb-winrate {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.3rem;
-  letter-spacing: 0.04em;
-  text-align: right;
-}
-.lb-bar-wrap { display: none; }
+    /* lb-inner — responsive grid for leaderboard rows */
+    .lb-inner {
+      display: grid;
+      grid-template-columns: 32px 1fr 120px 90px 20px;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+    }
+    .rec-badge {
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 3px;
+      letter-spacing: 0.03em;
+    }
+    .rec-w { background: var(--win-bg); color: var(--win); }
+    .rec-l { background: var(--loss-bg); color: var(--loss); }
+    .rec-d { background: var(--draw-bg); color: var(--draw); }
+    .lb-winrate {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 0.04em;
+      text-align: right;
+    }
+    .lb-bar-wrap { display: none; }
 
-/* ── EVENTS ── */
-.event-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
-  margin-bottom: 12px;
-}
-.event-header {
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.event-name {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.2rem;
-  letter-spacing: 0.06em;
-  color: var(--text);
-}
-.event-meta { font-size: 0.75rem; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
-.event-meta a { color: var(--accent); text-decoration: none; }
-.event-meta a:hover { text-decoration: underline; }
-.event-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-.event-table th {
-  font-size: 0.62rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-  font-weight: 400;
-  text-align: left;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--border);
-}
-.event-table th:last-child, .event-table td:last-child { text-align: right; }
-.event-table td { padding: 10px 16px; border-bottom: 1px solid #1a1a1a; color: #aaa; vertical-align: middle; }
-.event-table tr:last-child td { border-bottom: none; }
-.event-table tr:hover td { background: #181818; }
-.player-cell { color: var(--text); font-weight: 400; }
-.placing-cell { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.04em; color: var(--text); }
-.placing-top { color: var(--accent); }
-.format-pill {
-  font-size: 0.62rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: 3px;
-  background: var(--surface2);
-  color: var(--muted);
-  border: 1px solid var(--faint);
-}
-.wld-cell { display: flex; gap: 4px; justify-content: flex-end; }
+    /* ── EVENTS ── */
+    .event-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .event-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .event-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.06em;
+      color: var(--text);
+    }
+    .event-meta { font-size: 0.75rem; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+    .event-meta a { color: var(--accent); text-decoration: none; }
+    .event-meta a:hover { text-decoration: underline; }
+    .event-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .event-table th {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 400;
+      text-align: left;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .event-table th:last-child, .event-table td:last-child { text-align: right; }
+    .event-table td { padding: 10px 16px; border-bottom: 1px solid #1a1a1a; color: #aaa; vertical-align: middle; }
+    .event-table tr:last-child td { border-bottom: none; }
+    .event-table tr:hover td { background: #181818; }
+    .player-cell { color: var(--text); font-weight: 400; }
+    .placing-cell { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.04em; color: var(--text); }
+    .placing-top { color: var(--accent); }
+    .format-pill {
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 3px;
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--faint);
+    }
+    .wld-cell { display: flex; gap: 4px; justify-content: flex-end; }
 
-/* ── HIGHLIGHTS ── */
-.highlights-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
-}
-.highlight-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.highlight-card.gold { border-color: var(--accent-muted); background: var(--accent-bg); }
-.highlight-label {
-  font-size: 0.62rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-.highlight-card:not(.gold) .highlight-label { color: var(--muted); }
-.highlight-name {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.4rem;
-  letter-spacing: 0.04em;
-  color: var(--text);
-  line-height: 1.1;
-  cursor: pointer;
-}
-.highlight-name:hover { color: var(--accent); }
-.highlight-detail { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+    /* ── HIGHLIGHTS ── */
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .highlight-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .highlight-card.gold { border-color: var(--accent-muted); background: var(--accent-bg); }
+    .highlight-label {
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .highlight-card:not(.gold) .highlight-label { color: var(--muted); }
+    .highlight-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      line-height: 1.1;
+      cursor: pointer;
+    }
+    .highlight-name:hover { color: var(--accent); }
+    .highlight-detail { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
 
-/* ── PLAYER PANEL ── */
-.player-panel {
-  position: fixed;
-  top: 0; right: 0; bottom: 0;
-  width: min(480px, 100vw);
-  background: var(--surface);
-  border-left: 1px solid var(--border);
-  z-index: 1000;
-  transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-.player-panel.open { transform: translateX(0); }
-.panel-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 999;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
-}
-.panel-overlay.open { opacity: 1; pointer-events: all; }
-.panel-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  position: sticky;
-  top: 0;
-  background: var(--surface);
-  z-index: 1;
-}
-.panel-close {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 1rem;
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.15s;
-}
-.panel-close:hover { color: var(--text); border-color: var(--faint); }
-.panel-body { padding: 1.5rem; flex: 1; }
-.panel-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-bottom: 1.5rem;
-}
-.panel-stat {
-  background: var(--surface2);
-  border-radius: 4px;
-  padding: 10px 12px;
-}
-.panel-stat-label { font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
-.panel-stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.04em; line-height: 1; }
-.p-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.04em; color: var(--text); line-height: 1; }
-.p-faction { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
-.p-section-label { font-size: 0.65rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; margin-top: 1.25rem; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
-.p-event-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 9px 0;
-  border-bottom: 1px solid #3a3a3a;
-  font-size: 0.82rem;
-}
-.p-event-row:last-child { border-bottom: none; }
-.p-event-name { color: var(--text); font-weight: 400; }
-.p-event-meta { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
-.player-link { cursor: pointer; text-decoration: none; color: inherit; border-bottom: 1px dotted var(--muted); transition: border-color 0.15s; }
-.player-link:hover { border-bottom-color: var(--accent); color: var(--accent); }
+    /* ── PLAYER PANEL ── */
+    .player-panel {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: min(480px, 100vw);
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .player-panel.open { transform: translateX(0); }
+    .panel-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .panel-overlay.open { opacity: 1; pointer-events: all; }
+    .panel-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      z-index: 1;
+    }
+    .panel-close {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .panel-close:hover { color: var(--text); border-color: var(--faint); }
+    .panel-body { padding: 1.5rem; flex: 1; }
+    .panel-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .panel-stat {
+      background: var(--surface2);
+      border-radius: 4px;
+      padding: 10px 12px;
+    }
+    .panel-stat-label { font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+    .panel-stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.04em; line-height: 1; }
+    .p-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.04em; color: var(--text); line-height: 1; }
+    .p-faction { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+    .p-section-label { font-size: 0.65rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; margin-top: 1.25rem; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+    .p-event-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 0;
+      border-bottom: 1px solid #3a3a3a;
+      font-size: 0.82rem;
+    }
+    .p-event-row:last-child { border-bottom: none; }
+    .p-event-name { color: var(--text); font-weight: 400; }
+    .p-event-meta { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+    .player-link { cursor: pointer; text-decoration: none; color: inherit; border-bottom: 1px dotted var(--muted); transition: border-color 0.15s; }
+    .player-link:hover { border-bottom-color: var(--accent); color: var(--accent); }
 
-/* ── RESPONSIVE ── */
-@media (max-width: 700px) {
-  .lb-row { grid-template-columns: 28px 1fr 90px; }
-  .lb-inner { grid-template-columns: 28px 1fr 90px 16px; }
-  .lb-faction { display: none; }
-  .event-table:not(.league-table) th:nth-child(3), .event-table:not(.league-table) td:nth-child(3) { display: none; }
-}
-@media (max-width: 500px) {
-  /* Leaderboard — hide record on very small screens, show win rate only */
-  .lb-row { grid-template-columns: 28px 1fr 70px 16px; }
-  .lb-inner { grid-template-columns: 28px 1fr 70px 16px; }
-  .lb-inner .lb-record { display: none; }
-  .lb-record { display: none; }
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .lb-row { grid-template-columns: 28px 1fr 90px; }
+      .lb-inner { grid-template-columns: 28px 1fr 90px 16px; }
+      .lb-faction { display: none; }
+      .event-table:not(.league-table) th:nth-child(3), .event-table:not(.league-table) td:nth-child(3) { display: none; }
+    }
+    @media (max-width: 500px) {
+      /* Leaderboard — hide record on very small screens, show win rate only */
+      .lb-row { grid-template-columns: 28px 1fr 70px 16px; }
+      .lb-inner { grid-template-columns: 28px 1fr 70px 16px; }
+      .lb-inner .lb-record { display: none; }
+      .lb-record { display: none; }
 
-  /* Tab nav — smaller padding, wrap if needed */
-  .tab-btn { padding: 8px 12px; font-size: 0.78rem; }
+      /* Tab nav — smaller padding, wrap if needed */
+      .tab-btn { padding: 8px 12px; font-size: 0.78rem; }
 
-  /* Tables — hide less critical columns (not league tables) */
-  .event-table:not(.league-table) th:nth-child(4), .event-table:not(.league-table) td:nth-child(4) { display: none; } /* format */
-  .event-table:not(.league-table) th:nth-child(2), .event-table:not(.league-table) td:nth-child(2) { display: none; } /* faction */
+      /* Tables — hide less critical columns (not league tables) */
+      .event-table:not(.league-table) th:nth-child(4), .event-table:not(.league-table) td:nth-child(4) { display: none; } /* format */
+      .event-table:not(.league-table) th:nth-child(2), .event-table:not(.league-table) td:nth-child(2) { display: none; } /* faction */
 
-  /* Now panel — single column */
-  #now-panel > div:last-child { grid-template-columns: 1fr !important; }
+      /* Now panel — single column */
+      #now-panel > div:last-child { grid-template-columns: 1fr !important; }
 
-  /* Header — tighter */
-  .site-header { padding: 1.5rem 1rem 0.75rem; }
-  .team-name { font-size: clamp(2rem, 10vw, 4rem); }
-  #header-meta { gap: 8px; font-size: 0.72rem; }
+      /* Header — tighter */
+      .site-header { padding: 1.5rem 1rem 0.75rem; }
+      .team-name { font-size: clamp(2rem, 10vw, 4rem); }
+      #header-meta { gap: 8px; font-size: 0.72rem; }
 
-  /* Edition buttons */
-  #ed-10, #ed-11 { padding: 4px 8px; font-size: 0.7rem; }
+      /* Edition buttons */
+      #ed-10, #ed-11 { padding: 4px 8px; font-size: 0.7rem; }
 
-  /* Player panel — full width on mobile */
-  .player-panel { width: 100vw; border-left: none; border-top: 1px solid var(--border); border-radius: 12px 12px 0 0; top: auto; height: 90vh; }
-  .panel-stat-grid { grid-template-columns: 1fr 1fr; }
+      /* Player panel — full width on mobile */
+      .player-panel { width: 100vw; border-left: none; border-top: 1px solid var(--border); border-radius: 12px 12px 0 0; top: auto; height: 90vh; }
+      .panel-stat-grid { grid-template-columns: 1fr 1fr; }
 
-  /* League pod tab bar — scrollable */
-  #pod-tab-bar { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-  #pod-tab-bar::-webkit-scrollbar { display: none; }
-  #pod-tab-bar .tab-btn { white-space: nowrap; padding: 6px 10px; font-size: 0.75rem; }
+      /* League pod tab bar — scrollable */
+      #pod-tab-bar { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      #pod-tab-bar::-webkit-scrollbar { display: none; }
+      #pod-tab-bar .tab-btn { white-space: nowrap; padding: 6px 10px; font-size: 0.75rem; }
 
-  /* Main content padding */
-  .page { padding: 1rem; }
-}
+      /* Main content padding */
+      .page { padding: 1rem; }
+    }
 
-@media (max-width: 360px) {
-  .tab-btn { padding: 6px 8px; font-size: 0.72rem; }
-}
+    @media (max-width: 360px) {
+      .tab-btn { padding: 6px 8px; font-size: 0.72rem; }
+    }
 
-/* ── TABS ── */
-.tab-bar { display: flex; gap: 2px; margin-top: 1.5rem; border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-wrap: nowrap; }
-.tab-bar::-webkit-scrollbar { display: none; }
-.tab-btn {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.82rem;
-  font-weight: 400;
-  padding: 8px 16px;
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.15s;
-  margin-bottom: -1px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.tab-btn:hover { color: var(--text); }
-.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    /* ── TABS ── */
+    .tab-bar { display: flex; gap: 2px; margin-top: 1.5rem; border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-wrap: nowrap; }
+    .tab-bar::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 400;
+      padding: 8px 16px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: -1px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-/* ── FORMAT GROUP ── */
-.fmt-group { margin-bottom: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-.fmt-group-head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px; cursor: pointer;
-  transition: background 0.15s;
-}
-.fmt-group-head:hover { background: var(--surface2); }
-.fmt-group-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.06em; color: var(--text); }
-.fmt-group-meta { font-size: 0.72rem; color: var(--muted); }
-.fmt-group-body { display: none; border-top: 1px solid var(--border); }
-.fmt-group-body.open { display: block; }
+    /* ── FORMAT GROUP ── */
+    .fmt-group { margin-bottom: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .fmt-group-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .fmt-group-head:hover { background: var(--surface2); }
+    .fmt-group-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.06em; color: var(--text); }
+    .fmt-group-meta { font-size: 0.72rem; color: var(--muted); }
+    .fmt-group-body { display: none; border-top: 1px solid var(--border); }
+    .fmt-group-body.open { display: block; }
 
-/* ── FOOTER ── */
-.site-footer {
-  border-top: 1px solid var(--border);
-  padding: 1.5rem 2rem;
-  font-size: 0.72rem;
-  color: var(--muted);
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-```
-
+    /* ── FOOTER ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
   </style>
 </head>
 <body>
@@ -468,7 +464,6 @@
 <!-- ════════════════════════════════════════
      EDIT YOUR DATA HERE
      ════════════════════════════════════════ -->
-
 <script id="data" type="application/json">
 {
   "team": "Pile of Shame Support Network",
@@ -810,10 +805,10 @@
   ]
 }
 </script>
-
 <!-- ════════════════════════════════════════ -->
 
 <!-- ════════════════════════════════════════ -->
+
 
 <header class="site-header">
   <div class="site-header-inner">
@@ -837,15 +832,12 @@
 </header>
 
 <!-- ── STATS TAB ── -->
-
 <main class="page" id="tab-stats">
 
   <!-- ── NOW PANEL ── -->
-
   <div id="now-panel" style="margin-bottom:2rem;"></div>
 
   <!-- ── TOURNAMENTS PANEL ── -->
-
   <div class="section-head" style="cursor:pointer;" onclick="toggleSection('sec-tournaments')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
     <div class="section-title">Tournaments</div>
     <div class="section-rule"></div>
@@ -876,7 +868,6 @@
   </div>
 
   <!-- ── CHAMPIONS OF SHAME PANEL ── -->
-
   <div class="section-head" style="cursor:pointer;margin-top:2rem;" onclick="toggleSection('sec-champions')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
     <div class="section-title">Champions of Shame</div>
     <div class="section-rule"></div>
@@ -889,49 +880,45 @@
       <button id="cham-btn-factions" class="tab-btn"        onclick="switchChamTab('factions')">Factions</button>
     </div>
 
-```
-<!-- Players pane -->
-<div id="cham-players">
-  <div style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;line-height:1.5;">A celebration of everyone turning up and rolling dice. Rankings use quality-weighted win rates — bigger events count more. Attend 2+ events to leave provisional. <button onclick="toggleSection('sec-methodology')" style="background:none;border:none;color:var(--accent);font-size:0.78rem;cursor:pointer;padding:0;text-decoration:underline;">How rankings work ↓</button></div>
-  <!-- Methodology panel -->
-  <div id="sec-methodology" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;margin-bottom:1rem;font-size:0.82rem;color:var(--text);line-height:1.6;">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.06em;margin-bottom:10px;color:var(--text);">How Champions of Shame Rankings Work</div>
-    <div style="display:grid;gap:10px;">
-      <div>
-        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Event Quality Multiplier</div>
-        <div style="color:var(--muted);">Not all events are equal. A win at a 1,000-player GT carries more weight than a win at a 24-player club RTT. We scale each event using <span style="color:var(--text);font-family:monospace;">log(players) / log(100)</span> — so a 100-player event is 1.0×, a 1,000-player event is ~1.5×, and a 24-player event is ~0.7×.</div>
+    <!-- Players pane -->
+    <div id="cham-players">
+      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;line-height:1.5;">A celebration of everyone turning up and rolling dice. Rankings use quality-weighted win rates — bigger events count more. Attend 2+ events to leave provisional. <button onclick="toggleSection('sec-methodology')" style="background:none;border:none;color:var(--accent);font-size:0.78rem;cursor:pointer;padding:0;text-decoration:underline;">How rankings work ↓</button></div>
+      <!-- Methodology panel -->
+      <div id="sec-methodology" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;margin-bottom:1rem;font-size:0.82rem;color:var(--text);line-height:1.6;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.06em;margin-bottom:10px;color:var(--text);">How Champions of Shame Rankings Work</div>
+        <div style="display:grid;gap:10px;">
+          <div>
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Event Quality Multiplier</div>
+            <div style="color:var(--muted);">Not all events are equal. A win at a 1,000-player GT carries more weight than a win at a 24-player club RTT. We scale each event using <span style="color:var(--text);font-family:monospace;">log(players) / log(100)</span> — so a 100-player event is 1.0×, a 1,000-player event is ~1.5×, and a 24-player event is ~0.7×.</div>
+          </div>
+          <div>
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Bayesian Win Rate</div>
+            <div style="color:var(--muted);">Raw win rate rewards players who play fewer, carefully chosen events. We use a Bayesian adjustment to pull small samples toward the team average — the more you play, the more your actual rate matters.</div>
+          </div>
+          <div>
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Provisional Threshold</div>
+            <div style="color:var(--muted);">Players who have attended fewer than 2 events are listed as provisional. A single strong performance isn't enough to earn a ranked position.</div>
+          </div>
+          <div>
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Teams Events</div>
+            <div style="color:var(--muted);">Teams event results are excluded from the Singles, GT and RTT tabs. They appear only in the Teams tab and in each player's individual event history.</div>
+          </div>
+        </div>
       </div>
-      <div>
-        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Bayesian Win Rate</div>
-        <div style="color:var(--muted);">Raw win rate rewards players who play fewer, carefully chosen events. We use a Bayesian adjustment to pull small samples toward the team average — the more you play, the more your actual rate matters.</div>
-      </div>
-      <div>
-        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Provisional Threshold</div>
-        <div style="color:var(--muted);">Players who have attended fewer than 2 events are listed as provisional. A single strong performance isn't enough to earn a ranked position.</div>
-      </div>
-      <div>
-        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;">Teams Events</div>
-        <div style="color:var(--muted);">Teams event results are excluded from the Singles, GT and RTT tabs. They appear only in the Teams tab and in each player's individual event history.</div>
-      </div>
+      <div id="lb-filters" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;"></div>
+      <div class="leaderboard" id="leaderboard" style="max-height:600px;overflow-y:auto;border-radius:6px;"></div>
     </div>
-  </div>
-  <div id="lb-filters" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;"></div>
-  <div class="leaderboard" id="leaderboard" style="max-height:600px;overflow-y:auto;border-radius:6px;"></div>
-</div>
 
-<!-- Factions pane -->
-<div id="cham-factions" style="display:none;">
-  <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">How each army is performing across PSSN this season. Bayesian weighted — more games = more reliable.</div>
-  <div id="faction-stats"></div>
-</div>
-```
-
+    <!-- Factions pane -->
+    <div id="cham-factions" style="display:none;">
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">How each army is performing across PSSN this season. Bayesian weighted — more games = more reliable.</div>
+      <div id="faction-stats"></div>
+    </div>
   </div>
 
 </main>
 
 <!-- ── MEMBERS TAB ── -->
-
 <main class="page" id="tab-members" style="display:none;">
 
   <div class="section-head" style="margin-top:0;">
@@ -942,83 +929,80 @@
 
   <div style="display:grid;grid-template-columns:220px 1fr;gap:1.5rem;align-items:start;">
 
-```
-<!-- Left: name list -->
-<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
-  <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);">Who are you?</div>
-  <div style="max-height:520px;overflow-y:auto;" id="members-name-list"></div>
-</div>
-
-<!-- Right: profile panel -->
-<div id="members-profile" style="display:none;">
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-
-    <!-- Champions opt-in card -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;">
-      <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Champions of Shame</div>
-      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;line-height:1.5;">Control whether your ranking appears on the public leaderboard. Your rank is always calculated either way.</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <span id="members-cos-label" style="font-size:0.85rem;color:var(--text);">Show on leaderboard</span>
-        <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;cursor:pointer;">
-          <input type="checkbox" id="members-cos-toggle" onchange="handleCosToggle(this.checked)"
-            style="opacity:0;width:0;height:0;position:absolute;"/>
-          <span id="members-cos-track" style="position:absolute;inset:0;border-radius:12px;background:var(--surface2);border:1px solid var(--border);transition:all 0.2s;"></span>
-          <span id="members-cos-thumb" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:all 0.2s;"></span>
-        </label>
-      </div>
-      <div id="members-cos-status" style="font-size:0.72rem;margin-top:10px;display:none;"></div>
+    <!-- Left: name list -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);">Who are you?</div>
+      <div style="max-height:520px;overflow-y:auto;" id="members-name-list"></div>
     </div>
 
-    <!-- Quick actions card -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;">
-      <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Quick Actions</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <button onclick="openPlayerPanel(window._memberName)"
-          style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;text-align:left;padding-left:14px;"
-          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-          📊 View my player card
-        </button>
-        <button onclick="switchTab('submit')"
-          style="width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;text-align:left;padding-left:14px;"
-          onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
-          ✎ Submit a result
-        </button>
-        <button onclick="switchTab('calendar')"
-          style="width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;text-align:left;padding-left:14px;"
-          onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
-          📅 View calendar
-        </button>
-        <button onclick="clearMemberIdentity()"
-          style="width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;text-align:left;padding-left:14px;margin-top:4px;"
-          onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
-          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-          ✕ Not you? Clear selection
-        </button>
+    <!-- Right: profile panel -->
+    <div id="members-profile" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+
+        <!-- Champions opt-in card -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;">
+          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Champions of Shame</div>
+          <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;line-height:1.5;">Control whether your ranking appears on the public leaderboard. Your rank is always calculated either way.</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <span id="members-cos-label" style="font-size:0.85rem;color:var(--text);">Show on leaderboard</span>
+            <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;cursor:pointer;">
+              <input type="checkbox" id="members-cos-toggle" onchange="handleCosToggle(this.checked)"
+                style="opacity:0;width:0;height:0;position:absolute;"/>
+              <span id="members-cos-track" style="position:absolute;inset:0;border-radius:12px;background:var(--surface2);border:1px solid var(--border);transition:all 0.2s;"></span>
+              <span id="members-cos-thumb" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:all 0.2s;"></span>
+            </label>
+          </div>
+          <div id="members-cos-status" style="font-size:0.72rem;margin-top:10px;display:none;"></div>
+        </div>
+
+        <!-- Quick actions card -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;">
+          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Quick Actions</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button onclick="openPlayerPanel(window._memberName)"
+              style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;text-align:left;padding-left:14px;"
+              onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+              📊 View my player card
+            </button>
+            <button onclick="switchTab('submit')"
+              style="width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;text-align:left;padding-left:14px;"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
+              ✎ Submit a result
+            </button>
+            <button onclick="switchTab('calendar')"
+              style="width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;text-align:left;padding-left:14px;"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
+              📅 View calendar
+            </button>
+            <button onclick="clearMemberIdentity()"
+              style="width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;text-align:left;padding-left:14px;margin-top:4px;"
+              onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+              ✕ Not you? Clear selection
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Player card inline -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);">Season Stats</div>
+        <div id="members-stats-preview" style="padding:1.25rem;"></div>
       </div>
     </div>
 
-  </div>
-
-  <!-- Player card inline -->
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
-    <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);">Season Stats</div>
-    <div id="members-stats-preview" style="padding:1.25rem;"></div>
-  </div>
-</div>
-
-<!-- Right placeholder when no name selected -->
-<div id="members-placeholder" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3rem;text-align:center;color:var(--muted);">
-  <div style="font-size:2rem;margin-bottom:8px;">👈</div>
-  <div style="font-size:0.85rem;">Select your name to get started</div>
-</div>
-```
+    <!-- Right placeholder when no name selected -->
+    <div id="members-placeholder" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3rem;text-align:center;color:var(--muted);">
+      <div style="font-size:2rem;margin-bottom:8px;">👈</div>
+      <div style="font-size:0.85rem;">Select your name to get started</div>
+    </div>
 
   </div>
 
   <!-- Mobile: stack vertically below 700px -->
-
   <style>
     @media (max-width: 700px) {
       #tab-members > div:last-child { grid-template-columns: 1fr !important; }
@@ -1027,7 +1011,6 @@
   </style>
 
   <!-- Add member (admin only) -->
-
   <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);">
     <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Admin — Add New Member</div>
     <div id="member-admin-gate">
@@ -1061,7 +1044,6 @@
 </main>
 
 <!-- ── CALENDAR TAB ── -->
-
 <main class="page" id="tab-calendar" style="display:none;">
   <div class="section-head" style="margin-top:0;">
     <div class="section-title">UKTC Season Calendar</div>
@@ -1076,11 +1058,9 @@
 </main>
 
 <!-- ── CLUB TAB ── -->
-
 <main class="page" id="tab-club" style="display:none;">
 
   <!-- Event Countdown -->
-
   <div class="section-head" style="margin-top:0;">
     <div class="section-title">Next Event</div>
     <div class="section-rule"></div>
@@ -1088,7 +1068,6 @@
   <div id="event-countdown" style="margin-bottom:2rem;"></div>
 
   <!-- Season Timeline -->
-
   <div class="section-head" onclick="toggleSection('sec-timeline')" style="cursor:pointer;">
     <div class="section-title">Season Timeline</div>
     <div class="section-rule"></div>
@@ -1098,10 +1077,10 @@
     <div id="season-timeline" style="margin-bottom:2rem;"></div>
   </div>
 
+
 </main>
 
 <!-- ── MORE TAB ── -->
-
 <main class="page" id="tab-more" style="display:none;">
 
   <div class="section-head" style="margin-top:0;cursor:pointer;" onclick="toggleSection('sec-awards')">
@@ -1153,7 +1132,6 @@
 </main>
 
 <!-- ── LEAGUE TAB ── -->
-
 <main class="page" id="tab-league" style="display:none;">
 
   <div class="section-head" style="margin-top:0;">
@@ -1163,13 +1141,11 @@
   <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Round-robin pods. 2 points for a win. Top 2 from each pod qualify for the playoffs.</div>
 
   <!-- Pod tab bar — populated dynamically -->
-
   <div id="pod-tab-bar" style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:1.5rem;flex-wrap:wrap;"></div>
 
   <div id="league-content"><div style="font-size:0.85rem;color:var(--muted);">Loading league data...</div></div>
 
   <!-- League admin PIN gate -->
-
   <div style="margin-top:3rem;padding-top:2rem;border-top:2px solid var(--border);">
     <div style="font-size:0.72rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">League Admin</div>
     <div id="league-admin-gate">
@@ -1186,11 +1162,9 @@
 </main>
 
 <!-- ── SUBMIT TAB ── -->
-
 <main class="page" id="tab-submit" style="display:none;">
 
   <!-- PIN gate -->
-
   <div id="pin-gate" style="max-width:400px;margin:3rem auto 0;">
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2rem;text-align:center;">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:0.06em;color:var(--text);margin-bottom:0.5rem;">Team Access</div>
@@ -1204,432 +1178,431 @@
   </div>
 
   <!-- Main content (shown after PIN) -->
-
   <div id="submit-form" style="display:none;">
 
-```
-<!-- WHO'S GOING -->
-<div class="section-head" style="margin-top:0;cursor:pointer;" onclick="toggleSection('sec-whos-going')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-  <div>
-    <div class="section-title">Who's Going?</div>
-    <div id="sec-whos-going-hint" style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Sign up for upcoming events so your teammates know to look out for you — click to open</div>
-  </div>
-  <div class="section-rule"></div>
-  <span id="sec-whos-going-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
-</div>
-<div id="sec-whos-going" style="display:none;">
-  <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">Tick ✓ if you're going, ? if you're not sure. Visible to everyone with the team PIN.</div>
-  <!-- Sub-tabs -->
-  <div style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:1rem;">
-    <button id="wg-btn-individual" class="tab-btn active" onclick="switchWgTab('individual')">Individual Events</button>
-    <button id="wg-btn-teams"      class="tab-btn"        onclick="switchWgTab('teams')">ITT Teams</button>
-  </div>
-  <div id="wg-individual">
-    <div id="whos-going-grid"></div>
-  </div>
-  <div id="wg-teams" style="display:none;">
-    <div id="whos-going-teams-grid"></div>
-  </div>
-</div>
-
-<!-- WIZARD -->
-<div class="section-head" style="margin-top:2rem;cursor:pointer;" onclick="toggleSection('sec-submit-wizard')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-  <div class="section-title">Submit a Result</div>
-  <div class="section-rule"></div>
-  <span id="sec-submit-wizard-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
-</div>
-<div id="sec-submit-wizard">
-<div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Start by choosing what type of result you're submitting.</div>
-
-<!-- Result type selector -->
-<div style="display:flex;gap:8px;margin-bottom:1.5rem;max-width:500px;">
-  <button id="wiz-type-tournament" onclick="setWizardType('tournament')"
-    style="flex:1;padding:10px;background:var(--accent);border:1px solid var(--accent);border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;">
-    🏆 Tournament Result
-  </button>
-  <button id="wiz-type-league" onclick="setWizardType('league')"
-    style="flex:1;padding:10px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;">
-    ⚔️ League Game
-  </button>
-</div>
-
-<!-- Tournament wizard -->
-<div id="wiz-tournament-flow">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;">
-    <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Step 1 — Find or create event</div>
-    <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event name</label>
-    <input id="wiz-event-search" type="text" placeholder="e.g. Sheffield GT"
-      oninput="wizardSearchEvent(this.value)"
-      style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;margin-bottom:10px;"/>
-    <div id="wiz-search-results" style="display:none;margin-bottom:12px;"></div>
-    <div id="wiz-new-event-fields" style="display:none;">
-      <div style="font-size:0.75rem;color:#f0c040;margin-bottom:12px;padding:8px 10px;background:#2a2000;border:1px solid #f0c040;border-radius:4px;">
-        No existing event found — fill in the details to create it.
+    <!-- WHO'S GOING -->
+    <div class="section-head" style="margin-top:0;cursor:pointer;" onclick="toggleSection('sec-whos-going')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+      <div>
+        <div class="section-title">Who's Going?</div>
+        <div id="sec-whos-going-hint" style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Sign up for upcoming events so your teammates know to look out for you — click to open</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-        <div>
-          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Display date</label>
-          <input id="wiz-ev-date" type="text" placeholder="Mar 2026"
-            style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
-        </div>
-        <div>
-          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Sort date (YYYYMMDD)</label>
-          <input id="wiz-ev-sortdate" type="number" placeholder="20260328"
-            style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
-        </div>
+      <div class="section-rule"></div>
+      <span id="sec-whos-going-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+    </div>
+    <div id="sec-whos-going" style="display:none;">
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">Tick ✓ if you're going, ? if you're not sure. Visible to everyone with the team PIN.</div>
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:1rem;">
+        <button id="wg-btn-individual" class="tab-btn active" onclick="switchWgTab('individual')">Individual Events</button>
+        <button id="wg-btn-teams"      class="tab-btn"        onclick="switchWgTab('teams')">ITT Teams</button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
-        <div>
-          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Format</label>
-          <select id="wiz-ev-format"
-            style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
-            <option value="">Select...</option>
-            <option value="GT">GT</option>
-            <option value="RTT">RTT</option>
-            <option value="Teams">Teams / ITT</option>
-            <option value="Club">Club Event</option>
-            <option value="Championship">Championship</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Total players</label>
-          <input id="wiz-ev-players" type="number" placeholder="e.g. 180"
-            style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
-        </div>
-        <div>
-          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">BCP URL</label>
-          <input id="wiz-ev-bcp" type="text" placeholder="Optional"
-            style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
-        </div>
+      <div id="wg-individual">
+        <div id="whos-going-grid"></div>
       </div>
-      <button onclick="wizardCreateAndContinue()"
-        style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;">
-        Create event &amp; add my result →
+      <div id="wg-teams" style="display:none;">
+        <div id="whos-going-teams-grid"></div>
+      </div>
+    </div>
+
+    <!-- WIZARD -->
+    <div class="section-head" style="margin-top:2rem;cursor:pointer;" onclick="toggleSection('sec-submit-wizard')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+      <div class="section-title">Submit a Result</div>
+      <div class="section-rule"></div>
+      <span id="sec-submit-wizard-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
+    </div>
+    <div id="sec-submit-wizard">
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Start by choosing what type of result you're submitting.</div>
+
+    <!-- Result type selector -->
+    <div style="display:flex;gap:8px;margin-bottom:1.5rem;max-width:500px;">
+      <button id="wiz-type-tournament" onclick="setWizardType('tournament')"
+        style="flex:1;padding:10px;background:var(--accent);border:1px solid var(--accent);border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;">
+        🏆 Tournament Result
+      </button>
+      <button id="wiz-type-league" onclick="setWizardType('league')"
+        style="flex:1;padding:10px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;">
+        ⚔️ League Game
       </button>
     </div>
-  </div>
-</div>
 
-<!-- Step 2: Add result -->
-<div id="wizard-step2" style="display:none;max-width:500px;margin-top:1rem;">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div>
-        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);">Step 2 — Your result</div>
-        <div id="wiz-event-label" style="font-size:1rem;font-weight:400;color:var(--text);margin-top:3px;"></div>
-      </div>
-      <button onclick="wizardReset()" style="font-size:0.72rem;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;">← Change event</button>
-    </div>
-    <div style="display:grid;gap:12px;">
-      <div>
-        <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your name</label>
-        <select id="wiz-player"
-          style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-          <option value="">Select player...</option>
-        </select>
-      </div>
-      <div>
-        <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Faction played</label>
-        <select id="wiz-faction"
-          style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-          <option value="">Select faction...</option>
-        </select>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div>
-          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Placing</label>
-          <input id="wiz-placing" type="number" min="1" placeholder="e.g. 42"
-            style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-        </div>
-        <div>
-          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Total players</label>
-          <input id="wiz-total" type="number" min="1" placeholder="e.g. 180"
-            style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-        <div>
-          <label style="font-size:0.75rem;color:var(--win);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Wins</label>
-          <input id="wiz-wins" type="number" min="0" value="0"
-            style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-        </div>
-        <div>
-          <label style="font-size:0.75rem;color:var(--loss);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Losses</label>
-          <input id="wiz-losses" type="number" min="0" value="0"
-            style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-        </div>
-        <div>
-          <label style="font-size:0.75rem;color:var(--draw);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Draws</label>
-          <input id="wiz-draws" type="number" min="0" value="0"
-            style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-        </div>
-      </div>
-      <div>
-        <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Sub-team (Teams events only)</label>
-        <input id="wiz-subteam" type="text" placeholder="e.g. The Sh[a]meful Suspects"
-          style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-      </div>
-      <button onclick="wizardSubmitResult()"
-        style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;"
-        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-        Submit Result
-      </button>
-      <div id="wiz-message" style="font-size:0.82rem;display:none;"></div>
-    </div>
-  </div>
-</div>
-
-</div> <!-- end wiz-tournament-flow -->
-
-<!-- League game submission -->
-<div id="wiz-league-flow" style="display:none;max-width:500px;">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;">
-    <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">Submit a League Game</div>
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Your result will go to the admin for approval before appearing in the standings.</div>
-    <div style="display:grid;gap:12px;">
-      <div>
-        <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your pod</label>
-        <select id="lg-sub-pod" onchange="updateLeagueSubDropdowns()"
-          style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-          <option value="">Select your pod...</option>
-        </select>
-      </div>
-      <div>
-        <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your name</label>
-        <select id="lg-sub-me" onchange="updateLeagueSubOpponent()"
-          style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-          <option value="">Select pod first...</option>
-        </select>
-      </div>
-      <div>
-        <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Opponent</label>
-        <select id="lg-sub-opponent"
-          style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-          <option value="">Select your name first...</option>
-        </select>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div>
-          <label style="font-size:0.75rem;color:var(--win);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your Battle Points</label>
-          <input id="lg-sub-mybp" type="number" min="0" max="100" placeholder="e.g. 82"
-            style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-        </div>
-        <div>
-          <label style="font-size:0.75rem;color:var(--loss);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Opponent Battle Points</label>
-          <input id="lg-sub-oppbp" type="number" min="0" max="100" placeholder="e.g. 74"
-            style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-        </div>
-      </div>
-      <button onclick="submitLeagueGameAsPlayer()"
-        style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;"
-        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-        Submit League Result
-      </button>
-      <div id="lg-sub-message" style="font-size:0.82rem;display:none;"></div>
-    </div>
-  </div>
-</div> <!-- end sec-submit-wizard -->
-
-<!-- DATA CORRECTIONS -->
-<div class="section-head" style="margin-top:2rem;cursor:pointer;" onclick="toggleSection('sec-corrections')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-  <div>
-    <div class="section-title">Report a Data Error</div>
-    <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Something wrong with your stats? Flag it here for the admin to review</div>
-  </div>
-  <div class="section-rule"></div>
-  <span id="sec-corrections-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
-</div>
-<div id="sec-corrections" style="display:none;">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;max-width:500px;margin-top:8px;">
-    <div style="display:grid;gap:12px;">
-      <div>
-        <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your name</label>
-        <select id="corr-player" onchange="loadCorrectionEvents()"
-          style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-          <option value="">Select your name...</option>
-        </select>
-      </div>
-      <div id="corr-events-wrap" style="display:none;">
-        <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event</label>
-        <select id="corr-event" onchange="loadCorrectionCurrent()"
-          style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-          <option value="">Select event...</option>
-        </select>
-      </div>
-      <div id="corr-current-wrap" style="display:none;">
-        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Currently recorded as</div>
-        <div id="corr-current" style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-size:0.82rem;color:var(--text);"></div>
-      </div>
-      <div id="corr-fields-wrap" style="display:none;">
-        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">What should it be?</div>
-        <div style="display:grid;gap:10px;">
-          <div>
-            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Faction (if wrong)</label>
-            <select id="corr-faction"
-              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
-              <option value="">No change</option>
-            </select>
+    <!-- Tournament wizard -->
+    <div id="wiz-tournament-flow">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;">
+        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Step 1 — Find or create event</div>
+        <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event name</label>
+        <input id="wiz-event-search" type="text" placeholder="e.g. Sheffield GT"
+          oninput="wizardSearchEvent(this.value)"
+          style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;margin-bottom:10px;"/>
+        <div id="wiz-search-results" style="display:none;margin-bottom:12px;"></div>
+        <div id="wiz-new-event-fields" style="display:none;">
+          <div style="font-size:0.75rem;color:#f0c040;margin-bottom:12px;padding:8px 10px;background:#2a2000;border:1px solid #f0c040;border-radius:4px;">
+            No existing event found — fill in the details to create it.
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
             <div>
-              <label style="font-size:0.72rem;color:var(--win);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Wins</label>
-              <input id="corr-w" type="number" min="0" placeholder="—"
+              <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Display date</label>
+              <input id="wiz-ev-date" type="text" placeholder="Mar 2026"
                 style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
             </div>
             <div>
-              <label style="font-size:0.72rem;color:var(--loss);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Losses</label>
-              <input id="corr-l" type="number" min="0" placeholder="—"
+              <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Sort date (YYYYMMDD)</label>
+              <input id="wiz-ev-sortdate" type="number" placeholder="20260328"
+                style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Format</label>
+              <select id="wiz-ev-format"
+                style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
+                <option value="">Select...</option>
+                <option value="GT">GT</option>
+                <option value="RTT">RTT</option>
+                <option value="Teams">Teams / ITT</option>
+                <option value="Club">Club Event</option>
+                <option value="Championship">Championship</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Total players</label>
+              <input id="wiz-ev-players" type="number" placeholder="e.g. 180"
                 style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
             </div>
             <div>
-              <label style="font-size:0.72rem;color:var(--draw);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Draws</label>
-              <input id="corr-d" type="number" min="0" placeholder="—"
+              <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">BCP URL</label>
+              <input id="wiz-ev-bcp" type="text" placeholder="Optional"
                 style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
             </div>
           </div>
-          <div>
-            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Placing (if wrong)</label>
-            <input id="corr-placing" type="number" min="1" placeholder="—"
-              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
-          </div>
-          <div>
-            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Note <span style="color:var(--faint);text-transform:none;">(explain what's wrong)</span></label>
-            <textarea id="corr-note" rows="2" placeholder="e.g. My placing was 34 not 41, BCP link shows correct result"
-              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;resize:vertical;"></textarea>
-          </div>
-          <button onclick="submitCorrection()"
-            style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;"
-            onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-            Submit Correction
+          <button onclick="wizardCreateAndContinue()"
+            style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;">
+            Create event &amp; add my result →
           </button>
-          <div id="corr-message" style="font-size:0.82rem;display:none;"></div>
         </div>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- ADMIN SECTION -->
-<div style="margin-top:3rem;padding-top:2rem;border-top:2px solid var(--border);">
-  <div style="font-size:0.72rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Admin Access</div>
-  <div id="admin-gate">
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Enter admin PIN to manage submissions and events.</div>
-    <input type="password" id="admin-pin-input" maxlength="8" placeholder="Admin PIN"
-      autocomplete="new-password"
-      style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;width:160px;letter-spacing:0.2em;outline:none;"
-      oninput="if(this.value.length>=4)checkAdminPin(this.value)"/>
-    <div id="admin-pin-error" style="font-size:0.75rem;color:var(--loss);display:none;margin-top:6px;">Incorrect admin PIN</div>
-  </div>
-  <div id="admin-content" style="display:none;">
-
-    <!-- Pending approvals -->
-    <div class="section-head" style="margin-top:1.5rem;">
-      <div class="section-title">Pending Approvals</div>
-      <div class="section-rule"></div>
-    </div>
-    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Results submitted by team members waiting for your approval.</div>
-    <div id="sheet-submissions"></div>
-
-    <!-- Pending corrections -->
-    <div class="section-head" style="margin-top:2rem;">
-      <div class="section-title">Pending Corrections</div>
-      <div class="section-rule"></div>
-    </div>
-    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Data error reports submitted by members. Review, apply the fix to the HTML, then dismiss.</div>
-    <div id="admin-corrections"></div>
-
-    <!-- Pending event submissions -->
-    <div class="section-head" style="margin-top:2rem;">
-      <div class="section-title">Pending Event Submissions</div>
-      <div class="section-rule"></div>
-    </div>
-    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">New events submitted by members. Approve to create the event and add the result, or dismiss.</div>
-    <div id="admin-event-submissions"></div>
-
-    <!-- Add event -->
-    <div class="section-head" style="margin-top:2.5rem;">
-      <div class="section-title">Add Full Event</div>
-      <div class="section-rule"></div>
-    </div>
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Add a completed event with all PSSN results at once. Goes live immediately.</div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;max-width:600px;">
-      <div style="display:grid;gap:12px;margin-bottom:1.5rem;">
-        <div>
-          <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event name</label>
-          <input id="ev-name" type="text" placeholder="e.g. Sheffield GT" oninput="checkEventDuplicate(this.value)"
-            style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-          <div id="ev-duplicate-warning" style="display:none;font-size:0.75rem;color:#f0c040;margin-top:5px;"></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <!-- Step 2: Add result -->
+    <div id="wizard-step2" style="display:none;max-width:500px;margin-top:1rem;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
           <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Display date</label>
-            <input id="ev-date" type="text" placeholder="Mar 2026"
-              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);">Step 2 — Your result</div>
+            <div id="wiz-event-label" style="font-size:1rem;font-weight:400;color:var(--text);margin-top:3px;"></div>
           </div>
-          <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Sort date (YYYYMMDD)</label>
-            <input id="ev-sortdate" type="number" placeholder="20260328"
-              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-          </div>
+          <button onclick="wizardReset()" style="font-size:0.72rem;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;">← Change event</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div style="display:grid;gap:12px;">
           <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Format</label>
-            <select id="ev-format"
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your name</label>
+            <select id="wiz-player"
               style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-              <option value="">Select...</option>
-              <option value="GT">GT</option>
-              <option value="RTT">RTT</option>
-              <option value="Teams">Teams / ITT</option>
-              <option value="Club">Club Event</option>
-              <option value="Championship">Championship</option>
+              <option value="">Select player...</option>
             </select>
           </div>
           <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Total players</label>
-            <input id="ev-total-players" type="number" min="1" placeholder="e.g. 180"
-              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Faction played</label>
+            <select id="wiz-faction"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select faction...</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Placing</label>
+              <input id="wiz-placing" type="number" min="1" placeholder="e.g. 42"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            </div>
+            <div>
+              <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Total players</label>
+              <input id="wiz-total" type="number" min="1" placeholder="e.g. 180"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <div>
+              <label style="font-size:0.75rem;color:var(--win);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Wins</label>
+              <input id="wiz-wins" type="number" min="0" value="0"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            </div>
+            <div>
+              <label style="font-size:0.75rem;color:var(--loss);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Losses</label>
+              <input id="wiz-losses" type="number" min="0" value="0"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            </div>
+            <div>
+              <label style="font-size:0.75rem;color:var(--draw);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Draws</label>
+              <input id="wiz-draws" type="number" min="0" value="0"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            </div>
           </div>
           <div>
-            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">BCP URL</label>
-            <input id="ev-bcp-url" type="text" placeholder="Optional"
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Sub-team (Teams events only)</label>
+            <input id="wiz-subteam" type="text" placeholder="e.g. The Sh[a]meful Suspects"
               style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <button onclick="wizardSubmitResult()"
+            style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;"
+            onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+            Submit Result
+          </button>
+          <div id="wiz-message" style="font-size:0.82rem;display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+    </div> <!-- end wiz-tournament-flow -->
+
+    <!-- League game submission -->
+    <div id="wiz-league-flow" style="display:none;max-width:500px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;">
+        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">Submit a League Game</div>
+        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Your result will go to the admin for approval before appearing in the standings.</div>
+        <div style="display:grid;gap:12px;">
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your pod</label>
+            <select id="lg-sub-pod" onchange="updateLeagueSubDropdowns()"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select your pod...</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your name</label>
+            <select id="lg-sub-me" onchange="updateLeagueSubOpponent()"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select pod first...</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Opponent</label>
+            <select id="lg-sub-opponent"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select your name first...</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <label style="font-size:0.75rem;color:var(--win);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your Battle Points</label>
+              <input id="lg-sub-mybp" type="number" min="0" max="100" placeholder="e.g. 82"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            </div>
+            <div>
+              <label style="font-size:0.75rem;color:var(--loss);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Opponent Battle Points</label>
+              <input id="lg-sub-oppbp" type="number" min="0" max="100" placeholder="e.g. 74"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            </div>
+          </div>
+          <button onclick="submitLeagueGameAsPlayer()"
+            style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;"
+            onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+            Submit League Result
+          </button>
+          <div id="lg-sub-message" style="font-size:0.82rem;display:none;"></div>
+        </div>
+      </div>
+    </div> <!-- end sec-submit-wizard -->
+
+    <!-- DATA CORRECTIONS -->
+    <div class="section-head" style="margin-top:2rem;cursor:pointer;" onclick="toggleSection('sec-corrections')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+      <div>
+        <div class="section-title">Report a Data Error</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Something wrong with your stats? Flag it here for the admin to review</div>
+      </div>
+      <div class="section-rule"></div>
+      <span id="sec-corrections-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+    </div>
+    <div id="sec-corrections" style="display:none;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;max-width:500px;margin-top:8px;">
+        <div style="display:grid;gap:12px;">
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Your name</label>
+            <select id="corr-player" onchange="loadCorrectionEvents()"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select your name...</option>
+            </select>
+          </div>
+          <div id="corr-events-wrap" style="display:none;">
+            <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event</label>
+            <select id="corr-event" onchange="loadCorrectionCurrent()"
+              style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="">Select event...</option>
+            </select>
+          </div>
+          <div id="corr-current-wrap" style="display:none;">
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Currently recorded as</div>
+            <div id="corr-current" style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-size:0.82rem;color:var(--text);"></div>
+          </div>
+          <div id="corr-fields-wrap" style="display:none;">
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">What should it be?</div>
+            <div style="display:grid;gap:10px;">
+              <div>
+                <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Faction (if wrong)</label>
+                <select id="corr-faction"
+                  style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
+                  <option value="">No change</option>
+                </select>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                <div>
+                  <label style="font-size:0.72rem;color:var(--win);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Wins</label>
+                  <input id="corr-w" type="number" min="0" placeholder="—"
+                    style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+                </div>
+                <div>
+                  <label style="font-size:0.72rem;color:var(--loss);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Losses</label>
+                  <input id="corr-l" type="number" min="0" placeholder="—"
+                    style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+                </div>
+                <div>
+                  <label style="font-size:0.72rem;color:var(--draw);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Draws</label>
+                  <input id="corr-d" type="number" min="0" placeholder="—"
+                    style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+                </div>
+              </div>
+              <div>
+                <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Placing (if wrong)</label>
+                <input id="corr-placing" type="number" min="1" placeholder="—"
+                  style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+              </div>
+              <div>
+                <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Note <span style="color:var(--faint);text-transform:none;">(explain what's wrong)</span></label>
+                <textarea id="corr-note" rows="2" placeholder="e.g. My placing was 34 not 41, BCP link shows correct result"
+                  style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;resize:vertical;"></textarea>
+              </div>
+              <button onclick="submitCorrection()"
+                style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;"
+                onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                Submit Correction
+              </button>
+              <div id="corr-message" style="font-size:0.82rem;display:none;"></div>
+            </div>
           </div>
         </div>
       </div>
-      <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-top:1rem;border-top:1px solid var(--border);">PSSN Results</div>
-      <div id="ev-results-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
-      <button onclick="addResultRow()"
-        style="width:100%;padding:8px;background:transparent;border:1px dashed var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;"
-        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-        + Add player result
-      </button>
-      <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
-        <button onclick="submitEvent()"
-          style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;"
-          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-          Save Event to Database
-        </button>
-        <div id="ev-message" style="margin-top:8px;font-size:0.82rem;display:none;"></div>
+    </div>
+
+    <!-- ADMIN SECTION -->
+    <div style="margin-top:3rem;padding-top:2rem;border-top:2px solid var(--border);">
+      <div style="font-size:0.72rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Admin Access</div>
+      <div id="admin-gate">
+        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Enter admin PIN to manage submissions and events.</div>
+        <input type="password" id="admin-pin-input" maxlength="8" placeholder="Admin PIN"
+          autocomplete="new-password"
+          style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;width:160px;letter-spacing:0.2em;outline:none;"
+          oninput="if(this.value.length>=4)checkAdminPin(this.value)"/>
+        <div id="admin-pin-error" style="font-size:0.75rem;color:var(--loss);display:none;margin-top:6px;">Incorrect admin PIN</div>
+      </div>
+      <div id="admin-content" style="display:none;">
+
+        <!-- Pending approvals -->
+        <div class="section-head" style="margin-top:1.5rem;">
+          <div class="section-title">Pending Approvals</div>
+          <div class="section-rule"></div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Results submitted by team members waiting for your approval.</div>
+        <div id="sheet-submissions"></div>
+
+        <!-- Pending corrections -->
+        <div class="section-head" style="margin-top:2rem;">
+          <div class="section-title">Pending Corrections</div>
+          <div class="section-rule"></div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Data error reports submitted by members. Review, apply the fix to the HTML, then dismiss.</div>
+        <div id="admin-corrections"></div>
+
+        <!-- Pending event submissions -->
+        <div class="section-head" style="margin-top:2rem;">
+          <div class="section-title">Pending Event Submissions</div>
+          <div class="section-rule"></div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">New events submitted by members. Approve to create the event and add the result, or dismiss.</div>
+        <div id="admin-event-submissions"></div>
+
+        <!-- Add event -->
+        <div class="section-head" style="margin-top:2.5rem;">
+          <div class="section-title">Add Full Event</div>
+          <div class="section-rule"></div>
+        </div>
+        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Add a completed event with all PSSN results at once. Goes live immediately.</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;max-width:600px;">
+          <div style="display:grid;gap:12px;margin-bottom:1.5rem;">
+            <div>
+              <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event name</label>
+              <input id="ev-name" type="text" placeholder="e.g. Sheffield GT" oninput="checkEventDuplicate(this.value)"
+                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+              <div id="ev-duplicate-warning" style="display:none;font-size:0.75rem;color:#f0c040;margin-top:5px;"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Display date</label>
+                <input id="ev-date" type="text" placeholder="Mar 2026"
+                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+              </div>
+              <div>
+                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Sort date (YYYYMMDD)</label>
+                <input id="ev-sortdate" type="number" placeholder="20260328"
+                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+              <div>
+                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Format</label>
+                <select id="ev-format"
+                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+                  <option value="">Select...</option>
+                  <option value="GT">GT</option>
+                  <option value="RTT">RTT</option>
+                  <option value="Teams">Teams / ITT</option>
+                  <option value="Club">Club Event</option>
+                  <option value="Championship">Championship</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Total players</label>
+                <input id="ev-total-players" type="number" min="1" placeholder="e.g. 180"
+                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+              </div>
+              <div>
+                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">BCP URL</label>
+                <input id="ev-bcp-url" type="text" placeholder="Optional"
+                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-top:1rem;border-top:1px solid var(--border);">PSSN Results</div>
+          <div id="ev-results-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+          <button onclick="addResultRow()"
+            style="width:100%;padding:8px;background:transparent;border:1px dashed var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;"
+            onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+            + Add player result
+          </button>
+          <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
+            <button onclick="submitEvent()"
+              style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;"
+              onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+              Save Event to Database
+            </button>
+            <div id="ev-message" style="margin-top:8px;font-size:0.82rem;display:none;"></div>
+          </div>
+        </div>
+
+        <!-- Events in DB -->
+        <div class="section-head" style="margin-top:2rem;">
+          <div class="section-title">Events in Database</div>
+          <div class="section-rule"></div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Events added via this form. Click Delete to remove.</div>
+        <div id="ev-db-list"></div>
+
       </div>
     </div>
-
-    <!-- Events in DB -->
-    <div class="section-head" style="margin-top:2rem;">
-      <div class="section-title">Events in Database</div>
-      <div class="section-rule"></div>
-    </div>
-    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Events added via this form. Click Delete to remove.</div>
-    <div id="ev-db-list"></div>
-
-  </div>
-</div>
-```
 
   </div>
 
 </main>
+
+
 
 <div class="panel-overlay" id="panel-overlay" onclick="closePanel()"></div>
 <div class="player-panel" id="player-panel">
@@ -1649,6 +1622,7 @@
   <span id="footer-version" style="color:var(--faint);"></span>
   <span>Results link to Best Coast Pairings · Submit results via the Submit tab</span>
 </footer>
+
 
 <script>
 const D = JSON.parse(document.getElementById('data').textContent);
@@ -1730,10 +1704,10 @@ async function loadApprovedSubmissions() {
               results: (dbEv.results || []).map(r => ({
                 player: r.player_name,
                 faction: r.faction,
-                placing: r.placing || 0,
-                w: r.wins || 0,
-                l: r.losses || 0,
-                d: r.draws || 0,
+                placing: parseInt(r.place || r.placing || 0, 10),
+                w: parseInt(r.wins || 0, 10),
+                l: parseInt(r.losses || 0, 10),
+                d: parseInt(r.draws || 0, 10),
                 subteam: r.subteam || null,
                 shadow: r.shadow || false,
                 dropped: r.dropped || false,
@@ -2649,12 +2623,19 @@ formatOrder.forEach(fmt => {
     } else {
       const sorted = [...ev.results].sort((a,b) => a.placing - b.placing);
       const rows = sorted.map(r => {
-        if (r.dropped) return `<tr>
-          <td class="player-cell">${r.player}</td>
-          <td>${r.faction}</td>
-          <td class="placing-cell" style="color:var(--muted)">—</td>
-          <td class="wld-cell"><span style="font-size:0.72rem;color:var(--muted)">Dropped</span></td>
-        </tr>`;
+        if (r.dropped) {
+          const outOf = ev.totalPlayers ? ` <span style="font-size:0.7rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:300">/ ${ev.totalPlayers}</span>` : '';
+          return `<tr style="opacity:0.6;">
+            <td class="player-cell"><span class="player-link" onclick="openPlayerPanel('${r.player}')">${r.player}</span> <span style="font-size:0.62rem;color:var(--loss);border:1px solid var(--loss);padding:1px 5px;border-radius:3px;margin-left:4px;">Dropped</span></td>
+            <td>${r.faction}</td>
+            <td class="placing-cell" style="color:var(--muted)">${r.placing > 0 ? r.placing + (ev.totalPlayers ? ' / ' + ev.totalPlayers : '') : '—'}</td>
+            <td class="wld-cell">
+              <span class="rec-badge rec-w">${r.w}W</span>
+              <span class="rec-badge rec-l">${r.l}L</span>
+              ${r.d > 0 ? `<span class="rec-badge rec-d">${r.d}D</span>` : ''}
+            </td>
+          </tr>`;
+        }
         const isTop = r.placing <= Math.ceil(ev.totalPlayers * 0.1);
         const placingCls = isTop ? ' placing-top' : '';
         const outOf = ev.totalPlayers ? ` <span style="font-size:0.7rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:300">/ ${ev.totalPlayers}</span>` : '';
@@ -6318,6 +6299,5 @@ window._memberName = localStorage.getItem('pssn_member') || null;
 
 initSite();
 </script>
-
 </body>
 </html>
