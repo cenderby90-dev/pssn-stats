@@ -1187,81 +1187,34 @@
         <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">New events submitted by members. Approve to create the event and add the result, or dismiss.</div>
         <div id="admin-event-submissions"></div>
 
-        <!-- Add event -->
-        <div class="section-head" style="margin-top:2.5rem;">
-          <div class="section-title">Add Full Event</div>
-          <div class="section-rule"></div>
-        </div>
-        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Add a completed event with all PSSN results at once. Goes live immediately.</div>
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;max-width:600px;">
-          <div style="display:grid;gap:12px;margin-bottom:1.5rem;">
-            <div>
-              <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Event name</label>
-              <input id="ev-name" type="text" placeholder="e.g. Sheffield GT" oninput="checkEventDuplicate(this.value)"
-                style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-              <div id="ev-duplicate-warning" style="display:none;font-size:0.75rem;color:#f0c040;margin-top:5px;"></div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <div>
-                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Display date</label>
-                <input id="ev-date" type="text" placeholder="Mar 2026"
-                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-              </div>
-              <div>
-                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Sort date (YYYYMMDD)</label>
-                <input id="ev-sortdate" type="number" placeholder="20260328"
-                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-              <div>
-                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Format</label>
-                <select id="ev-format"
-                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-                  <option value="">Select...</option>
-                  <option value="GT">GT</option>
-                  <option value="RTT">RTT</option>
-                  <option value="Teams">Teams / ITT</option>
-                  <option value="Club">Club Event</option>
-                  <option value="Championship">Championship</option>
-                </select>
-              </div>
-              <div>
-                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Total players</label>
-                <input id="ev-total-players" type="number" min="1" placeholder="e.g. 180"
-                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-              </div>
-              <div>
-                <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">BCP URL</label>
-                <input id="ev-bcp-url" type="text" placeholder="Optional"
-                  style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-              </div>
-            </div>
-          </div>
-          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-top:1rem;border-top:1px solid var(--border);">PSSN Results</div>
-          <div id="ev-results-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
-          <button onclick="addResultRow()"
-            style="width:100%;padding:8px;background:transparent;border:1px dashed var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;"
-            onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-            + Add player result
-          </button>
-          <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
-            <button onclick="submitEvent()"
-              style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;"
-              onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-              Save Event to Database
-            </button>
-            <div id="ev-message" style="margin-top:8px;font-size:0.82rem;display:none;"></div>
-          </div>
-        </div>
-
         <!-- Events in DB -->
         <div class="section-head" style="margin-top:2rem;">
           <div class="section-title">Events in Database</div>
           <div class="section-rule"></div>
         </div>
-        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Events added via this form. Click Delete to remove.</div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;">All approved events. Click to expand results, edit individual records, or delete.</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;padding:8px 12px;background:var(--surface2);border-radius:4px;border-left:3px solid var(--accent);">
+          💡 To add a new event with multiple results, use the browser console bookmarklet — it's much faster than a form. Ask Chris for the snippet.
+        </div>
+        <!-- Events filter/sort -->
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <input id="ev-db-search" type="text" placeholder="Search events..."
+            oninput="filterDbEvents()"
+            style="flex:1;min-width:140px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+          <select id="ev-db-format" onchange="filterDbEvents()"
+            style="padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
+            <option value="">All formats</option>
+            <option value="GT">GT</option>
+            <option value="RTT">RTT</option>
+            <option value="Teams">Teams</option>
+          </select>
+          <select id="ev-db-sort" onchange="filterDbEvents()"
+            style="padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
+            <option value="date-desc">Newest first</option>
+            <option value="date-asc">Oldest first</option>
+            <option value="name">Name A–Z</option>
+          </select>
+        </div>
         <div id="ev-db-list"></div>
 
         <!-- Member Manager -->
@@ -1283,9 +1236,14 @@
           </div>
           <div id="member-add-message" style="font-size:0.78rem;display:none;margin-bottom:10px;"></div>
 
-          <!-- Member list -->
-          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">
-            All Members (<span id="member-count">0</span>)
+          <!-- Member search + list -->
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">
+              All Members (<span id="member-count">0</span>)
+            </div>
+            <input id="member-search" type="text" placeholder="Filter members..."
+              oninput="filterMemberList()"
+              style="padding:5px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.78rem;width:140px;"/>
           </div>
           <div id="member-list" style="max-height:400px;overflow-y:auto;"></div>
         </div>
@@ -1439,12 +1397,12 @@ async function loadPlayers() {
 }
 
 async function initSite() {
-  await loadPlayers();              // load players from DB first
+  await loadPlayers();
   await loadApprovedSubmissions();
+  await loadAttendance();          // must be before rebuildStats so CoS optins render correctly
   rebuildStats();
   buildNowPanel();
   loadLeagueData().then(() => { leagueLoaded = true; });
-  // Show badge if admin has cached PIN from previous session
   if (sessionStorage.getItem('pssn_admin_pin')) updatePendingBadge();
 }
 
@@ -1601,20 +1559,38 @@ function getRanked(filter) {
 function renderTeamsLeaderboard() {
   const lbEl = document.getElementById('leaderboard');
 
-  // collect all subteams across all teams events
+  // Build subteam map from r.subteam on results — ev.subteams doesn't exist for DB events
   const subteamMap = {};
   getActiveEvents().filter(ev => ev.format === 'Teams').forEach(ev => {
-    if (!ev.subteams) return;
-    ev.subteams.forEach(st => {
-      const key = st.name;
-      if (!subteamMap[key]) subteamMap[key] = { name: key, events: [], bestPlacing: Infinity, totalW: 0, totalL: 0, totalD: 0, totalGames: 0 };
-      subteamMap[key].events.push({ ev, st });
-      subteamMap[key].totalW += st.w;
-      subteamMap[key].totalL += st.l;
-      subteamMap[key].totalD += st.d;
-      subteamMap[key].totalGames += st.w + st.l + st.d;
-      const pct = st.placing / ev.totalTeams;
-      if (pct < subteamMap[key].bestPlacing) subteamMap[key].bestPlacing = pct;
+    // Group results by subteam name
+    const subteamGroups = {};
+    (ev.results || []).forEach(r => {
+      if (!r.subteam) return;
+      if (!subteamGroups[r.subteam]) subteamGroups[r.subteam] = [];
+      subteamGroups[r.subteam].push(r);
+    });
+
+    Object.entries(subteamGroups).forEach(([stName, players]) => {
+      // Calculate team W/L/D from individual results
+      // All players in same subteam have same placing — use first player's placing
+      const placing = players[0]?.placing || 0;
+      const totalW = players.reduce((a, r) => a + (r.w || 0), 0);
+      const totalL = players.reduce((a, r) => a + (r.l || 0), 0);
+      const totalD = players.reduce((a, r) => a + (r.d || 0), 0);
+      // Team record = individual game totals (each player plays separately)
+      const stMeta = { name: stName, placing, w: totalW, l: totalL, d: totalD };
+
+      if (!subteamMap[stName]) subteamMap[stName] = {
+        name: stName, events: [], bestPlacing: Infinity,
+        totalW: 0, totalL: 0, totalD: 0, totalGames: 0
+      };
+      subteamMap[stName].events.push({ ev, st: stMeta });
+      subteamMap[stName].totalW += totalW;
+      subteamMap[stName].totalL += totalL;
+      subteamMap[stName].totalD += totalD;
+      subteamMap[stName].totalGames += totalW + totalL + totalD;
+      const pct = ev.totalTeams ? placing / ev.totalTeams : 1;
+      if (pct < subteamMap[stName].bestPlacing) subteamMap[stName].bestPlacing = pct;
     });
   });
 
@@ -2292,12 +2268,23 @@ formatOrder.forEach(fmt => {
 
     let bodyHtml = '';
 
-    if (isTeams && ev.subteams) {
+    if (isTeams) {
+      // Build subteam groups from r.subteam on results — ev.subteams doesn't exist for DB events
       const groups = {};
-      ev.subteams.forEach(st => { groups[st.name] = { meta: st, players: [] }; });
-      ev.results.forEach(r => {
-        if (!groups[r.subteam]) groups[r.subteam] = { meta: { name: r.subteam, placing: r.placing, w: 0, l: 0, d: 0 }, players: [] };
-        groups[r.subteam].players.push(r);
+      (ev.results || []).forEach(r => {
+        const key = r.subteam || '_no_subteam';
+        if (!groups[key]) groups[key] = {
+          meta: { name: r.subteam || 'Unknown', placing: r.placing || 0, w: 0, l: 0, d: 0 },
+          players: []
+        };
+        groups[key].players.push(r);
+        groups[key].meta.w += r.w || 0;
+        groups[key].meta.l += r.l || 0;
+        groups[key].meta.d += r.d || 0;
+        // placing is same for all players in subteam — keep highest (lowest number)
+        if (r.placing && (!groups[key].meta.placing || r.placing < groups[key].meta.placing)) {
+          groups[key].meta.placing = r.placing;
+        }
       });
       bodyHtml = Object.values(groups).sort((a,b) => a.meta.placing - b.meta.placing).map(g => {
         const st = g.meta;
@@ -3279,7 +3266,7 @@ async function loadResultSubmissions() {
               ${s.subteam ? ` · <span style="color:var(--text);">${s.subteam}</span>` : ''}
             </div>
             <div style="font-size:0.65rem;color:var(--faint);margin-top:2px;">
-              Submitted ${new Date(s.submitted_at).toLocaleDateString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+              Submitted ${new Date(s.submitted_at).toLocaleDateString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} · <span style="color:var(--accent);">${timeAgo(s.submitted_at)}</span>
             </div>
           </div>
           <div style="display:flex;gap:6px;flex-shrink:0;">
@@ -3304,6 +3291,7 @@ async function loadResultSubmissions() {
 }
 
 async function approveResultSubmission(id) {
+  if (!confirm('Approve this result and add it to the stats?')) return;
   const msg = document.getElementById(`sub-msg-${id}`);
   if (msg) { msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)'; msg.textContent='Approving...'; }
   try {
@@ -3341,19 +3329,23 @@ async function rejectResultSubmission(id) {
 }
 
 // ── Pending badge — shows count on Submissions tab button ──
+let _badgeLastFetch = 0;
 async function updatePendingBadge() {
   const badge = document.getElementById('pending-badge');
   if (!badge) return;
+  // Only fetch if we have an admin PIN — otherwise badge is irrelevant
+  if (!getAdminPin()) return;
   try {
-    // Count pending submissions + pending corrections + pending event submissions
-    const [subRes] = await Promise.all([
-      fetch(`${API}/submissions?pin=${encodeURIComponent(getAdminPin())}`)
-    ]);
+    const subRes = await fetch(`${API}/submissions?pin=${encodeURIComponent(getAdminPin())}`);
     const subData = await subRes.json();
     const pendingSubs = (subData.submissions || []).filter(s => !s.approved).length;
 
-    // Count corrections from attendanceData
-    await loadAttendance();
+    // Use cached attendanceData if fresh (within 60s), else fetch
+    const now = Date.now();
+    if (!Object.keys(attendanceData).length || now - _badgeLastFetch > 60000) {
+      await loadAttendance();
+      _badgeLastFetch = now;
+    }
     const pendingCorrs = Object.entries(attendanceData)
       .filter(([k, v]) => {
         if (!k.startsWith('_corr_') && !k.startsWith('_pending_event_')) return false;
@@ -3361,12 +3353,8 @@ async function updatePendingBadge() {
       }).length;
 
     const total = pendingSubs + pendingCorrs;
-    if (total > 0) {
-      badge.style.display = 'inline';
-      badge.textContent = total;
-    } else {
-      badge.style.display = 'none';
-    }
+    badge.style.display = total > 0 ? 'inline' : 'none';
+    if (total > 0) badge.textContent = total;
   } catch(e) {
     badge.style.display = 'none';
   }
@@ -3407,7 +3395,7 @@ async function loadAdminCorrections() {
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
           <div>
             <div style="font-size:0.9rem;font-weight:400;color:var(--text);">${c.player} — <span style="color:var(--muted);">${c.evName}</span></div>
-            <div style="font-size:0.72rem;color:var(--faint);margin-top:2px;">Submitted ${date}</div>
+            <div style="font-size:0.72rem;color:var(--faint);margin-top:2px;">Submitted ${date} · <span style="color:var(--accent);">${timeAgo(c.submittedAt)}</span></div>
           </div>
           <div style="display:flex;gap:6px;">
             <button onclick="approveCorrection('${keyStr}')"
@@ -3478,19 +3466,21 @@ async function approveCorrection(key) {
     }
 
     // 2. Apply change to D.events in memory for immediate UI update
+    // D.events uses DB field names (player_name, wins, losses, draws, place)
     const ev = D.events.find(e => e.name === evName);
     if (ev) {
-      const r = ev.results.find(r => r.player === player);
+      const r = ev.results.find(r => r.player_name === player);
       if (r) {
         if (proposed.faction !== undefined) r.faction = proposed.faction;
-        if (proposed.w !== undefined) r.w = proposed.w;
-        if (proposed.l !== undefined) r.l = proposed.l;
-        if (proposed.d !== undefined) r.d = proposed.d;
-        if (proposed.placing !== undefined) r.placing = proposed.placing;
+        if (proposed.w !== undefined) r.wins = proposed.w;
+        if (proposed.l !== undefined) r.losses = proposed.l;
+        if (proposed.d !== undefined) r.draws = proposed.d;
+        if (proposed.placing !== undefined) r.place = proposed.placing;
       }
     }
 
-    // 3. Rebuild stats
+    // 3. Force reload from DB to ensure stats are accurate, then rebuild
+    await loadApprovedSubmissions();
     rebuildStats();
 
     // 4. Mark as approved in attendance DB
@@ -3567,7 +3557,7 @@ async function loadAdminEventSubmissions() {
             <div style="font-size:0.78rem;color:var(--text);margin-top:6px;">
               Submitted by <strong>${r.player_name||'?'}</strong> — ${r.faction||'?'} · ${r.placing||'?'}th · ${r.wins||0}W ${r.losses||0}L ${r.draws||0}D
             </div>
-            <div style="font-size:0.65rem;color:var(--faint);margin-top:2px;">Submitted ${date}</div>
+            <div style="font-size:0.65rem;color:var(--faint);margin-top:2px;">Submitted ${date} · <span style="color:var(--accent);">${timeAgo(s.submittedAt)}</span></div>
           </div>
           <div style="display:flex;gap:6px;flex-shrink:0;">
             <button onclick="approveEventSubmission('${keyStr}')"
@@ -5150,11 +5140,8 @@ function wizardSearchEvent(val) {
     return;
   }
 
-  // search JSON events + DB events
-  const allEvents = [
-    ...D.events.map(e => ({ name: e.name, format: e.format, date: e.date, source: 'existing' })),
-    ...dbEvents.map(e => ({ name: e.name, format: e.format, date: e.event_date, source: 'db' }))
-  ];
+  // Search only dbEvents — D.events is populated from dbEvents anyway so no duplication
+  const allEvents = dbEvents.map(e => ({ name: e.name, format: e.format, date: e.event_date, source: 'db' }));
 
   const matches = allEvents.filter(e =>
     e.name.toLowerCase().includes(val.toLowerCase().trim())
@@ -5275,6 +5262,19 @@ async function wizardSubmitResult() {
     msg.style.display = 'block'; msg.style.color = 'var(--loss)';
     msg.textContent = 'Please select your name and faction.';
     return;
+  }
+
+  // Check for duplicate — player already has a result for this event in DB
+  if (!wizardIsNewEvent) {
+    const dbEv = dbEvents.find(e => e.name === wizardEventName);
+    if (dbEv) {
+      const alreadyIn = (dbEv.results || []).some(r => r.player_name === player);
+      if (alreadyIn) {
+        msg.style.display = 'block'; msg.style.color = '#f0c040';
+        msg.textContent = `⚠️ ${player} already has a result recorded for ${wizardEventName}. If it's wrong, use "Fix an Error in My Stats" instead.`;
+        return;
+      }
+    }
   }
   // Sanity check W/L/D vs format
   const totalGames = wins + losses + draws;
@@ -5427,6 +5427,19 @@ function checkLeagueAdminPin(val) {
 // Helper — always get the most current league admin PIN from the input field
 function getLeagueAdminPin() {
   return document.getElementById('league-admin-pin-input')?.value || window._leagueAdminPin || '';
+}
+
+function timeAgo(isoString) {
+  if (!isoString) return '';
+  const diff = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diff / 60000);
+  const hrs = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 2) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  if (hrs < 24) return `${hrs}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return new Date(isoString).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
 function getAdminPin() {
@@ -5622,7 +5635,7 @@ async function loadDbEvents() {
     if (!ct.includes('application/json')) return;
     const data = await res.json();
     dbEvents = data.events || [];
-    renderDbEvents();
+    filterDbEvents(); // renders with any active filters applied
   } catch(e) { console.warn('Could not load db events', e); }
 }
 
@@ -5646,128 +5659,6 @@ function playerOptions() {
   return D.players.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
 }
 
-function addResultRow() {
-  const id = Date.now();
-  evResultRows.push(id);
-  const list = document.getElementById('ev-results-list');
-  const div = document.createElement('div');
-  div.id = `row-${id}`;
-  div.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;position:relative;';
-  div.innerHTML = `
-    <button onclick="removeResultRow(${id})" style="position:absolute;top:6px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1;">✕</button>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-      <div>
-        <label style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">Player</label>
-        <select id="row-${id}-player" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
-          <option value="">Select player...</option>
-          ${playerOptions()}
-        </select>
-      </div>
-      <div>
-        <label style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">Faction</label>
-        <select id="row-${id}-faction" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
-          <option value="">Select faction...</option>
-          ${factionOptions()}
-        </select>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
-      <div>
-        <label style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">Placing</label>
-        <input id="row-${id}-placing" type="number" min="1" placeholder="1" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
-      </div>
-      <div>
-        <label style="font-size:0.65rem;color:var(--win);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">W</label>
-        <input id="row-${id}-w" type="number" min="0" value="0" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
-      </div>
-      <div>
-        <label style="font-size:0.65rem;color:var(--loss);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">L</label>
-        <input id="row-${id}-l" type="number" min="0" value="0" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
-      </div>
-      <div>
-        <label style="font-size:0.65rem;color:var(--draw);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">D</label>
-        <input id="row-${id}-d" type="number" min="0" value="0" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
-      </div>
-      <div>
-        <label style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">Shadow?</label>
-        <select id="row-${id}-shadow" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
-          <option value="false">No</option>
-          <option value="true">Yes</option>
-        </select>
-      </div>
-    </div>
-    <div>
-      <label style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:3px;">Sub-team (Teams events only)</label>
-      <input id="row-${id}-subteam" type="text" placeholder="e.g. The Sh[a]meful Suspects" style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
-    </div>`;
-  list.appendChild(div);
-}
-
-function removeResultRow(id) {
-  evResultRows = evResultRows.filter(r => r !== id);
-  const el = document.getElementById(`row-${id}`);
-  if (el) el.remove();
-}
-
-async function submitEvent() {
-  const msg = document.getElementById('ev-message');
-  const name = document.getElementById('ev-name').value.trim();
-  const event_date = document.getElementById('ev-date').value.trim();
-  const sort_date = parseInt(document.getElementById('ev-sortdate').value) || 0;
-  const format = document.getElementById('ev-format').value;
-  const edition = parseInt(document.getElementById('ev-edition').value) || 10;
-  const total_players = parseInt(document.getElementById('ev-total-players').value) || 0;
-  const total_teams = parseInt(document.getElementById('ev-total-teams').value) || 0;
-  const bcp_url = document.getElementById('ev-bcp-url').value.trim();
-
-  if (!name || !event_date || !sort_date || !format) {
-    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
-    msg.textContent = 'Please fill in event name, date, sort date and format.';
-    return;
-  }
-
-  const results = evResultRows.map(id => ({
-    player_name: document.getElementById(`row-${id}-player`)?.value,
-    faction: document.getElementById(`row-${id}-faction`)?.value,
-    placing: parseInt(document.getElementById(`row-${id}-placing`)?.value) || 0,
-    wins: parseInt(document.getElementById(`row-${id}-w`)?.value) || 0,
-    losses: parseInt(document.getElementById(`row-${id}-l`)?.value) || 0,
-    draws: parseInt(document.getElementById(`row-${id}-d`)?.value) || 0,
-    shadow: document.getElementById(`row-${id}-shadow`)?.value === 'true',
-    subteam: document.getElementById(`row-${id}-subteam`)?.value.trim() || null
-  })).filter(r => r.player_name && r.faction);
-
-  msg.style.display = 'block'; msg.style.color = 'var(--muted)';
-  msg.textContent = 'Saving event...';
-
-  try {
-    const res = await fetch(`${API}/events`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: getAdminPin(), event: { name, event_date, sort_date, format, edition, total_players, total_teams, bcp_url }, results })
-    });
-    const data = await res.json();
-    if (data.success) {
-      msg.style.color = 'var(--win)';
-      msg.textContent = `✓ Event saved with ${results.length} result${results.length !== 1 ? 's' : ''}. Reload the page to see it in the stats.`;
-      // clear form
-      ['ev-name','ev-date','ev-sortdate','ev-bcp-url'].forEach(id => document.getElementById(id).value = '');
-      document.getElementById('ev-total-players').value = '';
-      document.getElementById('ev-total-teams').value = '0';
-      document.getElementById('ev-format').value = '';
-      document.getElementById('ev-results-list').innerHTML = '';
-      evResultRows = [];
-      document.getElementById('ev-duplicate-warning').style.display = 'none';
-      await loadDbEvents();
-    } else {
-      msg.style.color = 'var(--loss)';
-      msg.textContent = 'Error: ' + (data.error || 'Unknown error');
-    }
-  } catch(e) {
-    msg.style.color = 'var(--loss)';
-    msg.textContent = 'Network error — try again.';
-  }
-}
 
 async function deleteDbEvent(id) {
   if (!confirm('Delete this event and all its results? This cannot be undone.')) return;
@@ -5780,6 +5671,41 @@ async function deleteDbEvent(id) {
     const data = await res.json();
     if (data.success) await loadDbEvents();
   } catch(e) { console.error('Delete failed', e); }
+}
+
+function filterDbEvents() {
+  const search = (document.getElementById('ev-db-search')?.value || '').toLowerCase().trim();
+  const format = document.getElementById('ev-db-format')?.value || '';
+  const sort = document.getElementById('ev-db-sort')?.value || 'date-desc';
+
+  let filtered = [...dbEvents];
+  if (search) filtered = filtered.filter(e => e.name.toLowerCase().includes(search));
+  if (format) filtered = filtered.filter(e => e.format === format);
+
+  if (sort === 'date-desc') filtered.sort((a, b) => (b.sort_date || 0) - (a.sort_date || 0));
+  else if (sort === 'date-asc') filtered.sort((a, b) => (a.sort_date || 0) - (b.sort_date || 0));
+  else if (sort === 'name') filtered.sort((a, b) => a.name.localeCompare(b.name));
+
+  const el = document.getElementById('ev-db-list');
+  if (!el) return;
+  if (!filtered.length) {
+    el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">No events match the filter.</div>`;
+    return;
+  }
+  // Temporarily swap dbEvents for render, then restore
+  const original = dbEvents;
+  dbEvents = filtered;
+  renderDbEvents();
+  dbEvents = original;
+}
+
+function filterMemberList() {
+  const search = (document.getElementById('member-search')?.value || '').toLowerCase().trim();
+  const rows = document.querySelectorAll('#member-list > div');
+  rows.forEach(row => {
+    const name = row.querySelector('span')?.textContent?.toLowerCase() || '';
+    row.style.display = (!search || name.includes(search)) ? '' : 'none';
+  });
 }
 
 function renderDbEvents() {
