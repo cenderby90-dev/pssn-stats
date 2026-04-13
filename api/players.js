@@ -1,33 +1,46 @@
 import { sql } from '@vercel/postgres';
 
 const ADMIN_PIN = process.env.ADMIN_PIN;
-const TEAM_PIN = '1719';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Content-Type', 'application/json');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
+    // GET — all active players
     if (req.method === 'GET') {
-      const { rows } = await sql`SELECT * FROM player_profiles`;
+      const { rows } = await sql`
+        SELECT * FROM players WHERE active = true ORDER BY name ASC
+      `;
       return res.status(200).json({ players: rows });
     }
+
+    // POST — add a new player (admin only)
     if (req.method === 'POST') {
-      const { pin, player_name, bio, photo_url } = req.body;
-      if (pin !== ADMIN_PIN) {
-        return res.status(401).json({ error: 'Unauthorised' });
-      }
+      const { pin, name, factions } = req.body;
+      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+      if (!name) return res.status(400).json({ error: 'Name required' });
       await sql`
-        INSERT INTO player_profiles (player_name, bio, photo_url)
-        VALUES (${player_name}, ${bio || null}, ${photo_url || null})
-        ON CONFLICT (player_name)
-        DO UPDATE SET bio = ${bio || null}, photo_url = ${photo_url || null}, updated_at = NOW()
+        INSERT INTO players (name, factions, active)
+        VALUES (${name}, ${factions || []}, true)
+        ON CONFLICT (name) DO UPDATE SET factions = ${factions || []}, active = true
       `;
       return res.status(200).json({ success: true });
     }
+
+    // PATCH — update a player (rename, update factions, deactivate)
+    if (req.method === 'PATCH') {
+      const { pin, id, name, factions, active } = req.body;
+      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+      if (name !== undefined) await sql`UPDATE players SET name = ${name} WHERE id = ${id}`;
+      if (factions !== undefined) await sql`UPDATE players SET factions = ${factions} WHERE id = ${id}`;
+      if (active !== undefined) await sql`UPDATE players SET active = ${active} WHERE id = ${id}`;
+      return res.status(200).json({ success: true });
+    }
+
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err) {
     console.error(err);
