@@ -67,7 +67,32 @@ export default async function handler(req, res) {
       }
       return res.status(200).json({ success: true, eventId });
     }
-
+// PATCH — update a single result (for corrections)
+if (req.method === 'PATCH') {
+  const { pin, resultId, updates } = req.body;
+  if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+  if (!resultId || !updates) return res.status(400).json({ error: 'Missing resultId or updates' });
+  
+  const fields = [];
+  const values = [];
+  if (updates.faction !== undefined)  { fields.push('faction'); values.push(updates.faction); }
+  if (updates.wins !== undefined)     { fields.push('wins');    values.push(updates.wins); }
+  if (updates.losses !== undefined)   { fields.push('losses');  values.push(updates.losses); }
+  if (updates.draws !== undefined)    { fields.push('draws');   values.push(updates.draws); }
+  if (updates.place !== undefined)    { fields.push('place');   values.push(updates.place); }
+  if (updates.dropped !== undefined)  { fields.push('dropped'); values.push(updates.dropped); }
+  if (updates.shadow !== undefined)   { fields.push('shadow');  values.push(updates.shadow); }
+  
+  if (!fields.length) return res.status(400).json({ error: 'No valid fields to update' });
+  
+  // Build parameterised update
+  const setClauses = fields.map((f, i) => `${f} = $${i + 2}`).join(', ');
+  await sql.query(
+    `UPDATE event_results SET ${setClauses} WHERE id = $1`,
+    [resultId, ...values]
+  );
+  return res.status(200).json({ success: true });
+}
     if (req.method === 'DELETE') {
       const { pin, eventId } = req.body;
       if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
