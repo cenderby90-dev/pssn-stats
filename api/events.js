@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+
 const ADMIN_PIN = process.env.ADMIN_PIN;
 
 export default async function handler(req, res) {
@@ -27,6 +28,7 @@ export default async function handler(req, res) {
       const { pin, event, results } = req.body;
       if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
       if (!event || !event.name) return res.status(400).json({ error: 'Missing event data' });
+
       const { rows } = await sql`
         INSERT INTO events (name, event_date, sort_date, format, edition, total_players, total_teams, bcp_url, approved)
         VALUES (
@@ -43,6 +45,7 @@ export default async function handler(req, res) {
         RETURNING id
       `;
       const eventId = rows[0].id;
+
       if (results && results.length) {
         for (const r of results) {
           await sql`
