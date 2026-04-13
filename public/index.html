@@ -457,6 +457,7 @@
       flex-wrap: wrap;
       gap: 8px;
     }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
   </style>
 </head>
 <body>
@@ -666,9 +667,14 @@
     </div>
 
     <!-- Right placeholder when no name selected -->
-    <div id="members-placeholder" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3rem;text-align:center;color:var(--muted);">
+    <div id="members-placeholder" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2.5rem;text-align:center;color:var(--muted);">
       <div style="font-size:2rem;margin-bottom:8px;">👈</div>
-      <div style="font-size:0.85rem;">Select your name to get started</div>
+      <div style="font-size:0.85rem;margin-bottom:12px;">Select your name to get started</div>
+      <div style="font-size:0.78rem;color:var(--faint);max-width:240px;margin:0 auto;line-height:1.5;">
+        Once you select your name you can opt in to the
+        <span style="color:var(--accent);">Champions of Shame</span> leaderboard
+        and customise your player card.
+      </div>
     </div>
 
   </div>
@@ -882,7 +888,7 @@
       <span id="sec-submit-wizard-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
     </div>
     <div id="sec-submit-wizard">
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Start by choosing what type of result you're submitting.</div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Attended an event? Submit your result here — it goes to the admin for approval before appearing in the stats. <span style="color:var(--faint);">Use 'Fix an Error' below if your record is already wrong.</span></div>
 
     <!-- Result type selector -->
     <div style="display:flex;gap:8px;margin-bottom:1.5rem;max-width:500px;">
@@ -1397,9 +1403,17 @@ async function loadPlayers() {
 }
 
 async function initSite() {
-  await loadPlayers();
-  await loadApprovedSubmissions();
-  await loadAttendance();          // must be before rebuildStats so CoS optins render correctly
+  // Show loading indicator immediately
+  const headerMeta = document.getElementById('header-meta');
+  if (headerMeta) headerMeta.innerHTML = '<span style="color:var(--muted);animation:pulse 1.2s ease-in-out infinite;">Loading season data...</span>';
+
+  // Load players, events/submissions, and attendance in parallel
+  await Promise.all([
+    loadPlayers(),
+    loadApprovedSubmissions(),
+    loadAttendance()   // must be before rebuildStats so CoS optins render correctly
+  ]);
+
   rebuildStats();
   buildNowPanel();
   loadLeagueData().then(() => { leagueLoaded = true; });
@@ -2843,10 +2857,13 @@ async function renderCalendar() {
       const maybe = D.players.map(p => p.name).filter(n =>
         attendanceData[`${n}_${ev.sortDate}`] === 'maybe'
       );
+      const notgoing = D.players.map(p => p.name).filter(n =>
+        attendanceData[`${n}_${ev.sortDate}`] === 'no'
+      );
       const total = going.length + maybe.length;
 
       const whoId = `who-${ev.sortDate}`;
-      const whoHtml = total > 0 ? `
+      const whoHtml = (total > 0 || notgoing.length > 0) ? `
         <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);" id="${whoId}">
           ${going.length ? `
             <div style="margin-bottom:4px;">
@@ -2856,10 +2873,17 @@ async function renderCalendar() {
               </div>
             </div>` : ''}
           ${maybe.length ? `
-            <div>
+            <div style="margin-bottom:4px;">
               <span style="font-size:0.62rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#c9a227;">Maybe (${maybe.length})</span>
               <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;">
                 ${maybe.map(n => `<span style="font-size:0.72rem;padding:2px 7px;background:#2a2000;border:1px solid #c9a227;border-radius:3px;color:#c9a227;">${n}</span>`).join('')}
+              </div>
+            </div>` : ''}
+          ${notgoing.length ? `
+            <div>
+              <span style="font-size:0.62rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--loss);">Not going (${notgoing.length})</span>
+              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;">
+                ${notgoing.map(n => `<span style="font-size:0.72rem;padding:2px 7px;background:var(--loss-bg);border:1px solid var(--loss);border-radius:3px;color:var(--loss);">${n}</span>`).join('')}
               </div>
             </div>` : ''}
         </div>` : '';
@@ -3022,7 +3046,7 @@ async function renderWhosGoing() {
     <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
       <thead><tr>
         <th style="text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:500;font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;min-width:130px;">Player</th>
-        ${upcoming.map(ev=>`<th style="text-align:center;padding:8px 6px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:400;font-size:0.65rem;min-width:80px;">${ev.name}<br><span style="opacity:0.6;">${ev.dates.split('–')[0]}</span></th>`).join('')}
+        ${upcoming.map(ev=>`<th style="text-align:center;padding:8px 6px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:400;font-size:0.65rem;min-width:100px;">${ev.name}<br><span style="opacity:0.6;">${ev.dates.split('–')[0]}</span></th>`).join('')}
       </tr></thead>
       <tbody>
         ${players.map(name=>`
@@ -3031,11 +3055,12 @@ async function renderWhosGoing() {
             ${upcoming.map(ev=>{
               const key=`${name}_${ev.sortDate}`;
               const stored=attendanceData[key];
-              const going=stored==='yes', maybe=stored==='maybe';
+              const going=stored==='yes', maybe=stored==='maybe', notgoing=stored==='no';
               return `<td style="text-align:center;padding:5px;border-bottom:1px solid var(--border);">
                 <div style="display:flex;gap:3px;justify-content:center;">
                   <button onclick="setGoing('${name.replace(/'/g,"\\'")}',${ev.sortDate},'yes')" title="Going" style="width:26px;height:26px;border-radius:4px;border:1px solid ${going?'var(--win)':'var(--border)'};background:${going?'var(--win-bg)':'transparent'};cursor:pointer;font-size:0.85rem;color:${going?'var(--win)':'var(--muted)'};transition:all 0.15s;">✓</button>
                   <button onclick="setGoing('${name.replace(/'/g,"\\'")}',${ev.sortDate},'maybe')" title="Maybe" style="width:26px;height:26px;border-radius:4px;border:1px solid ${maybe?'#f0c040':'var(--border)'};background:${maybe?'#2a2000':'transparent'};cursor:pointer;font-size:0.85rem;color:${maybe?'#f0c040':'var(--muted)'};transition:all 0.15s;">?</button>
+                  <button onclick="setGoing('${name.replace(/'/g,"\\'")}',${ev.sortDate},'no')" title="Not going" style="width:26px;height:26px;border-radius:4px;border:1px solid ${notgoing?'var(--loss)':'var(--border)'};background:${notgoing?'var(--loss-bg)':'transparent'};cursor:pointer;font-size:0.85rem;color:${notgoing?'var(--loss)':'var(--muted)'};transition:all 0.15s;">✗</button>
                 </div>
               </td>`;
             }).join('')}
@@ -3043,7 +3068,7 @@ async function renderWhosGoing() {
       </tbody>
     </table>
   </div>
-  <div style="font-size:0.75rem;color:var(--muted);margin-top:10px;">✓ = Going &nbsp;·&nbsp; ? = Maybe &nbsp;·&nbsp; Shared across all devices.</div>`;
+  <div style="font-size:0.75rem;color:var(--muted);margin-top:10px;">✓ = Going &nbsp;·&nbsp; ? = Maybe &nbsp;·&nbsp; ✗ = Not going &nbsp;·&nbsp; Shared across all devices.</div>`;
 }
 
 async function setGoing(name, sortDate, status) {
@@ -3479,7 +3504,8 @@ async function approveCorrection(key) {
       }
     }
 
-    // 3. Force reload from DB to ensure stats are accurate, then rebuild
+    // 3. Reload stats from DB — reuse already-fetched event data if possible
+    // loadApprovedSubmissions will fetch events; cache the result for correction form reuse
     await loadApprovedSubmissions();
     rebuildStats();
 
