@@ -1229,30 +1229,30 @@
           <div class="section-rule"></div>
         </div>
         <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Add new members, update their factions, or deactivate players who have left.</div>
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;max-width:560px;">
-
-          <!-- Add new member -->
-          <div style="display:flex;gap:8px;margin-bottom:1rem;">
-            <input id="member-new-name" type="text" placeholder="New member name"
-              style="flex:1;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
-            <button onclick="addMember()"
-              style="padding:8px 14px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;white-space:nowrap;">
-              + Add
-            </button>
-          </div>
-          <div id="member-add-message" style="font-size:0.78rem;display:none;margin-bottom:10px;"></div>
-
-          <!-- Member search + list -->
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
-            <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">
-              All Members (<span id="member-count">0</span>)
-            </div>
-            <input id="member-search" type="text" placeholder="Filter members..."
-              oninput="filterMemberList()"
-              style="padding:5px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.78rem;width:140px;"/>
-          </div>
-          <div id="member-list" style="max-height:400px;overflow-y:auto;"></div>
+        <!-- Add new member row -->
+        <div style="display:flex;gap:8px;margin-bottom:8px;max-width:560px;">
+          <input id="member-new-name" type="text" placeholder="New member name" maxlength="60"
+            style="flex:1;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;"
+            onkeydown="if(event.key==='Enter') addMember()"/>
+          <button onclick="addMember()"
+            style="padding:8px 14px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;white-space:nowrap;">
+            + Add Member
+          </button>
         </div>
+        <div id="member-add-message" style="font-size:0.78rem;display:none;margin-bottom:10px;"></div>
+
+        <!-- Filter + count row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;max-width:560px;">
+          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">
+            All Members (<span id="member-count">0</span>)
+          </div>
+          <input id="member-search" type="text" placeholder="Filter by name..."
+            oninput="filterMemberList()"
+            style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.8rem;width:160px;outline:none;"/>
+        </div>
+
+        <!-- Member list -->
+        <div id="member-list" style="max-width:560px;"></div>
 
       </div>
     </div>
@@ -5552,39 +5552,35 @@ async function loadAndRenderMembers() {
       'Ultramarines','White Scars','World Eaters'
     ].sort();
 
-    listEl.innerHTML = all.map(p => `
-      <div style="border-bottom:1px solid var(--border);padding:10px 0;">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
-          <span style="font-size:0.85rem;color:${p.active ? 'var(--text)' : 'var(--muted)'};font-weight:400;">
-            ${p.name}
-            ${!p.active ? '<span style="font-size:0.65rem;color:var(--faint);margin-left:6px;">inactive</span>' : ''}
-          </span>
-          <button onclick="toggleMember(${p.id}, ${!p.active})"
-            style="font-size:0.65rem;padding:2px 8px;background:transparent;
-                   border:1px solid ${p.active ? 'var(--loss)' : 'var(--win)'};border-radius:3px;
-                   color:${p.active ? 'var(--loss)' : 'var(--win)'};cursor:pointer;white-space:nowrap;flex-shrink:0;">
-            ${p.active ? 'Deactivate' : 'Reactivate'}
-          </button>
+    listEl.innerHTML = all.map(p => {
+      const factionTags = (p.factions || []).length
+        ? (p.factions).map(f => `<span style="font-size:0.68rem;padding:2px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--muted);">${f}</span>`).join('')
+        : `<span style="font-size:0.72rem;color:var(--faint);font-style:italic;">No factions set</span>`;
+      // Store factions as a data attribute to avoid JSON/quote issues in onclick
+      const factionsAttr = encodeURIComponent(JSON.stringify(p.factions || []));
+      return `
+      <div data-name="${p.name.toLowerCase()}" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:8px;opacity:${p.active ? '1' : '0.5'};">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <span class="member-name" style="font-size:0.88rem;color:var(--text);font-weight:400;">${p.name}</span>
+              ${!p.active ? '<span style="font-size:0.62rem;background:var(--surface2);border:1px solid var(--border);color:var(--faint);padding:1px 6px;border-radius:3px;">Inactive</span>' : ''}
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">${factionTags}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button onclick="openEditMember(${p.id}, '${p.name.replace(/'/g,"\\'")}', decodeURIComponent('${factionsAttr}'))"
+              style="font-size:0.72rem;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Edit</button>
+            <button onclick="toggleMember(${p.id}, ${!p.active})"
+              style="font-size:0.72rem;padding:4px 10px;background:transparent;border:1px solid ${p.active ? 'var(--loss)' : 'var(--win)'};border-radius:3px;color:${p.active ? 'var(--loss)' : 'var(--win)'};cursor:pointer;">
+              ${p.active ? 'Deactivate' : 'Reactivate'}
+            </button>
+          </div>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-          <select id="faction-sel-${p.id}" multiple
-            style="flex:1;min-width:180px;max-height:60px;padding:4px 6px;background:var(--surface2);
-                   border:1px solid var(--border);border-radius:4px;color:var(--text);
-                   font-family:'DM Sans',sans-serif;font-size:0.75rem;">
-            ${ALL_FACTIONS_LIST.map(f => `
-              <option value="${f}" ${(p.factions||[]).includes(f) ? 'selected' : ''}>${f}</option>
-            `).join('')}
-          </select>
-          <button onclick="saveMemberFactions(${p.id})"
-            style="padding:5px 10px;background:transparent;border:1px solid var(--border);border-radius:4px;
-                   color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.75rem;cursor:pointer;white-space:nowrap;"
-            onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-            Save factions
-          </button>
-          <span id="faction-msg-${p.id}" style="font-size:0.72rem;display:none;"></span>
-        </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   } catch(e) {
     if (listEl) listEl.innerHTML = `<div style="font-size:0.82rem;color:var(--loss);">Failed to load members.</div>`;
   }
@@ -5630,8 +5626,101 @@ async function addMember() {
   }
 }
 
+function openEditMember(id, name, factionsEncoded) {
+  // factionsEncoded is either a JSON string or URL-encoded JSON
+  let currentFactions = [];
+  try {
+    const decoded = typeof factionsEncoded === 'string' && factionsEncoded.startsWith('%')
+      ? JSON.parse(decodeURIComponent(factionsEncoded))
+      : (typeof factionsEncoded === 'string' ? JSON.parse(factionsEncoded) : factionsEncoded);
+    currentFactions = Array.isArray(decoded) ? decoded : [];
+  } catch(e) { currentFactions = []; }
+  const ALL_FACTIONS = [
+    'Adepta Sororitas','Adeptus Custodes','Adeptus Mechanicus','Aeldari',
+    'Astra Militarum','Black Templars','Blood Angels','Chaos Daemons',
+    'Chaos Knights','Chaos Space Marines','Dark Angels','Death Guard',
+    'Deathwatch','Drukhari',"Emperor's Children",'Genestealer Cult',
+    'Grey Knights','Imperial Knights','Iron Hands','Leagues of Votann',
+    'Necrons','Orks','Raven Guard','Salamanders','Space Marines',
+    "Space Wolves","T'au Empire",'Thousand Sons','Tyranids',
+    'Ultramarines','White Scars','World Eaters'
+  ].sort();
+
+  let modal = document.getElementById('edit-member-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'edit-member-modal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;">
+      <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Edit Member</div>
+      <div style="font-size:1rem;color:var(--text);font-weight:400;margin-bottom:16px;">${name}</div>
+
+      <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Factions</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;" id="em-faction-grid">
+        ${ALL_FACTIONS.map(f => {
+          const sel = currentFactions.includes(f);
+          return `<button
+            onclick="this.dataset.sel = this.dataset.sel==='1' ? '0' : '1'; this.style.background=this.dataset.sel==='1'?'var(--accent)':'transparent'; this.style.borderColor=this.dataset.sel==='1'?'var(--accent)':'var(--border)'; this.style.color=this.dataset.sel==='1'?'#fff':'var(--muted)';"
+            data-faction="${f}" data-sel="${sel ? '1' : '0'}"
+            style="font-size:0.75rem;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:'DM Sans',sans-serif;
+                   background:${sel ? 'var(--accent)' : 'transparent'};
+                   border:1px solid ${sel ? 'var(--accent)' : 'var(--border)'};
+                   color:${sel ? '#fff' : 'var(--muted)'};">
+            ${f}
+          </button>`;
+        }).join('')}
+      </div>
+
+      <div id="em-msg" style="display:none;font-size:0.78rem;padding:6px 10px;border-radius:4px;margin-bottom:10px;"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button onclick="document.getElementById('edit-member-modal').style.display='none'"
+          style="padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.85rem;cursor:pointer;">Cancel</button>
+        <button onclick="saveEditMember(${id})"
+          style="padding:8px 16px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;">Save</button>
+      </div>
+    </div>`;
+
+  modal.style.display = 'flex';
+  modal.onclick = e => { if (e.target === modal) modal.style.display = 'none'; };
+}
+
+async function saveEditMember(id) {
+  const grid = document.getElementById('em-faction-grid');
+  const msg = document.getElementById('em-msg');
+  const factions = [...grid.querySelectorAll('button[data-sel="1"]')].map(b => b.dataset.faction);
+  const adminPin = getAdminPin();
+
+  msg.style.display = 'block'; msg.style.background = 'var(--surface2)'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Saving...';
+  try {
+    const res = await fetch(`${API}/players`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: adminPin, id, factions })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.style.background = 'var(--win-bg)'; msg.style.color = 'var(--win)';
+      msg.textContent = '✓ Saved';
+      await loadAndRenderMembers();
+      setTimeout(() => { document.getElementById('edit-member-modal').style.display = 'none'; }, 600);
+    } else {
+      msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown');
+    }
+  } catch(e) {
+    msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error.';
+  }
+}
+
 async function toggleMember(playerId, active) {
-  const adminPin = document.getElementById('admin-pin-input')?.value;
+  if (!active && !confirm('Deactivate this member? They will be removed from dropdowns but their results are kept.')) return;
+  const adminPin = getAdminPin();
   try {
     const res = await fetch(`${API}/players`, {
       method: 'PATCH',
@@ -5748,7 +5837,8 @@ function filterMemberList() {
   const search = (document.getElementById('member-search')?.value || '').toLowerCase().trim();
   const rows = document.querySelectorAll('#member-list > div');
   rows.forEach(row => {
-    const name = row.querySelector('span')?.textContent?.toLowerCase() || '';
+    // Use data-name attribute set on card for reliable matching
+    const name = (row.dataset.name || row.querySelector('.member-name')?.textContent || '').toLowerCase();
     row.style.display = (!search || name.includes(search)) ? '' : 'none';
   });
 }
@@ -5760,46 +5850,77 @@ function renderDbEvents() {
     el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">No events in database yet.</div>`;
     return;
   }
-  el.innerHTML = dbEvents.map(ev => `
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;">
-      <div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;"
-           onclick="toggleDbEventResults('dber-${ev.id}')">
-        <div>
-          <div style="font-size:0.88rem;color:var(--text);">${ev.name}</div>
-          <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">${ev.event_date} · ${ev.format} · ${ev.results.length} result${ev.results.length !== 1 ? 's' : ''}</div>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <span style="font-size:0.7rem;color:var(--muted);">▼</span>
-          <button onclick="event.stopPropagation();deleteDbEvent(${ev.id})"
-            style="font-size:0.72rem;padding:4px 10px;background:var(--loss-bg);border:1px solid var(--loss);border-radius:3px;color:var(--loss);cursor:pointer;">Delete</button>
-        </div>
-      </div>
-      <div id="dber-${ev.id}" style="display:none;border-top:1px solid var(--border);padding:10px 14px;">
-        ${ev.results.length ? ev.results.map(r => `
-          <div id="dber-row-${r.id}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">
-            <div style="font-size:0.82rem;color:var(--text);min-width:120px;">${r.player_name}</div>
-            <div style="font-size:0.78rem;color:var(--muted);flex:1;">${r.faction}</div>
-            <div style="font-size:0.72rem;color:var(--muted);">${r.place || '?'}/${ev.total_players || ev.total_teams || '?'}</div>
-            <div style="font-size:0.72rem;">
-              <span style="color:var(--win);">${r.wins}W</span>
-              <span style="color:var(--loss);margin:0 2px;">${r.losses}L</span>
-              <span style="color:var(--draw);">${r.draws}D</span>
+  el.innerHTML = dbEvents.map(ev => {
+    const resultCount = ev.results.length;
+    const formatBadge = `<span style="font-size:0.62rem;background:var(--surface2);border:1px solid var(--border);padding:1px 6px;border-radius:3px;color:var(--muted);margin-left:6px;">${ev.format}</span>`;
+    const bcpLink = ev.bcp_url
+      ? `<a href="${ev.bcp_url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:0.7rem;color:var(--accent);text-decoration:none;margin-left:8px;">BCP ↗</a>`
+      : '';
+
+    const resultRows = ev.results.length
+      ? ev.results.map(r => {
+          const placePct = r.place && ev.total_players ? r.place / ev.total_players : null;
+          const isTop = placePct && placePct <= 0.1;
+          return `
+          <div style="display:grid;grid-template-columns:160px 1fr auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+            <span style="font-size:0.82rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.player_name}</span>
+            <span style="font-size:0.75rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.faction}</span>
+            <div style="display:flex;align-items:center;gap:8px;white-space:nowrap;">
+              <span style="font-size:0.72rem;color:${isTop ? '#ff6a00' : 'var(--muted)'};">${r.place || '?'}/${ev.format === 'Teams' ? ev.total_teams : ev.total_players}</span>
+              <span style="font-size:0.72rem;color:var(--win);">${r.wins}W</span>
+              <span style="font-size:0.72rem;color:var(--loss);">${r.losses}L</span>
+              ${r.draws > 0 ? `<span style="font-size:0.72rem;color:var(--draw);">${r.draws}D</span>` : ''}
+              ${r.dropped ? `<span style="font-size:0.62rem;color:var(--loss);border:1px solid var(--loss);border-radius:3px;padding:1px 4px;">dropped</span>` : ''}
+              ${r.shadow ? `<span style="font-size:0.62rem;color:var(--accent);border:1px solid var(--accent-muted);border-radius:3px;padding:1px 4px;">shadow</span>` : ''}
             </div>
-            ${r.dropped ? `<span style="font-size:0.65rem;color:var(--loss);border:1px solid var(--loss);border-radius:3px;padding:1px 5px;">dropped</span>` : ''}
             <button onclick="openEditResult(${r.id}, '${r.player_name.replace(/'/g,"\\'")}', '${r.faction.replace(/'/g,"\\'")}', ${r.place||0}, ${r.wins}, ${r.losses}, ${r.draws}, ${r.dropped})"
               style="font-size:0.65rem;padding:2px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;white-space:nowrap;"
               onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
               onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Edit</button>
-          </div>`).join('')
-        : '<div style="font-size:0.82rem;color:var(--muted);">No results recorded.</div>'}
+          </div>`;
+        }).join('')
+      : `<div style="font-size:0.82rem;color:var(--muted);padding:8px 0;">No results recorded.</div>`;
+
+    return `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;">
+      <!-- Header row — click to expand -->
+      <div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;"
+           onclick="toggleDbEventResults('dber-${ev.id}')">
+        <div style="min-width:0;flex:1;">
+          <div style="font-size:0.88rem;color:var(--text);display:flex;align-items:center;flex-wrap:wrap;">
+            ${ev.name}${formatBadge}${bcpLink}
+          </div>
+          <div style="font-size:0.7rem;color:var(--muted);margin-top:3px;">
+            ${ev.event_date}
+            &nbsp;·&nbsp; <span style="color:var(--text);">${resultCount}</span> result${resultCount !== 1 ? 's' : ''}
+            ${ev.total_players ? `&nbsp;·&nbsp; ${ev.format === 'Teams' ? ev.total_teams + ' teams' : ev.total_players + ' players'}` : ''}
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+          <span id="dber-arr-${ev.id}" style="font-size:0.7rem;color:var(--muted);transition:transform 0.2s;">▼</span>
+          <button onclick="event.stopPropagation();deleteDbEvent(${ev.id})"
+            style="font-size:0.72rem;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;"
+            onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Delete</button>
+        </div>
       </div>
-    </div>`).join('');
+      <!-- Expandable results -->
+      <div id="dber-${ev.id}" style="display:none;border-top:1px solid var(--border);padding:4px 14px 10px;">
+        <div style="font-size:0.62rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:8px 0 4px;display:grid;grid-template-columns:160px 1fr auto auto;gap:8px;">
+          <span>Player</span><span>Faction</span><span>Place / W L D</span><span></span>
+        </div>
+        ${resultRows}
+      </div>
+    </div>`; }).join('');
 }
 
 function toggleDbEventResults(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  const arr = document.getElementById('dber-arr-' + id.replace('dber-',''));
+  if (arr) arr.style.transform = open ? '' : 'rotate(180deg)';
 }
 
 function openEditResult(id, player, faction, place, wins, losses, draws, dropped) {
