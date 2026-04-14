@@ -672,15 +672,7 @@
     </div>
 
     <!-- Right placeholder when no name selected -->
-    <div id="members-placeholder" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2.5rem;text-align:center;color:var(--muted);">
-      <div style="font-size:2rem;margin-bottom:8px;">👈</div>
-      <div style="font-size:0.85rem;margin-bottom:12px;">Select your name to get started</div>
-      <div style="font-size:0.78rem;color:var(--faint);max-width:240px;margin:0 auto;line-height:1.5;">
-        Once you select your name you can opt in to the
-        <span style="color:var(--accent);">Champions of Shame</span> leaderboard
-        and customise your player card.
-      </div>
-    </div>
+
 
   </div>
 
@@ -863,7 +855,7 @@
       <div class="section-rule"></div>
       <span id="sec-submit-wizard-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(0deg);">▼</span>
     </div>
-    <div id="sec-submit-wizard">
+    <div id="sec-submit-wizard" style="display:block;">
     <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Attended an event? Submit your result here — it goes to the admin for approval before appearing in the stats. <span style="color:var(--faint);">Use 'Fix an Error' below if your record is already wrong.</span></div>
 
     <!-- Result type selector -->
@@ -2466,7 +2458,6 @@ function initMembersTab() {
   buildMemberNameList();
   const stored = localStorage.getItem('pssn_member');
   if (stored && D.players.some(p => p.name === stored)) {
-    document.getElementById('members-placeholder').style.display = 'none';
     showMemberProfile(stored);
   }
 }
@@ -2510,13 +2501,13 @@ function selectMember(name) {
     btn.style.color = isMe ? 'var(--accent)' : 'var(--text)';
     btn.style.borderLeft = isMe ? '3px solid var(--accent)' : '3px solid transparent';
   });
-  document.getElementById('members-placeholder').style.display = 'none';
   showMemberProfile(name);
 }
 
 async function showMemberProfile(name) {
   window._memberName = name;
   document.getElementById('members-profile').style.display = 'block';
+  setTimeout(() => document.getElementById('members-profile').scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
 
   // Always load fresh attendance before reading opt-in state
   await loadAttendance();
@@ -2645,7 +2636,6 @@ function clearMemberIdentity() {
   localStorage.removeItem('pssn_member');
   window._memberName = null;
   document.getElementById('members-profile').style.display = 'none';
-  document.getElementById('members-placeholder').style.display = 'block';
   // Reset all buttons
   [...D.players].forEach(p => {
     const btn = document.getElementById(`member-btn-${p.name.replace(/\s+/g,'-').toLowerCase()}`);
