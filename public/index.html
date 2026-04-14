@@ -1525,7 +1525,7 @@ function addResultQ(s, r, quality, eventName) {
   const d = r.shadow ? 0 : r.d;
   s.w += w; s.l += l; s.d += d;
   s.games += w + l + d;
-  s.qW += w * quality;
+  s.qW += (w + d * 0.5) * quality;   // draws count as half a win
   s.qGames += (w + l + d) * quality;
   s.factions.add(r.faction);
   s.events.add(eventName);
@@ -1577,7 +1577,7 @@ function getRanked(filter) {
       const bA = bayesianWinRate(a, teamAvg);
       const bB = bayesianWinRate(b, teamAvg);
       if (Math.abs(bB - bA) > 0.001) return bB - bA;
-      return b.w - a.w;
+      return b.qW - a.qW;  // tiebreak on quality-weighted wins, not raw wins
     });
 }
 
@@ -1912,10 +1912,11 @@ function buildNowPanel() {
   const nextCalEv = (CALENDAR||[]).filter(e => (e.sortDate||0) > todayNum)
     .sort((a,b) => a.sortDate - b.sortDate)[0];
 
-  // Top 3 champions
+  // Top 3 champions — opted-in players only
   const ranked = getRanked('Singles');
+  const nowOptins = getCosOptins();
   const teamAvg = getTeamAvg(singlesStats);
-  const top3 = ranked.slice(0,3).map((s,i) => {
+  const top3 = ranked.filter(s => nowOptins.has(s.name)).slice(0,3).map((s,i) => {
     const wr = Math.round(bayesianWinRate(s, teamAvg)*100);
     const medal = ['🥇','🥈','🥉'][i];
     return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;${i<2?'border-bottom:1px solid var(--border);':''}">
@@ -2107,7 +2108,7 @@ function renderLeaderboard(filter) {
 
   // Only show opted-in players on the leaderboard; others are hidden but ranked internally
   const optedIn = ranked.filter(s => optins.has(s.name));
-  const optedOut = ranked.filter(s => !optins.has(s.name) && s.games > 0);
+  // Players not opted in are fully excluded — opt-out means opt-out
 
   // Qualified/provisional split within opted-in only
   const qualified   = optedIn.filter(s => (s.events?.size || 0) >= PROVISIONAL_MIN_EVENTS);
@@ -2116,7 +2117,7 @@ function renderLeaderboard(filter) {
   function buildRow(s, i, isProvisional) {
     const rawWr = s.games ? Math.round((s.w / s.games) * 100) : 0;
     const weightedWr = Math.round(bayesianWinRate(s, teamAvg) * 100);
-    const mainFaction = mostPlayedFaction(s.name);
+    const mainFaction = mostPlayedFaction(s.name, filter);
     const factionDisplay = mainFaction
       ? mainFaction + (s.factions.size > 1 ? ` <span style="font-size:0.65rem;color:var(--faint);">+${s.factions.size - 1} more</span>` : '')
       : ([...s.factions].filter(Boolean).join(', ') || '—');
@@ -6180,9 +6181,11 @@ function buildFactionStats() {
       </div>` : ''}`;
 }
 
-function mostPlayedFaction(name) {
+function mostPlayedFaction(name, formatFilter) {
   const counts = {};
   getActiveEvents().forEach(ev => {
+    if (formatFilter === 'Singles' && ev.format === 'Teams') return;
+    if (formatFilter && formatFilter !== 'Singles' && formatFilter !== 'All' && ev.format !== formatFilter) return;
     const r = ev.results.find(r => r.player === name && !r.dropped);
     if (r) counts[r.faction] = (counts[r.faction] || 0) + 1;
   });
