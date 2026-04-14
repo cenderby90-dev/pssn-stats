@@ -494,10 +494,11 @@
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:1rem;">
       <div class="tab-bar" style="margin-top:0;border-bottom:none;">
         <button class="tab-btn active" onclick="switchTab('stats')">Season Stats</button>
-        <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
+        <button class="tab-btn" onclick="switchTab('submit')">My Club</button>
         <button class="tab-btn" onclick="switchTab('league')">League</button>
+        <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
         <button class="tab-btn" onclick="switchTab('members')">Members</button>
-        <button class="tab-btn" id="tab-btn-submit" onclick="switchTab('submit')">Submissions <span id="pending-badge" style="display:none;background:var(--loss);color:#fff;font-size:0.6rem;padding:1px 5px;border-radius:10px;margin-left:4px;font-family:'DM Sans',sans-serif;vertical-align:middle;"></span></button>
+        <button class="tab-btn" id="tab-btn-admin" onclick="switchTab('admin')">Admin <span id="pending-badge" style="display:none;background:var(--loss);color:#fff;font-size:0.6rem;padding:1px 5px;border-radius:10px;margin-left:4px;font-family:'DM Sans',sans-serif;vertical-align:middle;"></span></button>
       </div>
       <div id="edition-toggle" style="display:flex;background:var(--surface2);border-radius:6px;padding:3px;gap:2px;border:1px solid var(--border);">
         <button id="ed-10" onclick="switchEdition(10)" style="font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:500;padding:5px 12px;border:none;border-radius:4px;cursor:pointer;transition:all 0.15s;">10th Ed</button>
@@ -691,37 +692,8 @@
     }
   </style>
 
-  <!-- Add member (admin only) -->
-  <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);">
-    <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Admin — Add New Member</div>
-    <div id="member-admin-gate">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <input type="password" id="member-admin-pin" maxlength="8" placeholder="Admin PIN"
-          style="padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;width:130px;letter-spacing:0.2em;outline:none;"
-          oninput="checkMemberAdminPin(this.value)"/>
-        <div id="member-admin-pin-error" style="font-size:0.75rem;color:var(--loss);display:none;">Incorrect PIN</div>
-      </div>
-    </div>
-    <div id="member-admin-content" style="display:none;">
-      <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px;">
-        <div>
-          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Player name</label>
-          <input type="text" id="new-member-name" placeholder="e.g. Alex Smith"
-            style="padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;width:220px;outline:none;"/>
-        </div>
-        <button onclick="addNewMember()"
-          style="padding:8px 16px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;"
-          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-          Add Member
-        </button>
-      </div>
-      <div id="new-member-message" style="font-size:0.78rem;display:none;"></div>
-      <div style="font-size:0.7rem;color:var(--faint);margin-top:6px;">
-        ⚠️ This adds the player to the site immediately. You'll also need to update the HTML data block and redeploy to make it permanent.
-      </div>
-    </div>
-  </div>
 
+</main>
 </main>
 
 <!-- ── CALENDAR TAB ── -->
@@ -868,9 +840,9 @@
         <div id="sec-whos-going-hint" style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Sign up for upcoming events so your teammates know to look out for you — click to open</div>
       </div>
       <div class="section-rule"></div>
-      <span id="sec-whos-going-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
+      <span id="sec-whos-going-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(0deg);">▼</span>
     </div>
-    <div id="sec-whos-going" style="display:none;">
+    <div id="sec-whos-going" style="display:block;">
       <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">Tick ✓ if you're going, ? if you're not sure. Visible to everyone with the team PIN.</div>
       <!-- Sub-tabs -->
       <div style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:1rem;">
@@ -889,7 +861,7 @@
     <div class="section-head" style="margin-top:2rem;cursor:pointer;" onclick="toggleSection('sec-submit-wizard')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
       <div class="section-title">Submit a Result</div>
       <div class="section-rule"></div>
-      <span id="sec-submit-wizard-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;">▼</span>
+      <span id="sec-submit-wizard-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(0deg);">▼</span>
     </div>
     <div id="sec-submit-wizard">
     <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Attended an event? Submit your result here — it goes to the admin for approval before appearing in the stats. <span style="color:var(--faint);">Use 'Fix an Error' below if your record is already wrong.</span></div>
@@ -1158,108 +1130,100 @@
       </div>
     </div>
 
-    <!-- ADMIN SECTION -->
-    <div style="margin-top:3rem;padding-top:2rem;border-top:2px solid var(--border);">
-      <div style="font-size:0.72rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Admin Access</div>
-      <div id="admin-gate">
-        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Admin PIN required — approve submissions, manage events, add members. Different to the team PIN.</div>
-        <input type="password" id="admin-pin-input" maxlength="8" placeholder="Admin PIN"
-          autocomplete="new-password"
-          style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;width:160px;letter-spacing:0.2em;outline:none;"
-          oninput="if(this.value.length>=4)checkAdminPin(this.value)"/>
-        <div id="admin-pin-error" style="font-size:0.75rem;color:var(--loss);display:none;margin-top:6px;">Incorrect admin PIN</div>
-      </div>
-      <div id="admin-content" style="display:none;">
 
-        <!-- Pending approvals -->
-        <div class="section-head" style="margin-top:1.5rem;">
-          <div class="section-title">Pending Approvals</div>
-          <div class="section-rule"></div>
-        </div>
-        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Results submitted by team members waiting for your approval.</div>
-        <div id="sheet-submissions">
-          <div style="font-size:0.82rem;color:var(--muted);">Loading...</div>
-        </div>
 
-        <!-- Pending corrections -->
-        <div class="section-head" style="margin-top:2rem;">
-          <div class="section-title">Pending Corrections</div>
-          <div class="section-rule"></div>
-        </div>
-        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Data error reports submitted by members. Review, apply the fix to the HTML, then dismiss.</div>
-        <div id="admin-corrections"></div>
+</main>
 
-        <!-- Pending event submissions -->
-        <div class="section-head" style="margin-top:2rem;">
-          <div class="section-title">Pending Event Submissions</div>
-          <div class="section-rule"></div>
-        </div>
-        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">New events submitted by members. Approve to create the event and add the result, or dismiss.</div>
-        <div id="admin-event-submissions"></div>
+<!-- ── ADMIN TAB ── -->
+<main class="page" id="tab-admin" style="display:none;">
 
-        <!-- Events in DB -->
-        <div class="section-head" style="margin-top:2rem;">
-          <div class="section-title">Events in Database</div>
-          <div class="section-rule"></div>
-        </div>
-        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;">All approved events. Click to expand results, edit individual records, or delete.</div>
-        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;padding:8px 12px;background:var(--surface2);border-radius:4px;border-left:3px solid var(--accent);">
-          💡 To add a new event with multiple results, use the browser console bookmarklet — it's much faster than a form. Ask Chris for the snippet.
-        </div>
-        <!-- Events filter/sort -->
-        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-          <input id="ev-db-search" type="text" placeholder="Search events..."
-            oninput="filterDbEvents()"
-            style="flex:1;min-width:140px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
-          <select id="ev-db-format" onchange="filterDbEvents()"
-            style="padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
-            <option value="">All formats</option>
-            <option value="GT">GT</option>
-            <option value="RTT">RTT</option>
-            <option value="Teams">Teams</option>
-          </select>
-          <select id="ev-db-sort" onchange="filterDbEvents()"
-            style="padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
-            <option value="date-desc">Newest first</option>
-            <option value="date-asc">Oldest first</option>
-            <option value="name">Name A–Z</option>
-          </select>
-        </div>
-        <div id="ev-db-list"></div>
+  <div style="margin-bottom:1.5rem;">
+    <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Admin</div>
+    <div style="font-size:0.82rem;color:var(--muted);">Manage results, events, and members. Requires admin PIN.</div>
+  </div>
 
-        <!-- Member Manager -->
-        <div class="section-head" style="margin-top:2.5rem;">
-          <div class="section-title">Member Manager</div>
-          <div class="section-rule"></div>
-        </div>
-        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Add new members, update their factions, or deactivate players who have left.</div>
-        <!-- Add new member row -->
-        <div style="display:flex;gap:8px;margin-bottom:8px;max-width:560px;">
-          <input id="member-new-name" type="text" placeholder="New member name" maxlength="60"
-            style="flex:1;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;"
-            onkeydown="if(event.key==='Enter') addMember()"/>
-          <button onclick="addMember()"
-            style="padding:8px 14px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;white-space:nowrap;">
-            + Add Member
-          </button>
-        </div>
-        <div id="member-add-message" style="font-size:0.78rem;display:none;margin-bottom:10px;"></div>
+  <div id="admin-gate" style="max-width:420px;">
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Admin PIN required — different from the team PIN.</div>
+    <input type="password" id="admin-pin-input" maxlength="8" placeholder="Admin PIN"
+      autocomplete="new-password"
+      style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;width:180px;letter-spacing:0.2em;outline:none;"
+      oninput="if(this.value.length>=4)checkAdminPin(this.value)"/>
+    <div id="admin-pin-error" style="font-size:0.75rem;color:var(--loss);display:none;margin-top:6px;">Incorrect PIN</div>
+  </div>
+  <div id="admin-content" style="display:none;">
 
-        <!-- Filter + count row -->
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;max-width:560px;">
-          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">
-            All Members (<span id="member-count">0</span>)
-          </div>
-          <input id="member-search" type="text" placeholder="Filter by name..."
-            oninput="filterMemberList()"
-            style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.8rem;width:160px;outline:none;"/>
-        </div>
-
-        <!-- Member list -->
-        <div id="member-list" style="max-width:560px;max-height:500px;overflow-y:auto;padding-right:4px;"></div>
-
-      </div>
+    <div class="section-head" style="margin-top:1.5rem;">
+      <div class="section-title">Pending Approvals</div>
+      <div class="section-rule"></div>
     </div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Results submitted by team members waiting for review.</div>
+    <div id="sheet-submissions">
+      <div style="font-size:0.82rem;color:var(--muted);">Loading...</div>
+    </div>
+
+    <div class="section-head" style="margin-top:2rem;">
+      <div class="section-title">Pending Corrections</div>
+      <div class="section-rule"></div>
+    </div>
+    <div id="admin-corrections"></div>
+
+    <div class="section-head" style="margin-top:2rem;">
+      <div class="section-title">Pending Event Submissions</div>
+      <div class="section-rule"></div>
+    </div>
+    <div id="admin-event-submissions"></div>
+
+    <div class="section-head" style="margin-top:2rem;">
+      <div class="section-title">Events in Database</div>
+      <div class="section-rule"></div>
+    </div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;">All approved events. Expand to view results, edit records, or delete.</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <input id="ev-db-search" type="text" placeholder="Search events..."
+        oninput="filterDbEvents()"
+        style="flex:1;min-width:140px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
+      <select id="ev-db-format" onchange="filterDbEvents()"
+        style="padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
+        <option value="">All formats</option>
+        <option value="GT">GT</option>
+        <option value="RTT">RTT</option>
+        <option value="Teams">Teams</option>
+      </select>
+      <select id="ev-db-sort" onchange="filterDbEvents()"
+        style="padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
+        <option value="date-desc">Newest first</option>
+        <option value="date-asc">Oldest first</option>
+        <option value="name">Name A–Z</option>
+      </select>
+    </div>
+    <div id="ev-db-list"></div>
+
+    <div class="section-head" style="margin-top:2.5rem;">
+      <div class="section-title">Member Manager</div>
+      <div class="section-rule"></div>
+    </div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Add new members, update their factions, or deactivate players who have left.</div>
+
+    <div style="display:flex;gap:8px;margin-bottom:8px;max-width:560px;">
+      <input id="member-new-name" type="text" placeholder="New member name" maxlength="60"
+        style="flex:1;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;"
+        onkeydown="if(event.key==='Enter') addMember()"/>
+      <button onclick="addMember()"
+        style="padding:8px 14px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;white-space:nowrap;">
+        + Add Member
+      </button>
+    </div>
+    <div id="member-add-message" style="font-size:0.78rem;display:none;margin-bottom:10px;"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;max-width:560px;">
+      <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">
+        All Members (<span id="member-count">0</span>)
+      </div>
+      <input id="member-search" type="text" placeholder="Filter by name..."
+        oninput="filterMemberList()"
+        style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.8rem;width:160px;outline:none;"/>
+    </div>
+    <div id="member-list" style="max-width:560px;max-height:500px;overflow-y:auto;padding-right:4px;"></div>
 
   </div>
 
@@ -2755,7 +2719,7 @@ async function addNewMember() {
 
 // ── tab switching ──
 function switchTab(tab) {
-  const tabs = ['stats','calendar','league','club','more','submit','members'];
+  const tabs = ['stats','calendar','league','club','more','submit','members','admin'];
   tabs.forEach(t => {
     const el = document.getElementById('tab-' + t);
     if (el) el.style.display = t === tab ? '' : 'none';
@@ -2770,6 +2734,7 @@ function switchTab(tab) {
   if (tab === 'stats') buildNowPanel();
   if (tab === 'members') initMembersTab();
   if (tab === 'submit') updatePendingBadge();
+  if (tab === 'admin') { loadDbEvents(); loadAndRenderMembers(); updatePendingBadge(); }
 }
 
 // ── PIN gate ──
