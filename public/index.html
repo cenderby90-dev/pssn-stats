@@ -3030,9 +3030,17 @@ async function loadAttendance(forceReload = false) {
     }
     const data = await res.json();
     attendanceData = {};
-    (data.attendance || []).forEach(row => {
-      attendanceData[`${row.player_name}_${row.event_sort_date}`] = row.status;
-    });
+    // API returns a flat key-value object: { "PlayerName_20260411": "yes", ... }
+    // (not an array with an attendance key)
+    if (Array.isArray(data.attendance)) {
+      // Legacy array format
+      data.attendance.forEach(row => {
+        attendanceData[`${row.player_name}_${row.event_sort_date}`] = row.status;
+      });
+    } else {
+      // Current flat object format
+      Object.assign(attendanceData, data);
+    }
     _attendanceLastFetch = Date.now();
   } catch(e) {
     console.warn('Failed to load attendance:', e.message);
