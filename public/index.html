@@ -136,6 +136,10 @@
     .leaderboard::-webkit-scrollbar-track { background: var(--surface2); border-radius: 3px; }
     .leaderboard::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 3px; }
     .leaderboard::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+    #member-list::-webkit-scrollbar { width: 4px; }
+    #member-list::-webkit-scrollbar-track { background: transparent; }
+    #member-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    #member-list::-webkit-scrollbar-thumb:hover { background: var(--muted); }
     .lb-row {
       display: grid;
       grid-template-columns: 32px 1fr 120px 90px 70px;
@@ -1252,7 +1256,7 @@
         </div>
 
         <!-- Member list -->
-        <div id="member-list" style="max-width:560px;"></div>
+        <div id="member-list" style="max-width:560px;max-height:500px;overflow-y:auto;padding-right:4px;"></div>
 
       </div>
     </div>
