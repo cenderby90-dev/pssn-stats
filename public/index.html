@@ -1288,6 +1288,13 @@ const D = JSON.parse(document.getElementById('data').textContent);
 // ── edition state ──
 let ACTIVE_EDITION = D.currentEdition || 10;
 const API = '/api';
+const TEAM_PIN = '1719';
+
+// Sanitise strings for safe use in inline event handlers
+function safeAttr(str) {
+  return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+ // team-wide PIN for member writes
 let attendanceData = {};
 
 // ── approved submissions merged into events ──
@@ -2057,7 +2064,7 @@ async function saveCosOptins(names) {
       await fetch(`${API}/attendance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ player_name: name, event_sort_date: 19700102, status: 'cos_optin' })
+        body: JSON.stringify({ player_name: name, event_sort_date: 19700102, status: 'cos_optin', pin: TEAM_PIN })
       });
     }
     // Remove opt-outs
@@ -2065,7 +2072,7 @@ async function saveCosOptins(names) {
       await fetch(`${API}/attendance`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ player_name: name, event_sort_date: 19700102 })
+        body: JSON.stringify({ player_name: name, event_sort_date: 19700102, pin: TEAM_PIN })
       });
     }
     await loadAttendance(true); // force reload after write
@@ -2178,7 +2185,7 @@ function renderLeaderboard(filter) {
         <div class="lb-rank">${isProvisional ? '—' : i + 1}</div>
         <div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span class="lb-name player-link" onclick="event.stopPropagation();openPlayerPanel('${s.name}')">${s.name}</span>
+            <span class="lb-name player-link" onclick="event.stopPropagation();openPlayerPanel('${safeAttr(s.name)}')">${s.name}</span>
             ${bestResultHtml}
           </div>
           <div class="lb-faction" style="display:flex;align-items:center;gap:8px;">
@@ -2343,7 +2350,7 @@ formatOrder.forEach(fmt => {
         if (r.dropped) {
           const outOf = ev.totalPlayers ? ` <span style="font-size:0.7rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:300">/ ${ev.totalPlayers}</span>` : '';
           return `<tr style="opacity:0.6;">
-            <td class="player-cell"><span class="player-link" onclick="openPlayerPanel('${r.player}')">${r.player}</span> <span style="font-size:0.62rem;color:var(--loss);border:1px solid var(--loss);padding:1px 5px;border-radius:3px;margin-left:4px;">Dropped</span></td>
+            <td class="player-cell"><span class="player-link" onclick="openPlayerPanel('${safeAttr(r.player)}')">${r.player}</span> <span style="font-size:0.62rem;color:var(--loss);border:1px solid var(--loss);padding:1px 5px;border-radius:3px;margin-left:4px;">Dropped</span></td>
             <td>${r.faction}</td>
             <td class="placing-cell" style="color:var(--muted)">${r.placing > 0 ? r.placing + (ev.totalPlayers ? ' / ' + ev.totalPlayers : '') : '—'}</td>
             <td class="wld-cell">
@@ -2358,7 +2365,7 @@ formatOrder.forEach(fmt => {
         const outOf = ev.totalPlayers ? ` <span style="font-size:0.7rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:300">/ ${ev.totalPlayers}</span>` : '';
         const shadowTag = r.shadow ? ` <span style="font-size:0.62rem;color:var(--accent);border:1px solid var(--accent-muted);padding:1px 5px;border-radius:3px;letter-spacing:0.04em;margin-left:6px;">5-0 shadow</span>` : '';
         return `<tr>
-          <td class="player-cell"><span class="player-link" onclick="openPlayerPanel('${r.player}')">${r.player}</span>${shadowTag}</td>
+          <td class="player-cell"><span class="player-link" onclick="openPlayerPanel('${safeAttr(r.player)}')">${r.player}</span>${shadowTag}</td>
           <td>${r.faction}</td>
           <td class="placing-cell${placingCls}">${r.placing}${outOf}</td>
           <td class="wld-cell">
@@ -3079,13 +3086,13 @@ async function setGoing(name, sortDate, status) {
       await fetch(`${API}/attendance`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ player_name: name, event_sort_date: sortDate })
+        body: JSON.stringify({ player_name: name, event_sort_date: sortDate, pin: TEAM_PIN })
       });
     } else {
       await fetch(`${API}/attendance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ player_name: name, event_sort_date: sortDate, status })
+        body: JSON.stringify({ player_name: name, event_sort_date: sortDate, status, pin: TEAM_PIN })
       });
     }
     await loadAttendance(true); // force reload so tick updates immediately
@@ -3237,7 +3244,8 @@ async function submitCorrection() {
       body: JSON.stringify({
         player_name: `_corr_${ts}`,
         event_sort_date: 19700101,
-        status: JSON.stringify(correction)
+        status: JSON.stringify(correction),
+        pin: TEAM_PIN
       })
     });
     const data = await res.json();
@@ -3514,7 +3522,7 @@ async function approveCorrection(key) {
     await fetch(`${API}/attendance`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ player_name: dbPlayerName, event_sort_date: 19700101, status: JSON.stringify(c) })
+      body: JSON.stringify({ player_name: dbPlayerName, event_sort_date: 19700101, status: JSON.stringify(c), pin: getAdminPin() })
     });
 
     await loadAdminCorrections();
@@ -3537,7 +3545,8 @@ async function dismissCorrection(key) {
       body: JSON.stringify({
         player_name: dbPlayerName,
         event_sort_date: 19700101,
-        status: JSON.stringify(c)
+        status: JSON.stringify(c),
+        pin: getAdminPin()
       })
     });
     await loadAdminCorrections();
@@ -3633,7 +3642,7 @@ async function approveEventSubmission(key) {
       await fetch(`${API}/attendance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ player_name: dbPlayerName, event_sort_date: 19700101, status: JSON.stringify(s) })
+        body: JSON.stringify({ player_name: dbPlayerName, event_sort_date: 19700101, status: JSON.stringify(s) , pin: getAdminPin() })
       });
       await loadAdminEventSubmissions();
     } else {
@@ -3654,7 +3663,7 @@ async function dismissEventSubmission(key) {
     await fetch(`${API}/attendance`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ player_name: dbPlayerName, event_sort_date: 19700101, status: JSON.stringify(s) })
+      body: JSON.stringify({ player_name: dbPlayerName, event_sort_date: 19700101, status: JSON.stringify(s), pin: getAdminPin() })
     });
     await loadAdminEventSubmissions();
   } catch(e) {
@@ -3691,7 +3700,8 @@ async function saveTeamData(sortDate, teams) {
       body: JSON.stringify({
         player_name: `_teams_${sortDate}`,
         event_sort_date: sortDate,
-        status: JSON.stringify(teams)
+        status: JSON.stringify(teams),
+        pin: TEAM_PIN
       })
     });
     await loadAttendance();
@@ -3726,7 +3736,8 @@ async function saveTeamRegistry(names) {
       body: JSON.stringify({
         player_name: '_team_registry_19700101',
         event_sort_date: 19700101,
-        status: JSON.stringify(names)
+        status: JSON.stringify(names),
+        pin: TEAM_PIN
       })
     });
     await loadAttendance();
