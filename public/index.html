@@ -1187,31 +1187,56 @@
       <div class="section-rule"></div>
     </div>
     <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">
-      Run the bookmarklet on a BCP results page, then paste the JSON output here.
+      Run the bookmarklet on a BCP results page and paste the JSON here. Works for both individual and teams events.
+      For teams events, paste the <strong>team standings</strong> first, then the <strong>individual results</strong>.
     </div>
     <div style="max-width:680px;">
-      <textarea id="bcp-paste" rows="5" placeholder='Paste bookmarklet JSON here, e.g. {"event":"Sheffield GT","results":[...]}'
-        oninput="bcpParsePreview()"
-        style="width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:monospace;font-size:0.8rem;resize:vertical;outline:none;"></textarea>
 
-      <!-- Event metadata fields — shown after valid paste -->
+      <!-- Mode indicator -->
+      <div id="bcp-mode-bar" style="display:none;margin-bottom:10px;padding:7px 12px;border-radius:4px;font-size:0.78rem;font-weight:500;"></div>
+
+      <!-- Paste 1 (always shown) -->
+      <div style="margin-bottom:8px;font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;" id="bcp-paste1-label">Paste bookmarklet output</div>
+      <textarea id="bcp-paste" rows="4" placeholder='{"event":"Sheffield GT","results":[...]}'
+        oninput="bcpParsePreview()"
+        style="width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:monospace;font-size:0.78rem;resize:vertical;outline:none;"></textarea>
+
+      <!-- Paste 2 — individual results for teams events -->
+      <div id="bcp-paste2-wrap" style="display:none;margin-top:10px;">
+        <div style="margin-bottom:8px;font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;">Individual player results (from BCP individual tab)</div>
+        <textarea id="bcp-paste2" rows="4" placeholder='{"event":"Spring Team Training","results":[{"player":"Cayleb Langhals","faction":"Death Guard","placing":8,...}]}'
+          oninput="bcpParsePreview()"
+          style="width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:monospace;font-size:0.78rem;resize:vertical;outline:none;"></textarea>
+      </div>
+
+      <!-- Team assignment confirmation (teams events only) -->
+      <div id="bcp-team-assign" style="display:none;margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px;">
+        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Confirm team rosters</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">For each PSSN team, confirm which players are on it. Unassigned players are shown at the bottom — drag them to the right team.</div>
+        <div id="bcp-team-assign-body"></div>
+        <button onclick="bcpConfirmTeams()"
+          style="margin-top:12px;padding:8px 18px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;"
+          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+          Confirm rosters →
+        </button>
+      </div>
+
+      <!-- Event metadata -->
       <div id="bcp-meta" style="display:none;margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px;">
         <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Event details</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
           <div>
             <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Event name</label>
-            <input id="bcp-ev-name" type="text"
-              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            <input id="bcp-ev-name" type="text" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
           </div>
           <div>
-            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Display date (e.g. Apr 2026)</label>
-            <input id="bcp-ev-date" type="text" placeholder="Apr 2026"
-              oninput="bcpAutoSortDate(this.value)"
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Display date (e.g. May 2026)</label>
+            <input id="bcp-ev-date" type="text" placeholder="May 2026" oninput="bcpAutoSortDate(this.value)"
               style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
           </div>
           <div>
             <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Sort date (YYYYMMDD)</label>
-            <input id="bcp-ev-sortdate" type="number" placeholder="20260419"
+            <input id="bcp-ev-sortdate" type="number" placeholder="20260503"
               style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
           </div>
           <div>
@@ -1231,27 +1256,32 @@
               style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
           </div>
           <div>
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Total teams (Teams events)</label>
+            <input id="bcp-ev-teams" type="number" min="1" placeholder="e.g. 65"
+              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div style="grid-column:1/-1;">
             <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">BCP URL (optional)</label>
             <input id="bcp-ev-url" type="text" placeholder="https://bestcoastpairings.com/..."
               style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
           </div>
         </div>
 
-        <!-- Results preview table -->
+        <!-- Preview table -->
         <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">
-          Results preview (<span id="bcp-result-count">0</span> players)
+          Results preview — <span id="bcp-result-count">0</span> PSSN result rows to import
         </div>
         <div style="overflow-x:auto;margin-bottom:12px;">
-          <table style="width:100%;border-collapse:collapse;font-size:0.78rem;" id="bcp-preview-table">
+          <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
             <thead>
               <tr style="border-bottom:1px solid var(--border);">
                 <th style="text-align:left;padding:5px 8px;color:var(--muted);font-weight:500;">Place</th>
                 <th style="text-align:left;padding:5px 8px;color:var(--muted);font-weight:500;">Player</th>
                 <th style="text-align:left;padding:5px 8px;color:var(--muted);font-weight:500;">Faction</th>
+                <th style="text-align:left;padding:5px 8px;color:var(--muted);font-weight:500;">Team</th>
                 <th style="text-align:center;padding:5px 8px;color:var(--win);font-weight:500;">W</th>
                 <th style="text-align:center;padding:5px 8px;color:var(--loss);font-weight:500;">L</th>
                 <th style="text-align:center;padding:5px 8px;color:var(--draw);font-weight:500;">D</th>
-                <th style="text-align:center;padding:5px 8px;color:var(--muted);font-weight:500;">In DB?</th>
               </tr>
             </thead>
             <tbody id="bcp-preview-body"></tbody>
@@ -1272,6 +1302,7 @@
         <div id="bcp-message" style="font-size:0.82rem;margin-top:10px;display:none;padding:8px 12px;border-radius:4px;"></div>
       </div>
     </div>
+
 
     <div class="section-head" style="margin-top:2rem;">
       <div class="section-title">Events in Database</div>
@@ -5903,7 +5934,7 @@ async function toggleMember(playerId, active) {
 
 
 // ── BCP Bookmarklet Import ──
-let _bcpParsed = null;
+let _bcpParsed = null;       // { mode: 'individual'|'teams', teamStandings, individualResults, merged }
 
 function bcpAutoSortDate(val) {
   const MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
@@ -5915,57 +5946,315 @@ function bcpAutoSortDate(val) {
   }
 }
 
-function bcpParsePreview() {
-  const raw = document.getElementById('bcp-paste')?.value.trim();
-  const meta = document.getElementById('bcp-meta');
-  if (!raw || raw.length < 10) { if (meta) meta.style.display = 'none'; _bcpParsed = null; return; }
-
-  let data;
-  try { data = JSON.parse(raw); } catch(e) {
-    if (meta) meta.style.display = 'none'; _bcpParsed = null; return;
-  }
-
-  if (!data.event || !Array.isArray(data.results) || !data.results.length) {
-    if (meta) meta.style.display = 'none'; _bcpParsed = null; return;
-  }
-
-  _bcpParsed = data;
-
-  // Populate event fields
-  document.getElementById('bcp-ev-name').value = data.event;
-  // Auto sort date from current date as fallback
-  const now = new Date();
-  const defaultSortDate = now.getFullYear()*10000 + (now.getMonth()+1)*100 + now.getDate();
-  if (!document.getElementById('bcp-ev-sortdate').value) {
-    document.getElementById('bcp-ev-sortdate').value = defaultSortDate;
-  }
-
-  // Build known PSSN player set for "in DB?" column
+function bcpDetectMode(results) {
+  // Individual: player names match D.players OR factions are present
+  // Teams: player names don't match D.players AND no factions (team names as "player")
   const knownPlayers = new Set(D.players.map(p => p.name));
+  const hasFactions = results.some(r => r.faction && r.faction.trim());
+  const anyKnown = results.some(r => knownPlayers.has(r.player));
+  return (hasFactions || anyKnown) ? 'individual' : 'teams';
+}
 
-  // Render preview
+function bcpGetTeamRegistry() {
+  // Get the most recent _teams_ entry from attendanceData
+  const keys = Object.keys(attendanceData).filter(k => k.startsWith('_teams_'));
+  if (!keys.length) return [];
+  keys.sort().reverse(); // most recent first
+  try { return JSON.parse(attendanceData[keys[0]]) || []; } catch(e) { return []; }
+}
+
+function bcpParsePreview() {
+  const raw1 = document.getElementById('bcp-paste')?.value.trim();
+  const raw2 = document.getElementById('bcp-paste2')?.value.trim();
+  const meta = document.getElementById('bcp-meta');
+  const modeBar = document.getElementById('bcp-mode-bar');
+  const paste2Wrap = document.getElementById('bcp-paste2-wrap');
+
+  if (!raw1 || raw1.length < 10) {
+    if (meta) meta.style.display = 'none';
+    if (modeBar) modeBar.style.display = 'none';
+    if (paste2Wrap) paste2Wrap.style.display = 'none';
+    _bcpParsed = null;
+    return;
+  }
+
+  let data1;
+  try { data1 = JSON.parse(raw1); } catch(e) { return; }
+  if (!data1.event || !Array.isArray(data1.results) || !data1.results.length) return;
+
+  const mode = bcpDetectMode(data1.results);
+  _bcpParsed = { mode };
+
+  // Pre-fill event name
+  document.getElementById('bcp-ev-name').value = data1.event;
+
+  if (mode === 'individual') {
+    // ── INDIVIDUAL EVENT ──
+    modeBar.style.display = 'block';
+    modeBar.style.background = 'var(--win-bg)';
+    modeBar.style.color = 'var(--win)';
+    modeBar.textContent = '✓ Individual event detected — ' + data1.results.length + ' total results';
+    paste2Wrap.style.display = 'none';
+    document.getElementById('bcp-ev-format').value = 'GT'; // sensible default
+
+    const knownPlayers = new Set(D.players.map(p => p.name));
+    const pssnResults = data1.results.filter(r => knownPlayers.has(r.player));
+    _bcpParsed.merged = pssnResults.map(r => ({
+      player_name: r.player, faction: r.faction || '',
+      place: r.placing, wins: r.w, losses: r.l, draws: r.d,
+      subteam: null, shadow: false, dropped: false
+    }));
+
+    document.getElementById('bcp-result-count').textContent = pssnResults.length + ' of ' + data1.results.length;
+    const tbody = document.getElementById('bcp-preview-body');
+    tbody.innerHTML = data1.results.map(r => {
+      const isPssn = knownPlayers.has(r.player);
+      return `<tr style="border-bottom:0.5px solid var(--border);${isPssn?'':'opacity:0.4;'}">
+        <td style="padding:5px 8px;color:var(--muted);">${r.placing}</td>
+        <td style="padding:5px 8px;color:var(--text);font-weight:${isPssn?'500':'400'};">${r.player}${isPssn?'':' <span style="font-size:0.68rem;color:var(--faint);">(not PSSN)</span>'}</td>
+        <td style="padding:5px 8px;color:var(--muted);font-size:0.72rem;">${r.faction||'—'}</td>
+        <td style="padding:5px 8px;color:var(--muted);font-size:0.72rem;">—</td>
+        <td style="padding:5px 8px;text-align:center;color:var(--win);">${r.w}</td>
+        <td style="padding:5px 8px;text-align:center;color:var(--loss);">${r.l}</td>
+        <td style="padding:5px 8px;text-align:center;color:var(--draw);">${r.d}</td>
+      </tr>`;
+    }).join('');
+    meta.style.display = 'block';
+
+  } else {
+    // ── TEAMS EVENT ──
+    modeBar.style.display = 'block';
+    modeBar.style.background = 'var(--draw-bg)';
+    modeBar.style.color = 'var(--draw)';
+    document.getElementById('bcp-ev-format').value = 'Teams';
+
+    // Build team placing map from paste 1
+    const teamPlacings = {};
+    data1.results.forEach(r => { teamPlacings[r.player] = { place: r.placing, w: r.w, l: r.l, d: r.d }; });
+    _bcpParsed.teamStandings = teamPlacings;
+
+    // Check if we also have individual results (paste 2)
+    let data2 = null;
+    if (raw2 && raw2.length > 10) {
+      try { data2 = JSON.parse(raw2); } catch(e) {}
+    }
+
+    if (!data2 || !Array.isArray(data2.results) || !data2.results.length) {
+      // Only have team standings — show prompt for individual paste
+      const pssnTeams = bcpFindPssnTeams(teamPlacings);
+      modeBar.textContent = '⬦ Teams event — ' + data1.results.length + ' teams found, ' + pssnTeams.length + ' PSSN. Paste individual results below.';
+      paste2Wrap.style.display = 'block';
+      // Preview just the team standings for now
+      const tbody = document.getElementById('bcp-preview-body');
+      tbody.innerHTML = data1.results.map(r => {
+        const isPssn = pssnTeams.some(t => t.name === r.player);
+        return `<tr style="border-bottom:0.5px solid var(--border);${isPssn?'':'opacity:0.4;'}">
+          <td style="padding:5px 8px;color:var(--muted);">${r.placing}</td>
+          <td style="padding:5px 8px;color:var(--text);font-weight:${isPssn?'500':'400'};" colspan="3">${r.player}${isPssn?' <span style="font-size:0.68rem;color:var(--win);">✓ PSSN</span>':''}</td>
+          <td style="padding:5px 8px;text-align:center;color:var(--win);">${r.w}</td>
+          <td style="padding:5px 8px;text-align:center;color:var(--loss);">${r.l}</td>
+          <td style="padding:5px 8px;text-align:center;color:var(--draw);">${r.d}</td>
+        </tr>`;
+      }).join('');
+      document.getElementById('bcp-result-count').textContent = '0 (paste individual results to continue)';
+      meta.style.display = 'block';
+      return;
+    }
+
+    // Have both pastes — show team assignment confirmation step
+    paste2Wrap.style.display = 'block';
+    const registry = bcpGetTeamRegistry();
+    const knownPlayers = new Set(D.players.map(p => p.name));
+    const pssnTeams = bcpFindPssnTeams(teamPlacings);
+
+    // Build initial player→team map from registry
+    const playerToTeam = {};
+    registry.forEach(team => {
+      (team.players || []).forEach(p => { playerToTeam[p] = team.name; });
+    });
+
+    // Store individual results on _bcpParsed for use in confirmation step
+    _bcpParsed.individualResults = data2.results;
+    _bcpParsed.knownPlayers = knownPlayers;
+    _bcpParsed.pssnTeams = pssnTeams;
+    _bcpParsed.playerToTeam = playerToTeam;
+
+    modeBar.textContent = '⬦ Teams event — ' + pssnTeams.length + ' PSSN team' + (pssnTeams.length>1?'s':'') + ' · confirm rosters below';
+
+    // Build team assignment UI
+    bcpBuildTeamAssign(data2.results, pssnTeams, teamPlacings, playerToTeam, knownPlayers);
+    document.getElementById('bcp-team-assign').style.display = 'block';
+    document.getElementById('bcp-meta').style.display = 'none';
+  }
+}
+
+function bcpBuildTeamAssign(individualResults, pssnTeams, teamPlacings, playerToTeam, knownPlayers) {
+  const body = document.getElementById('bcp-team-assign-body');
+
+  // Separate PSSN players from non-PSSN, and assign initial teams from registry
+  const pssnPlayers = individualResults.filter(r => knownPlayers.has(r.player));
+  const teamNames = pssnTeams.map(t => t.name);
+
+  // Group players by their registry-assigned team (or 'unassigned')
+  const buckets = {};
+  teamNames.forEach(n => { buckets[n] = []; });
+  buckets['__unassigned__'] = [];
+
+  pssnPlayers.forEach(r => {
+    const team = playerToTeam[r.player];
+    if (team && buckets[team]) buckets[team].push(r);
+    else buckets['__unassigned__'].push(r);
+  });
+
+  function playerCard(r, teamName) {
+    return `<div draggable="true"
+      data-player="${r.player.replace(/"/g,'&quot;')}"
+      data-faction="${(r.faction||'').replace(/"/g,'&quot;')}"
+      data-w="${r.w}" data-l="${r.l}" data-d="${r.d}"
+      ondragstart="bcpDragStart(event)"
+      style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;
+             background:var(--surface2);border:1px solid var(--border);border-radius:4px;
+             margin-bottom:4px;cursor:grab;gap:8px;font-size:0.82rem;">
+        <span style="color:var(--text);font-weight:500;">${r.player}</span>
+        <span style="color:var(--muted);font-size:0.72rem;">${r.faction||'—'}</span>
+        <span style="color:var(--muted);font-size:0.72rem;white-space:nowrap;">${r.w}W ${r.l}L ${r.d}D</span>
+    </div>`;
+  }
+
+  function teamBucket(teamName, players) {
+    const tp = teamPlacings[teamName];
+    const isReal = teamName !== '__unassigned__';
+    const label = isReal
+      ? `${teamName} <span style="color:var(--muted);font-size:0.72rem;">· ${tp ? tp.place + (tp.place===1?'st':tp.place===2?'nd':tp.place===3?'rd':'th') + ' place' : 'not in paste 1'}</span>`
+      : '<span style="color:var(--loss);">⚠ Unassigned players</span>';
+    return `<div style="margin-bottom:12px;">
+      <div style="font-size:0.75rem;font-weight:500;color:${isReal?'var(--text)':'var(--loss)'};margin-bottom:6px;">${label}</div>
+      <div id="bcp-bucket-${teamName.replace(/[^a-z0-9]/gi,'_')}"
+        ondragover="event.preventDefault()"
+        ondrop="bcpDrop(event,'${teamName.replace(/'/g,'\'')}')"
+        style="min-height:42px;padding:4px;background:var(--bg);border:1px dashed ${isReal?'var(--border)':'var(--loss)'};
+               border-radius:4px;${players.length===0?'display:flex;align-items:center;justify-content:center;':''}">
+        ${players.length ? players.map(r => playerCard(r)).join('') : '<span style="font-size:0.72rem;color:var(--faint);">Drop players here</span>'}
+      </div>
+    </div>`;
+  }
+
+  let html = teamNames.map(n => teamBucket(n, buckets[n])).join('');
+  if (buckets['__unassigned__'].length) html += teamBucket('__unassigned__', buckets['__unassigned__']);
+  body.innerHTML = html;
+}
+
+function bcpDragStart(event) {
+  const el = event.currentTarget;
+  event.dataTransfer.setData('text/plain', JSON.stringify({
+    player: el.dataset.player,
+    faction: el.dataset.faction,
+    w: +el.dataset.w, l: +el.dataset.l, d: +el.dataset.d
+  }));
+  event.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => el.style.opacity = '0.4', 0);
+}
+
+function bcpDrop(event, targetTeam) {
+  event.preventDefault();
+  let data;
+  try { data = JSON.parse(event.dataTransfer.getData('text/plain')); } catch(e) { return; }
+
+  // Remove player from any bucket they're currently in
+  document.querySelectorAll('[id^="bcp-bucket-"] [data-player]').forEach(el => {
+    if (el.dataset.player === data.player) el.remove();
+  });
+
+  // Update the internal playerToTeam map
+  if (_bcpParsed.playerToTeam) _bcpParsed.playerToTeam[data.player] = targetTeam;
+
+  // Add player card to new bucket
+  const bucketId = 'bcp-bucket-' + targetTeam.replace(/[^a-z0-9]/gi, '_');
+  const bucket = document.getElementById(bucketId);
+  if (!bucket) return;
+
+  // Remove "drop here" placeholder if present
+  const placeholder = bucket.querySelector('span');
+  if (placeholder) placeholder.remove();
+  bucket.style.display = '';
+
+  const card = document.createElement('div');
+  card.draggable = true;
+  card.dataset.player = data.player;
+  card.dataset.faction = data.faction;
+  card.dataset.w = data.w;
+  card.dataset.l = data.l;
+  card.dataset.d = data.d;
+  card.ondragstart = bcpDragStart;
+  card.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:4px;cursor:grab;gap:8px;font-size:0.82rem;';
+  card.innerHTML = `<span style="color:var(--text);font-weight:500;">${data.player}</span><span style="color:var(--muted);font-size:0.72rem;">${data.faction||'—'}</span><span style="color:var(--muted);font-size:0.72rem;white-space:nowrap;">${data.w}W ${data.l}L ${data.d}D</span>`;
+  bucket.appendChild(card);
+}
+
+function bcpConfirmTeams() {
+  // Read current bucket state from DOM → build merged results
+  const teamPlacings = _bcpParsed.teamStandings;
+  const pssnTeams = _bcpParsed.pssnTeams || [];
+  const merged = [];
+  const warnings = [];
+
+  pssnTeams.forEach(team => {
+    const tp = teamPlacings[team.name];
+    if (!tp) { warnings.push('Team "' + team.name + '" not found in paste 1'); return; }
+    const bucketId = 'bcp-bucket-' + team.name.replace(/[^a-z0-9]/gi, '_');
+    const bucket = document.getElementById(bucketId);
+    if (!bucket) return;
+    bucket.querySelectorAll('[data-player]').forEach(el => {
+      merged.push({
+        player_name: el.dataset.player,
+        faction: el.dataset.faction || '',
+        place: tp.place,
+        wins: +el.dataset.w, losses: +el.dataset.l, draws: +el.dataset.d,
+        subteam: team.name, shadow: false, dropped: false
+      });
+    });
+  });
+
+  // Check for unassigned PSSN players
+  const unassignedBucket = document.getElementById('bcp-bucket-__unassigned__');
+  if (unassignedBucket) {
+    unassignedBucket.querySelectorAll('[data-player]').forEach(el => {
+      warnings.push(el.dataset.player + ' is unassigned — not imported');
+    });
+  }
+
+  _bcpParsed.merged = merged;
+  _bcpParsed.warnings = warnings;
+
+  // Hide team assign, show meta/preview
+  document.getElementById('bcp-team-assign').style.display = 'none';
+  const meta = document.getElementById('bcp-meta');
+
+  // Populate preview table
+  document.getElementById('bcp-result-count').textContent = merged.length + (warnings.length ? ' · ⚠ ' + warnings.length + ' unassigned' : '');
   const tbody = document.getElementById('bcp-preview-body');
-  document.getElementById('bcp-result-count').textContent = data.results.length;
-  tbody.innerHTML = data.results.map(r => {
-    const known = knownPlayers.has(r.player);
-    const isPssn = known;
-    const rowStyle = isPssn ? '' : 'opacity:0.45;';
-    return `<tr style="border-bottom:0.5px solid var(--border);${rowStyle}">
-      <td style="padding:5px 8px;color:var(--muted);">${r.placing}</td>
-      <td style="padding:5px 8px;color:var(--text);font-weight:${isPssn?'500':'400'};">${r.player}</td>
+  tbody.innerHTML = merged.map(r => `
+    <tr style="border-bottom:0.5px solid var(--border);">
+      <td style="padding:5px 8px;color:var(--muted);">${r.place}</td>
+      <td style="padding:5px 8px;color:var(--text);font-weight:500;">${r.player_name}</td>
       <td style="padding:5px 8px;color:var(--muted);font-size:0.72rem;">${r.faction||'—'}</td>
-      <td style="padding:5px 8px;text-align:center;color:var(--win);">${r.w}</td>
-      <td style="padding:5px 8px;text-align:center;color:var(--loss);">${r.l}</td>
-      <td style="padding:5px 8px;text-align:center;color:var(--draw);">${r.d}</td>
-      <td style="padding:5px 8px;text-align:center;">
-        ${isPssn
-          ? '<span style="color:var(--win);font-size:0.75rem;">✓ PSSN</span>'
-          : '<span style="color:var(--faint);font-size:0.72rem;">—</span>'}
-      </td>
-    </tr>`;
-  }).join('');
+      <td style="padding:5px 8px;color:var(--muted);font-size:0.72rem;">${r.subteam}</td>
+      <td style="padding:5px 8px;text-align:center;color:var(--win);">${r.wins}</td>
+      <td style="padding:5px 8px;text-align:center;color:var(--loss);">${r.losses}</td>
+      <td style="padding:5px 8px;text-align:center;color:var(--draw);">${r.draws}</td>
+    </tr>`).join('');
+
+  const modeBar = document.getElementById('bcp-mode-bar');
+  modeBar.textContent = '✓ Teams confirmed — ' + merged.length + ' results ready to import' + (warnings.length ? ' · ⚠ ' + warnings.join('; ') : '');
+  modeBar.style.background = warnings.length ? 'var(--draw-bg)' : 'var(--win-bg)';
+  modeBar.style.color = warnings.length ? 'var(--draw)' : 'var(--win)';
 
   meta.style.display = 'block';
+}
+
+function bcpFindPssnTeams(teamPlacings) {
+  const registry = bcpGetTeamRegistry();
+  return registry.filter(t => t.name && teamPlacings[t.name]);
 }
 
 async function bcpImport() {
@@ -5975,63 +6264,39 @@ async function bcpImport() {
   const sortDate = parseInt(document.getElementById('bcp-ev-sortdate').value);
   const format   = document.getElementById('bcp-ev-format').value;
   const players  = parseInt(document.getElementById('bcp-ev-players').value) || 0;
+  const teams    = parseInt(document.getElementById('bcp-ev-teams').value) || 0;
   const bcpUrl   = document.getElementById('bcp-ev-url').value.trim();
 
   if (!name || !date || !sortDate || !format) {
-    msg.style.display = 'block';
-    msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
-    msg.textContent = 'Please fill in event name, display date, sort date and format.';
-    return;
+    msg.style.display = 'block'; msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Please fill in event name, display date, sort date and format.'; return;
   }
-  if (!_bcpParsed?.results?.length) {
-    msg.style.display = 'block';
-    msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
-    msg.textContent = 'No valid results to import.';
+  if (!_bcpParsed?.merged?.length) {
+    msg.style.display = 'block'; msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+    msg.textContent = _bcpParsed?.mode === 'teams' ? 'Paste the individual results in the second box first.' : 'No valid PSSN results to import.';
     return;
   }
 
-  // Filter to PSSN members only
-  const knownPlayers = new Set(D.players.map(p => p.name));
-  const pssnResults = _bcpParsed.results.filter(r => knownPlayers.has(r.player));
+  msg.style.display = 'block'; msg.style.background = 'var(--surface2)'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Importing ' + _bcpParsed.merged.length + ' results...';
 
-  if (!pssnResults.length) {
-    msg.style.display = 'block';
-    msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
-    msg.textContent = 'None of the results match PSSN members. Check player names.';
-    return;
-  }
-
-  msg.style.display = 'block';
-  msg.style.background = 'var(--surface2)'; msg.style.color = 'var(--muted)';
-  msg.textContent = `Importing ${pssnResults.length} PSSN result${pssnResults.length > 1 ? 's' : ''}...`;
-
-  const event = { name, event_date: date, sort_date: sortDate, format, total_players: players, bcp_url: bcpUrl };
-  const results = pssnResults.map(r => ({
-    player_name: r.player,
-    faction: r.faction || '',
-    place: r.placing,
-    wins: r.w,
-    losses: r.l,
-    draws: r.d,
-    shadow: false,
-    dropped: false,
-  }));
+  const event = { name, event_date: date, sort_date: sortDate, format, total_players: players, total_teams: teams, bcp_url: bcpUrl };
 
   try {
     const res = await fetch(`${API}/events`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: getAdminPin(), event, results })
+      body: JSON.stringify({ pin: getAdminPin(), event, results: _bcpParsed.merged })
     });
     const data = await res.json();
     if (data.success) {
       msg.style.background = 'var(--win-bg)'; msg.style.color = 'var(--win)';
-      msg.textContent = `✓ Imported "${name}" with ${pssnResults.length} PSSN result${pssnResults.length > 1 ? 's' : ''}. Reloading...`;
+      msg.textContent = '✓ Imported "' + name + '" with ' + _bcpParsed.merged.length + ' results. Reloading stats...';
       await loadApprovedSubmissions();
       rebuildStats();
       await loadDbEvents();
       updatePendingBadge();
-      setTimeout(bcpClear, 2000);
+      setTimeout(bcpClear, 2500);
     } else {
       msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
       msg.textContent = 'Error: ' + (data.error || 'Unknown');
@@ -6044,17 +6309,14 @@ async function bcpImport() {
 
 function bcpClear() {
   _bcpParsed = null;
-  const paste = document.getElementById('bcp-paste');
-  if (paste) paste.value = '';
-  const meta = document.getElementById('bcp-meta');
-  if (meta) meta.style.display = 'none';
-  ['bcp-ev-name','bcp-ev-date','bcp-ev-sortdate','bcp-ev-players','bcp-ev-url'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
+  ['bcp-paste','bcp-paste2','bcp-ev-name','bcp-ev-date','bcp-ev-sortdate','bcp-ev-players','bcp-ev-teams','bcp-ev-url']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['bcp-meta','bcp-paste2-wrap','bcp-mode-bar','bcp-message','bcp-team-assign'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'none';
   });
-  const msg = document.getElementById('bcp-message');
-  if (msg) msg.style.display = 'none';
 }
+
+
 
 async function loadDbEvents() {
   try {
