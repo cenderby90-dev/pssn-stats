@@ -491,6 +491,8 @@
     <div class="header-eyebrow">Warhammer 40,000 — Season Stats</div>
     <h1 class="header-title" id="team-title"></h1>
     <div class="header-meta" id="header-meta"></div>
+
+
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:1rem;">
       <div class="tab-bar" style="margin-top:0;border-bottom:none;">
         <button class="tab-btn active" onclick="switchTab('stats')">Season Stats</button>
@@ -887,6 +889,7 @@
             <div>
               <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Display date</label>
               <input id="wiz-ev-date" type="text" placeholder="Mar 2026"
+                oninput="wizardAutoSortDate(this.value)"
                 style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
             </div>
             <div>
@@ -899,6 +902,7 @@
             <div>
               <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Format</label>
               <select id="wiz-ev-format"
+                onchange="wizardUpdateSubteamVisibility()"
                 style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
                 <option value="">Select...</option>
                 <option value="GT">GT</option>
@@ -981,10 +985,20 @@
                 style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
             </div>
           </div>
-          <div>
+          <div id="wiz-subteam-wrap">
             <label style="font-size:0.75rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px;">Sub-team (Teams events only)</label>
             <input id="wiz-subteam" type="text" placeholder="e.g. The Sh[a]meful Suspects"
               style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;color:var(--muted);">
+              <input type="checkbox" id="wiz-shadow" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);"/>
+              Shadow round (went 5-0 before the shadow)
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;color:var(--muted);">
+              <input type="checkbox" id="wiz-dropped" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);"/>
+              I dropped from this event
+            </label>
           </div>
           <button onclick="wizardSubmitResult()"
             style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;"
@@ -1143,6 +1157,9 @@
     <div id="admin-pin-error" style="font-size:0.75rem;color:var(--loss);display:none;margin-top:6px;">Incorrect PIN</div>
   </div>
   <div id="admin-content" style="display:none;">
+
+    <!-- Triage summary — populated by buildAdminTriage() after PIN unlock -->
+    <div id="admin-triage" style="margin-bottom:1.5rem;"></div>
 
     <div class="section-head" style="margin-top:1.5rem;">
       <div class="section-title">Pending Approvals</div>
@@ -1385,6 +1402,13 @@ async function initSite() {
   buildNowPanel();
   loadLeagueData().then(() => { leagueLoaded = true; });
   if (sessionStorage.getItem('pssn_admin_pin')) updatePendingBadge();
+  // Restore My Club unlock state if returning to page in same session
+  if (sessionStorage.getItem('pssn_team_unlocked') === '1') {
+    const gate = document.getElementById('pin-gate');
+    const form = document.getElementById('submit-form');
+    if (gate) gate.style.display = 'none';
+    if (form) form.style.display = 'block';
+  }
 }
 
 
@@ -1963,6 +1987,7 @@ function buildNowPanel() {
       ${leagueHtml}
     </div>`;
 }
+
 
 // ── summary strips ──
 function buildStrip(containerId, statsMap, label) {
@@ -2723,16 +2748,29 @@ function switchTab(tab) {
   if (tab === 'more') { buildAwards(); buildMilestones(); }
   if (tab === 'stats') buildNowPanel();
   if (tab === 'members') initMembersTab();
-  if (tab === 'submit') updatePendingBadge();
+  if (tab === 'submit') {
+    updatePendingBadge();
+    // Restore unlocked state if already authenticated this session
+    if (sessionStorage.getItem('pssn_team_unlocked') === '1') {
+      const gate = document.getElementById('pin-gate');
+      const form = document.getElementById('submit-form');
+      if (gate) gate.style.display = 'none';
+      if (form && form.style.display === 'none') {
+        form.style.display = 'block';
+        renderWhosGoing();
+      }
+    }
+  }
   if (tab === 'admin') { loadDbEvents(); loadAndRenderMembers(); updatePendingBadge(); }
 }
 
 // ── PIN gate ──
 function checkPin(val) {
   if (val.length < 4) return;
-  if (val === '1719') {
+  if (val === TEAM_PIN) {
     document.getElementById('pin-gate').style.display = 'none';
     document.getElementById('submit-form').style.display = 'block';
+    sessionStorage.setItem('pssn_team_unlocked', '1');
     // Load attendance for who's going and db events for wizard
     renderWhosGoing();
     renderTeamsSignup();
@@ -3359,6 +3397,54 @@ async function updatePendingBadge() {
   } catch(e) {
     badge.style.display = 'none';
   }
+}
+
+function buildAdminTriage() {
+  const el = document.getElementById('admin-triage');
+  if (!el) return;
+
+  // Count result subs from the sheet-submissions DOM (cards rendered by loadResultSubmissions)
+  // Each pending card has a sub-msg-N element; count those as a proxy for pending count
+  const pendingSubs = document.querySelectorAll('#sheet-submissions [id^="sub-msg-"]').length;
+
+  const pendingCorrs = Object.entries(attendanceData)
+    .filter(([k,v]) => { if (!k.startsWith('_corr_')) return false; try { return JSON.parse(v).status==='pending'; } catch(e){return false;} }).length;
+
+  const pendingEvents = Object.entries(attendanceData)
+    .filter(([k,v]) => { if (!k.startsWith('_pending_event_')) return false; try { return JSON.parse(v).status==='pending'; } catch(e){return false;} }).length;
+
+  const total = pendingSubs + pendingCorrs + pendingEvents;
+
+  // Rebuild pending badge count
+  const badge = document.getElementById('pending-badge');
+  if (badge) {
+    badge.style.display = total > 0 ? 'inline' : 'none';
+    if (total > 0) badge.textContent = total;
+  }
+
+  if (total === 0) {
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;border-left:3px solid var(--win);">
+        <span style="font-size:1rem;">✓</span>
+        <div>
+          <div style="font-size:0.85rem;color:var(--text);font-weight:500;">All clear</div>
+          <div style="font-size:0.75rem;color:var(--muted);">No pending submissions, corrections, or events.</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const items = [];
+  if (pendingSubs > 0)    items.push(`<span style="color:var(--loss);">${pendingSubs} result submission${pendingSubs>1?'s':''}</span>`);
+  if (pendingEvents > 0)  items.push(`<span style="color:var(--draw);">${pendingEvents} event submission${pendingEvents>1?'s':''}</span>`);
+  if (pendingCorrs > 0)   items.push(`<span style="color:var(--accent);">${pendingCorrs} correction${pendingCorrs>1?'s':''}</span>`);
+
+  el.innerHTML = `
+    <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;border-left:3px solid var(--loss);">
+      <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Needs attention</div>
+      <div style="font-size:0.88rem;color:var(--text);line-height:1.8;">${items.join(' &nbsp;·&nbsp; ')}</div>
+      <div style="font-size:0.72rem;color:var(--faint);margin-top:6px;">Scroll down to review each section.</div>
+    </div>`;
 }
 
 async function loadAdminCorrections() {
@@ -5236,20 +5322,50 @@ function wizardShowStep2() {
       factionSel.appendChild(opt);
     });
   }
+
+  // Show/hide subteam based on format
+  wizardUpdateSubteamVisibility();
+
+  // Hide total players field for existing events (already in DB)
+  const totalWrap = document.getElementById('wiz-total')?.closest('div')?.parentElement;
+  if (totalWrap) totalWrap.style.display = wizardIsNewEvent ? '' : 'none';
+}
+
+function wizardAutoSortDate(val) {
+  const MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+  const m = val.trim().toLowerCase().match(/([a-z]+)[\s\-]+(\d{4})/);
+  if (m && MONTHS[m[1]] && parseInt(m[2]) > 2020) {
+    const sortDate = parseInt(m[2]) * 10000 + MONTHS[m[1]] * 100 + 1;
+    const el = document.getElementById('wiz-ev-sortdate');
+    if (el && !el.value) el.value = sortDate;
+  }
+}
+
+function wizardUpdateSubteamVisibility() {
+  const format = document.getElementById('wiz-ev-format')?.value || wizardEventFormat;
+  const subteamWrap = document.getElementById('wiz-subteam-wrap');
+  if (subteamWrap) subteamWrap.style.display = format === 'Teams' ? '' : 'none';
 }
 
 function wizardReset() {
-  wizardEventName = '';
-  wizardEventFormat = '';
-  wizardIsNewEvent = false;
   wizardNewEventData = null;
-  // Show step 1 (the search area inside wiz-tournament-flow), hide step 2
   document.getElementById('wiz-tournament-flow').style.display = 'block';
   document.getElementById('wizard-step2').style.display = 'none';
   document.getElementById('wiz-event-search').value = '';
   document.getElementById('wiz-search-results').style.display = 'none';
   document.getElementById('wiz-new-event-fields').style.display = 'none';
   document.getElementById('wiz-message').style.display = 'none';
+  // Reset checkboxes
+  const shadow = document.getElementById('wiz-shadow');
+  const dropped = document.getElementById('wiz-dropped');
+  if (shadow) shadow.checked = false;
+  if (dropped) dropped.checked = false;
+  // Reset subteam and total player field visibility
+  const subteamWrap = document.getElementById('wiz-subteam-wrap');
+  if (subteamWrap) subteamWrap.style.display = 'none';
+  const totalEl = document.getElementById('wiz-total');
+  const totalWrap = totalEl?.closest('div')?.parentElement;
+  if (totalWrap) totalWrap.style.display = '';
 }
 
 async function wizardSubmitResult() {
@@ -5302,7 +5418,7 @@ async function wizardSubmitResult() {
       const submission = {
         type: 'new_event',
         event: wizardNewEventData,
-        result: { player_name: player, faction, placing, wins, losses, draws, subteam },
+        result: { player_name: player, faction, placing, wins, losses, draws, subteam, shadow, dropped },
         submittedAt: new Date().toISOString(),
         status: 'pending'
       };
@@ -5316,7 +5432,7 @@ async function wizardSubmitResult() {
           faction,
           place: placing,
           total_players: wizardNewEventData.total_players || 0,
-          wins, losses, draws, subteam
+          wins, losses, draws, subteam, shadow, dropped
         })
       });
       const data = await res.json();
@@ -5339,7 +5455,7 @@ async function wizardSubmitResult() {
           event_format: wizardEventFormat,
           faction, place: placing,
           total_players: total,
-          wins, losses, draws, subteam
+          wins, losses, draws, subteam, shadow, dropped
         })
       });
       const subData = await subRes.json();
@@ -5378,6 +5494,7 @@ function checkAdminPin(val) {
           await loadResultSubmissions();
           loadDbEvents();
           loadAndRenderMembers();
+          buildAdminTriage();
         } else {
           errEl.style.display = 'block';
           document.getElementById('admin-pin-input').value = '';
@@ -5551,7 +5668,7 @@ async function addMember() {
   const msg = document.getElementById('member-add-message');
   const name = input?.value.trim();
   if (!name) return;
-  const adminPin = document.getElementById('admin-pin-input')?.value;
+  const adminPin = getAdminPin();
   try {
     const res = await fetch(`${API}/players`, {
       method: 'POST',
@@ -5693,34 +5810,6 @@ async function toggleMember(playerId, active) {
   } catch(e) { console.error(e); }
 }
 
-async function saveMemberFactions(playerId) {
-  const sel = document.getElementById(`faction-sel-${playerId}`);
-  const msg = document.getElementById(`faction-msg-${playerId}`);
-  const factions = sel ? [...sel.selectedOptions].map(o => o.value) : [];
-  const adminPin = document.getElementById('admin-pin-input')?.value;
-  try {
-    const res = await fetch(`${API}/players`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: adminPin, id: playerId, factions })
-    });
-    const data = await res.json();
-    if (data.success) {
-      msg.style.display = 'inline'; msg.style.color = 'var(--win)';
-      msg.textContent = '✓ Saved';
-      // Update D.players in memory
-      const p = D.players.find(p => p.name);
-      if (p) p.factions = factions;
-      setTimeout(() => { msg.style.display = 'none'; }, 2000);
-    } else {
-      msg.style.display = 'inline'; msg.style.color = 'var(--loss)';
-      msg.textContent = 'Error';
-    }
-  } catch(e) {
-    msg.style.display = 'inline'; msg.style.color = 'var(--loss)';
-    msg.textContent = 'Network error';
-  }
-}
 
 async function loadDbEvents() {
   try {
@@ -5833,7 +5922,7 @@ function renderDbEvents() {
               ${r.dropped ? `<span style="font-size:0.62rem;color:var(--loss);border:1px solid var(--loss);border-radius:3px;padding:1px 4px;">dropped</span>` : ''}
               ${r.shadow ? `<span style="font-size:0.62rem;color:var(--accent);border:1px solid var(--accent-muted);border-radius:3px;padding:1px 4px;">shadow</span>` : ''}
             </div>
-            <button onclick="openEditResult(${r.id}, '${r.player_name.replace(/'/g,"\\'")}', '${r.faction.replace(/'/g,"\\'")}', ${r.place||0}, ${r.wins}, ${r.losses}, ${r.draws}, ${r.dropped})"
+            <button onclick="openEditResult(${r.id}, '${r.player_name.replace(/'/g,"\\'")}', '${r.faction.replace(/'/g,"\\'")}', ${r.place||0}, ${r.wins}, ${r.losses}, ${r.draws}, ${r.dropped}, ${r.shadow||false})"
               style="font-size:0.65rem;padding:2px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;white-space:nowrap;"
               onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
               onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Edit</button>
@@ -5883,7 +5972,7 @@ function toggleDbEventResults(id) {
   if (arr) arr.style.transform = open ? '' : 'rotate(180deg)';
 }
 
-function openEditResult(id, player, faction, place, wins, losses, draws, dropped) {
+function openEditResult(id, player, faction, place, wins, losses, draws, dropped, shadow) {
   // Create/show inline edit modal
   let modal = document.getElementById('edit-result-modal');
   if (!modal) {
@@ -5921,9 +6010,15 @@ function openEditResult(id, player, faction, place, wins, losses, draws, dropped
             <input id="er-place" type="number" min="1" value="${place}" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input id="er-dropped" type="checkbox" ${dropped?'checked':''} style="width:16px;height:16px;cursor:pointer;"/>
-          <label for="er-dropped" style="font-size:0.82rem;color:var(--muted);cursor:pointer;">Dropped from event</label>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input id="er-dropped" type="checkbox" ${dropped?'checked':''} style="width:16px;height:16px;cursor:pointer;"/>
+            <label for="er-dropped" style="font-size:0.82rem;color:var(--muted);cursor:pointer;">Dropped from event</label>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input id="er-shadow" type="checkbox" ${shadow?'checked':''} style="width:16px;height:16px;cursor:pointer;"/>
+            <label for="er-shadow" style="font-size:0.82rem;color:var(--muted);cursor:pointer;">Shadow round</label>
+          </div>
         </div>
         <div id="er-msg" style="display:none;font-size:0.78rem;padding:6px 10px;border-radius:4px;"></div>
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
@@ -5948,6 +6043,7 @@ async function saveDbResult(id) {
     draws:   parseInt(document.getElementById('er-draws').value),
     place:   parseInt(document.getElementById('er-place').value),
     dropped: document.getElementById('er-dropped').checked,
+      shadow:  document.getElementById('er-shadow')?.checked || false,
   };
   msg.style.display = 'block'; msg.style.background = 'var(--surface2)'; msg.style.color = 'var(--muted)';
   msg.textContent = 'Saving...';
