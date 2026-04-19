@@ -1209,6 +1209,18 @@
           style="width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:monospace;font-size:0.78rem;resize:vertical;outline:none;"></textarea>
       </div>
 
+      <!-- Step: pick which teams are PSSN (teams events only) -->
+      <div id="bcp-pssn-picker" style="display:none;margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px;">
+        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Which teams are PSSN?</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">Click to select all PSSN teams in this event. Exact names don't matter — you're choosing from what BCP reported.</div>
+        <div id="bcp-pssn-picker-body" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
+        <button onclick="bcpConfirmPssnTeams()"
+          style="padding:8px 18px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;"
+          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+          Confirm PSSN teams →
+        </button>
+      </div>
+
       <!-- Team assignment confirmation (teams events only) -->
       <div id="bcp-team-assign" style="display:none;margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px;">
         <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Confirm team rosters</div>
@@ -1303,6 +1315,50 @@
       </div>
     </div>
 
+
+    <div class="section-head" style="margin-top:2rem;">
+      <div class="section-title">Team Name Aliases</div>
+      <div class="section-rule"></div>
+    </div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">
+      Map BCP team name variants to canonical PSSN team names. Used during import to normalise spelling differences and A/B team variants.
+    </div>
+    <div style="max-width:680px;">
+      <div id="alias-list" style="margin-bottom:12px;"></div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px;">
+        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Add alias</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;">
+          <div>
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Variant (BCP name)</label>
+            <input id="alias-variant" type="text" placeholder="e.g. Shameful Suspects A"
+              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;"/>
+          </div>
+          <div>
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Canonical name</label>
+            <input id="alias-canonical" type="text" placeholder="e.g. The Sh[a]meful Suspects"
+              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;"/>
+          </div>
+          <button onclick="aliasAdd()"
+            style="padding:7px 16px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;white-space:nowrap;">
+            + Add
+          </button>
+        </div>
+        <div id="alias-add-msg" style="font-size:0.78rem;margin-top:8px;display:none;"></div>
+      </div>
+      <div style="margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Repair historical data</div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;">
+          Scan all events in DB and patch any subteam values that match a known alias to their canonical name.
+        </div>
+        <button onclick="aliasRepair()"
+          style="padding:7px 16px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;cursor:pointer;">
+          Run repair scan
+        </button>
+        <div id="alias-repair-msg" style="font-size:0.78rem;margin-top:8px;display:none;padding:8px 12px;border-radius:4px;"></div>
+      </div>
+    </div>
 
     <div class="section-head" style="margin-top:2rem;">
       <div class="section-title">Events in Database</div>
@@ -5933,6 +5989,184 @@ async function toggleMember(playerId, active) {
 }
 
 
+// ── Team Name Aliases ──
+const ALIAS_KEY = '_team_aliases_19700101';
+
+function aliasGetRegistry() {
+  try {
+    const raw = attendanceData[ALIAS_KEY];
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+
+async function aliasSaveRegistry(registry) {
+  await loadAttendance(true);
+  await fetch(`${API}/attendance`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      player_name: ALIAS_KEY,
+      event_sort_date: 19700101,
+      status: JSON.stringify(registry),
+      pin: getAdminPin()
+    })
+  });
+  attendanceData[ALIAS_KEY] = JSON.stringify(registry);
+}
+
+function aliasResolve(name) {
+  // Returns canonical name if alias exists, otherwise returns name unchanged
+  const registry = aliasGetRegistry();
+  return registry[name] || name;
+}
+
+function aliasRenderList() {
+  const el = document.getElementById('alias-list');
+  if (!el) return;
+  const registry = aliasGetRegistry();
+  const entries = Object.entries(registry);
+  if (!entries.length) {
+    el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:8px 0;">No aliases defined yet.</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:0;border-bottom:1px solid var(--border);padding:8px 14px;">
+        <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;">Variant (BCP name)</div>
+        <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;">Canonical name</div>
+        <div></div>
+      </div>
+      ${entries.map(([variant, canonical]) => `
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;padding:8px 14px;border-bottom:0.5px solid var(--border);">
+          <div style="font-size:0.82rem;color:var(--muted);">${variant}</div>
+          <div style="font-size:0.82rem;color:var(--text);font-weight:500;">→ ${canonical}</div>
+          <button onclick="aliasRemove(${JSON.stringify(variant)})"
+            style="padding:3px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);font-size:0.72rem;cursor:pointer;"
+            onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+            Remove
+          </button>
+        </div>`).join('')}
+    </div>`;
+}
+
+async function aliasAdd() {
+  const variant   = document.getElementById('alias-variant')?.value.trim();
+  const canonical = document.getElementById('alias-canonical')?.value.trim();
+  const msg       = document.getElementById('alias-add-msg');
+
+  if (!variant || !canonical) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Both fields are required.'; return;
+  }
+  if (variant === canonical) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Variant and canonical name must differ.'; return;
+  }
+
+  msg.style.display = 'block'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Saving...';
+
+  const registry = aliasGetRegistry();
+  registry[variant] = canonical;
+
+  try {
+    await aliasSaveRegistry(registry);
+    document.getElementById('alias-variant').value = '';
+    document.getElementById('alias-canonical').value = '';
+    msg.style.color = 'var(--win)';
+    msg.textContent = `✓ Alias saved: "${variant}" → "${canonical}"`;
+    aliasRenderList();
+    setTimeout(() => { msg.style.display = 'none'; }, 3000);
+  } catch(e) {
+    msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error — try again.';
+  }
+}
+
+async function aliasRemove(variant) {
+  if (!confirm(`Remove alias for "${variant}"?`)) return;
+  const registry = aliasGetRegistry();
+  delete registry[variant];
+  try {
+    await aliasSaveRegistry(registry);
+    aliasRenderList();
+  } catch(e) {
+    alert('Network error — could not remove alias.');
+  }
+}
+
+async function aliasRepair() {
+  const msg = document.getElementById('alias-repair-msg');
+  const registry = aliasGetRegistry();
+  const aliases = Object.keys(registry);
+
+  if (!aliases.length) {
+    msg.style.display = 'block'; msg.style.background = 'var(--surface2)'; msg.style.color = 'var(--muted)';
+    msg.textContent = 'No aliases defined — nothing to repair.'; return;
+  }
+
+  msg.style.display = 'block'; msg.style.background = 'var(--surface2)'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Scanning events...';
+
+  try {
+    const res = await fetch(`${API}/events`);
+    const data = await res.json();
+    const allEvents = data.events || [];
+
+    let patchCount = 0;
+    const patches = [];
+
+    allEvents.forEach(ev => {
+      (ev.results || []).forEach(r => {
+        if (!r.subteam) return;
+        const canonical = registry[r.subteam];
+        if (canonical && canonical !== r.subteam) {
+          patches.push({ resultId: r.id, subteam: canonical, currentName: r.subteam });
+        }
+      });
+    });
+
+    if (!patches.length) {
+      msg.style.color = 'var(--win)';
+      msg.textContent = '✓ No mismatches found — all subteam names are already canonical.';
+      return;
+    }
+
+    msg.textContent = `Found ${patches.length} result${patches.length > 1 ? 's' : ''} to patch — fixing...`;
+
+    let fixed = 0;
+    for (const p of patches) {
+      try {
+        const patchRes = await fetch(`${API}/events`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pin: getAdminPin(),
+            resultId: p.resultId,
+            updates: { subteam: p.subteam }
+          })
+        });
+        const patchData = await patchRes.json();
+        if (patchData.success) fixed++;
+      } catch(e) { /* continue */ }
+    }
+
+    msg.style.background = fixed === patches.length ? 'var(--win-bg)' : 'var(--draw-bg)';
+    msg.style.color = fixed === patches.length ? 'var(--win)' : 'var(--draw)';
+    msg.textContent = `✓ Patched ${fixed} of ${patches.length} results. Reloading stats...`;
+
+    await loadApprovedSubmissions();
+    rebuildStats();
+    await loadDbEvents();
+
+  } catch(e) {
+    msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error — try again.';
+  }
+}
+
+
 // ── BCP Bookmarklet Import ──
 let _bcpParsed = null;       // { mode: 'individual'|'teams', teamStandings, individualResults, merged }
 
@@ -5983,6 +6217,28 @@ function bcpParsePreview() {
   if (!data1.event || !Array.isArray(data1.results) || !data1.results.length) return;
 
   const mode = bcpDetectMode(data1.results);
+
+  // If PSSN teams already confirmed and paste2 just changed — go straight to team assign
+  if (mode === 'teams' && _bcpParsed?.pssnTeams?.length && raw2 && raw2.length > 10) {
+    let data2;
+    try { data2 = JSON.parse(raw2); } catch(e) { return; }
+    if (data2?.results?.length) {
+      const knownPlayers = new Set(D.players.map(p => p.name));
+      const registry = bcpGetTeamRegistry();
+      const playerToTeam = {};
+      registry.forEach(team => { (team.players||[]).forEach(p => { playerToTeam[p] = team.name; }); });
+      // For players not in registry, try to match by team name similarity from paste2
+      // (BCP individual results sometimes include team context in player names on team pages)
+      bcpBuildTeamAssign(data2.results, _bcpParsed.pssnTeams, _bcpParsed.teamStandings, playerToTeam, knownPlayers);
+      document.getElementById('bcp-pssn-picker').style.display = 'none';
+      document.getElementById('bcp-team-assign').style.display = 'block';
+      document.getElementById('bcp-meta').style.display = 'none';
+      const modeBar = document.getElementById('bcp-mode-bar');
+      modeBar.textContent = '⬦ Assign players to teams · drag to reassign · then confirm';
+      return;
+    }
+  }
+
   _bcpParsed = { mode };
 
   // Pre-fill event name
@@ -6032,60 +6288,84 @@ function bcpParsePreview() {
     const teamPlacings = {};
     data1.results.forEach(r => { teamPlacings[r.player] = { place: r.placing, w: r.w, l: r.l, d: r.d }; });
     _bcpParsed.teamStandings = teamPlacings;
+    _bcpParsed.allTeams = data1.results.map(r => r.player);
 
-    // Check if we also have individual results (paste 2)
-    let data2 = null;
-    if (raw2 && raw2.length > 10) {
-      try { data2 = JSON.parse(raw2); } catch(e) {}
-    }
+    modeBar.textContent = '⬦ Teams event — ' + data1.results.length + ' teams detected · select which are PSSN below';
 
-    if (!data2 || !Array.isArray(data2.results) || !data2.results.length) {
-      // Only have team standings — show prompt for individual paste
-      const pssnTeams = bcpFindPssnTeams(teamPlacings);
-      modeBar.textContent = '⬦ Teams event — ' + data1.results.length + ' teams found, ' + pssnTeams.length + ' PSSN. Paste individual results below.';
-      paste2Wrap.style.display = 'block';
-      // Preview just the team standings for now
-      const tbody = document.getElementById('bcp-preview-body');
-      tbody.innerHTML = data1.results.map(r => {
-        const isPssn = pssnTeams.some(t => t.name === r.player);
-        return `<tr style="border-bottom:0.5px solid var(--border);${isPssn?'':'opacity:0.4;'}">
-          <td style="padding:5px 8px;color:var(--muted);">${r.placing}</td>
-          <td style="padding:5px 8px;color:var(--text);font-weight:${isPssn?'500':'400'};" colspan="3">${r.player}${isPssn?' <span style="font-size:0.68rem;color:var(--win);">✓ PSSN</span>':''}</td>
-          <td style="padding:5px 8px;text-align:center;color:var(--win);">${r.w}</td>
-          <td style="padding:5px 8px;text-align:center;color:var(--loss);">${r.l}</td>
-          <td style="padding:5px 8px;text-align:center;color:var(--draw);">${r.d}</td>
-        </tr>`;
-      }).join('');
-      document.getElementById('bcp-result-count').textContent = '0 (paste individual results to continue)';
-      meta.style.display = 'block';
-      return;
-    }
-
-    // Have both pastes — show team assignment confirmation step
-    paste2Wrap.style.display = 'block';
-    const registry = bcpGetTeamRegistry();
-    const knownPlayers = new Set(D.players.map(p => p.name));
-    const pssnTeams = bcpFindPssnTeams(teamPlacings);
-
-    // Build initial player→team map from registry
-    const playerToTeam = {};
-    registry.forEach(team => {
-      (team.players || []).forEach(p => { playerToTeam[p] = team.name; });
-    });
-
-    // Store individual results on _bcpParsed for use in confirmation step
-    _bcpParsed.individualResults = data2.results;
-    _bcpParsed.knownPlayers = knownPlayers;
-    _bcpParsed.pssnTeams = pssnTeams;
-    _bcpParsed.playerToTeam = playerToTeam;
-
-    modeBar.textContent = '⬦ Teams event — ' + pssnTeams.length + ' PSSN team' + (pssnTeams.length>1?'s':'') + ' · confirm rosters below';
-
-    // Build team assignment UI
-    bcpBuildTeamAssign(data2.results, pssnTeams, teamPlacings, playerToTeam, knownPlayers);
-    document.getElementById('bcp-team-assign').style.display = 'block';
+    // Show PSSN team picker — all teams as clickable pills with canonical name field
+    const pickerBody = document.getElementById('bcp-pssn-picker-body');
+    const registry = aliasGetRegistry();
+    pickerBody.innerHTML = data1.results.map(r => {
+      const suggested = registry[r.player] || r.player;
+      return `<div style="display:flex;align-items:center;gap:8px;width:100%;margin-bottom:6px;">
+        <button data-team="${r.player.replace(/"/g,'&quot;')}" onclick="bcpTogglePssnTeam(this)"
+          style="padding:6px 14px;border:1px solid var(--border);border-radius:20px;background:transparent;
+                 color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;
+                 white-space:nowrap;flex-shrink:0;transition:all 0.15s;" data-selected="0">
+          ${r.placing}. ${r.player}
+        </button>
+        <input type="text" class="bcp-canonical-input" data-team="${r.player.replace(/"/g,'&quot;')}"
+          value="${suggested.replace(/"/g,'&quot;')}" placeholder="Canonical team name"
+          style="display:none;flex:1;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);
+                 border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;outline:none;"/>
+      </div>`;
+    }).join('');
+    document.getElementById('bcp-pssn-picker').style.display = 'block';
+    document.getElementById('bcp-paste2-wrap').style.display = 'none';
+    document.getElementById('bcp-team-assign').style.display = 'none';
     document.getElementById('bcp-meta').style.display = 'none';
   }
+}
+
+function bcpTogglePssnTeam(btn) {
+  const selected = btn.dataset.selected === '1';
+  btn.dataset.selected = selected ? '0' : '1';
+  btn.style.background = selected ? 'transparent' : 'var(--accent)';
+  btn.style.color = selected ? 'var(--muted)' : '#fff';
+  btn.style.borderColor = selected ? 'var(--border)' : 'var(--accent)';
+  // Show/hide canonical name input alongside the pill
+  const input = btn.parentElement.querySelector('.bcp-canonical-input');
+  if (input) input.style.display = selected ? 'none' : 'block';
+}
+
+function bcpConfirmPssnTeams() {
+  // Collect selected teams — pill buttons with data-selected="1"
+  const selectedBtns = [...document.querySelectorAll('#bcp-pssn-picker-body [data-selected="1"]')];
+
+  if (!selectedBtns.length) {
+    alert('Please select at least one PSSN team.');
+    return;
+  }
+
+  // Store selected PSSN teams using canonical name from the input (not raw BCP name)
+  const teamPlacings = _bcpParsed.teamStandings;
+  _bcpParsed.pssnTeams = selectedBtns.map(btn => {
+    const bcpName = btn.dataset.team;
+    const input = btn.parentElement.querySelector('.bcp-canonical-input');
+    const canonicalName = (input?.value.trim()) || bcpName;
+    return { name: canonicalName, bcpName, ...teamPlacings[bcpName] };
+  });
+
+  // Auto-save any new aliases discovered (BCP name differs from canonical)
+  const newAliases = _bcpParsed.pssnTeams.filter(t => t.bcpName && t.bcpName !== t.name);
+  if (newAliases.length) {
+    const registry = aliasGetRegistry();
+    let changed = false;
+    newAliases.forEach(t => {
+      if (!registry[t.bcpName]) { registry[t.bcpName] = t.name; changed = true; }
+    });
+    if (changed) {
+      aliasSaveRegistry(registry).then(() => aliasRenderList()).catch(() => {});
+    }
+  }
+
+  // Update mode bar
+  const modeBar = document.getElementById('bcp-mode-bar');
+  modeBar.textContent = '✓ ' + _bcpParsed.pssnTeams.length + ' PSSN team' + (_bcpParsed.pssnTeams.length>1?'s':'') + ' selected · paste individual results below';
+
+  // Show paste 2 for individual results
+  document.getElementById('bcp-pssn-picker').style.display = 'none';
+  document.getElementById('bcp-paste2-wrap').style.display = 'block';
 }
 
 function bcpBuildTeamAssign(individualResults, pssnTeams, teamPlacings, playerToTeam, knownPlayers) {
@@ -6311,7 +6591,7 @@ function bcpClear() {
   _bcpParsed = null;
   ['bcp-paste','bcp-paste2','bcp-ev-name','bcp-ev-date','bcp-ev-sortdate','bcp-ev-players','bcp-ev-teams','bcp-ev-url']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  ['bcp-meta','bcp-paste2-wrap','bcp-mode-bar','bcp-message','bcp-team-assign'].forEach(id => {
+  ['bcp-meta','bcp-paste2-wrap','bcp-mode-bar','bcp-message','bcp-team-assign','bcp-pssn-picker'].forEach(id => {
     const el = document.getElementById(id); if (el) el.style.display = 'none';
   });
 }
