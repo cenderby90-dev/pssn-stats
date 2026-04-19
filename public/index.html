@@ -1183,6 +1183,97 @@
     <div id="admin-event-submissions"></div>
 
     <div class="section-head" style="margin-top:2rem;">
+      <div class="section-title">Import from BCP Bookmarklet</div>
+      <div class="section-rule"></div>
+    </div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">
+      Run the bookmarklet on a BCP results page, then paste the JSON output here.
+    </div>
+    <div style="max-width:680px;">
+      <textarea id="bcp-paste" rows="5" placeholder='Paste bookmarklet JSON here, e.g. {"event":"Sheffield GT","results":[...]}'
+        oninput="bcpParsePreview()"
+        style="width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:monospace;font-size:0.8rem;resize:vertical;outline:none;"></textarea>
+
+      <!-- Event metadata fields — shown after valid paste -->
+      <div id="bcp-meta" style="display:none;margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px;">
+        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Event details</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Event name</label>
+            <input id="bcp-ev-name" type="text"
+              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div>
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Display date (e.g. Apr 2026)</label>
+            <input id="bcp-ev-date" type="text" placeholder="Apr 2026"
+              oninput="bcpAutoSortDate(this.value)"
+              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div>
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Sort date (YYYYMMDD)</label>
+            <input id="bcp-ev-sortdate" type="number" placeholder="20260419"
+              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div>
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Format</label>
+            <select id="bcp-ev-format"
+              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+              <option value="GT">GT</option>
+              <option value="RTT">RTT</option>
+              <option value="Teams">Teams / ITT</option>
+              <option value="Club">Club Event</option>
+              <option value="Championship">Championship</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Total players</label>
+            <input id="bcp-ev-players" type="number" min="1" placeholder="e.g. 180"
+              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+          <div>
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">BCP URL (optional)</label>
+            <input id="bcp-ev-url" type="text" placeholder="https://bestcoastpairings.com/..."
+              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          </div>
+        </div>
+
+        <!-- Results preview table -->
+        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">
+          Results preview (<span id="bcp-result-count">0</span> players)
+        </div>
+        <div style="overflow-x:auto;margin-bottom:12px;">
+          <table style="width:100%;border-collapse:collapse;font-size:0.78rem;" id="bcp-preview-table">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border);">
+                <th style="text-align:left;padding:5px 8px;color:var(--muted);font-weight:500;">Place</th>
+                <th style="text-align:left;padding:5px 8px;color:var(--muted);font-weight:500;">Player</th>
+                <th style="text-align:left;padding:5px 8px;color:var(--muted);font-weight:500;">Faction</th>
+                <th style="text-align:center;padding:5px 8px;color:var(--win);font-weight:500;">W</th>
+                <th style="text-align:center;padding:5px 8px;color:var(--loss);font-weight:500;">L</th>
+                <th style="text-align:center;padding:5px 8px;color:var(--draw);font-weight:500;">D</th>
+                <th style="text-align:center;padding:5px 8px;color:var(--muted);font-weight:500;">In DB?</th>
+              </tr>
+            </thead>
+            <tbody id="bcp-preview-body"></tbody>
+          </table>
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button onclick="bcpImport()"
+            style="padding:8px 20px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;"
+            onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+            Import event to DB
+          </button>
+          <button onclick="bcpClear()"
+            style="padding:8px 14px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.85rem;cursor:pointer;">
+            Clear
+          </button>
+        </div>
+        <div id="bcp-message" style="font-size:0.82rem;margin-top:10px;display:none;padding:8px 12px;border-radius:4px;"></div>
+      </div>
+    </div>
+
+    <div class="section-head" style="margin-top:2rem;">
       <div class="section-title">Events in Database</div>
       <div class="section-rule"></div>
     </div>
@@ -5810,6 +5901,160 @@ async function toggleMember(playerId, active) {
   } catch(e) { console.error(e); }
 }
 
+
+// ── BCP Bookmarklet Import ──
+let _bcpParsed = null;
+
+function bcpAutoSortDate(val) {
+  const MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+  const m = val.trim().toLowerCase().match(/([a-z]+)[\s\-]+(\d{4})/);
+  if (m && MONTHS[m[1]] && parseInt(m[2]) > 2020) {
+    const sd = parseInt(m[2]) * 10000 + MONTHS[m[1]] * 100 + 1;
+    const el = document.getElementById('bcp-ev-sortdate');
+    if (el) el.value = sd;
+  }
+}
+
+function bcpParsePreview() {
+  const raw = document.getElementById('bcp-paste')?.value.trim();
+  const meta = document.getElementById('bcp-meta');
+  if (!raw || raw.length < 10) { if (meta) meta.style.display = 'none'; _bcpParsed = null; return; }
+
+  let data;
+  try { data = JSON.parse(raw); } catch(e) {
+    if (meta) meta.style.display = 'none'; _bcpParsed = null; return;
+  }
+
+  if (!data.event || !Array.isArray(data.results) || !data.results.length) {
+    if (meta) meta.style.display = 'none'; _bcpParsed = null; return;
+  }
+
+  _bcpParsed = data;
+
+  // Populate event fields
+  document.getElementById('bcp-ev-name').value = data.event;
+  // Auto sort date from current date as fallback
+  const now = new Date();
+  const defaultSortDate = now.getFullYear()*10000 + (now.getMonth()+1)*100 + now.getDate();
+  if (!document.getElementById('bcp-ev-sortdate').value) {
+    document.getElementById('bcp-ev-sortdate').value = defaultSortDate;
+  }
+
+  // Build known PSSN player set for "in DB?" column
+  const knownPlayers = new Set(D.players.map(p => p.name));
+
+  // Render preview
+  const tbody = document.getElementById('bcp-preview-body');
+  document.getElementById('bcp-result-count').textContent = data.results.length;
+  tbody.innerHTML = data.results.map(r => {
+    const known = knownPlayers.has(r.player);
+    const isPssn = known;
+    const rowStyle = isPssn ? '' : 'opacity:0.45;';
+    return `<tr style="border-bottom:0.5px solid var(--border);${rowStyle}">
+      <td style="padding:5px 8px;color:var(--muted);">${r.placing}</td>
+      <td style="padding:5px 8px;color:var(--text);font-weight:${isPssn?'500':'400'};">${r.player}</td>
+      <td style="padding:5px 8px;color:var(--muted);font-size:0.72rem;">${r.faction||'—'}</td>
+      <td style="padding:5px 8px;text-align:center;color:var(--win);">${r.w}</td>
+      <td style="padding:5px 8px;text-align:center;color:var(--loss);">${r.l}</td>
+      <td style="padding:5px 8px;text-align:center;color:var(--draw);">${r.d}</td>
+      <td style="padding:5px 8px;text-align:center;">
+        ${isPssn
+          ? '<span style="color:var(--win);font-size:0.75rem;">✓ PSSN</span>'
+          : '<span style="color:var(--faint);font-size:0.72rem;">—</span>'}
+      </td>
+    </tr>`;
+  }).join('');
+
+  meta.style.display = 'block';
+}
+
+async function bcpImport() {
+  const msg = document.getElementById('bcp-message');
+  const name     = document.getElementById('bcp-ev-name').value.trim();
+  const date     = document.getElementById('bcp-ev-date').value.trim();
+  const sortDate = parseInt(document.getElementById('bcp-ev-sortdate').value);
+  const format   = document.getElementById('bcp-ev-format').value;
+  const players  = parseInt(document.getElementById('bcp-ev-players').value) || 0;
+  const bcpUrl   = document.getElementById('bcp-ev-url').value.trim();
+
+  if (!name || !date || !sortDate || !format) {
+    msg.style.display = 'block';
+    msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Please fill in event name, display date, sort date and format.';
+    return;
+  }
+  if (!_bcpParsed?.results?.length) {
+    msg.style.display = 'block';
+    msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'No valid results to import.';
+    return;
+  }
+
+  // Filter to PSSN members only
+  const knownPlayers = new Set(D.players.map(p => p.name));
+  const pssnResults = _bcpParsed.results.filter(r => knownPlayers.has(r.player));
+
+  if (!pssnResults.length) {
+    msg.style.display = 'block';
+    msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'None of the results match PSSN members. Check player names.';
+    return;
+  }
+
+  msg.style.display = 'block';
+  msg.style.background = 'var(--surface2)'; msg.style.color = 'var(--muted)';
+  msg.textContent = `Importing ${pssnResults.length} PSSN result${pssnResults.length > 1 ? 's' : ''}...`;
+
+  const event = { name, event_date: date, sort_date: sortDate, format, total_players: players, bcp_url: bcpUrl };
+  const results = pssnResults.map(r => ({
+    player_name: r.player,
+    faction: r.faction || '',
+    place: r.placing,
+    wins: r.w,
+    losses: r.l,
+    draws: r.d,
+    shadow: false,
+    dropped: false,
+  }));
+
+  try {
+    const res = await fetch(`${API}/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: getAdminPin(), event, results })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.style.background = 'var(--win-bg)'; msg.style.color = 'var(--win)';
+      msg.textContent = `✓ Imported "${name}" with ${pssnResults.length} PSSN result${pssnResults.length > 1 ? 's' : ''}. Reloading...`;
+      await loadApprovedSubmissions();
+      rebuildStats();
+      await loadDbEvents();
+      updatePendingBadge();
+      setTimeout(bcpClear, 2000);
+    } else {
+      msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown');
+    }
+  } catch(e) {
+    msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error — try again.';
+  }
+}
+
+function bcpClear() {
+  _bcpParsed = null;
+  const paste = document.getElementById('bcp-paste');
+  if (paste) paste.value = '';
+  const meta = document.getElementById('bcp-meta');
+  if (meta) meta.style.display = 'none';
+  ['bcp-ev-name','bcp-ev-date','bcp-ev-sortdate','bcp-ev-players','bcp-ev-url'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const msg = document.getElementById('bcp-message');
+  if (msg) msg.style.display = 'none';
+}
 
 async function loadDbEvents() {
   try {
