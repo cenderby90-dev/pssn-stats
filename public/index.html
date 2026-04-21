@@ -698,8 +698,8 @@
   </div>
   <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.25rem;">Full UKTC calendar. Events your team attended are highlighted.</div>
   <div style="display:flex;gap:2px;margin-bottom:1.5rem;border-bottom:1px solid var(--border);">
-    <button id="cal-btn-upcoming" class="tab-btn active" onclick="switchCalView('upcoming')">Upcoming</button>
-    <button id="cal-btn-past" class="tab-btn" onclick="switchCalView('past')">Past</button>
+    <button id="cal-btn-upcoming" class="tab-btn" onclick="switchCalView('upcoming')">Upcoming</button>
+    <button id="cal-btn-past" class="tab-btn active" onclick="switchCalView('past')">Past</button>
   </div>
   <div id="calendar-grid"></div>
 </main>
@@ -2971,7 +2971,7 @@ function checkPin(val) {
 
 
 // ── calendar ──
-let calView = 'upcoming';
+let calView = 'past';
 
 function switchCalView(view) {
   calView = view;
@@ -3320,6 +3320,16 @@ async function renderWhosGoing() {
   const today = now.getFullYear()*10000 + (now.getMonth()+1)*100 + now.getDate();
   const upcoming = getCalendarEvents().filter(ev => ev.sortDate >= today).sort((a,b) => a.sortDate - b.sortDate).slice(0,6);
   const players = D.players.map(p => p.name).filter(Boolean).sort();
+
+  if (!upcoming.length) {
+    el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">
+      No upcoming events to sign up for yet.
+      <span style="display:block;margin-top:6px;font-size:0.78rem;">
+        Use <strong>Admin → Schedule an Event</strong> to add upcoming events — members can then mark themselves as going here.
+      </span>
+    </div>`;
+    return;
+  }
 
   el.innerHTML = `<div style="overflow-x:auto;">
     <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
