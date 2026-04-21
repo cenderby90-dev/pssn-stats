@@ -91,28 +91,53 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── PATCH — update a single result row ──
+  // ── PATCH — update a result row or event metadata ──
   if (req.method === 'PATCH') {
-    const { pin, resultId, updates } = req.body;
+    const { pin, resultId, eventId, updates } = req.body;
     if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorized' });
 
-    try {
-      await sql`
-        UPDATE event_results SET
-          faction  = COALESCE(${updates.faction ?? null},  faction),
-          wins     = COALESCE(${updates.wins    ?? null},  wins),
-          losses   = COALESCE(${updates.losses  ?? null},  losses),
-          draws    = COALESCE(${updates.draws   ?? null},  draws),
-          place    = COALESCE(${updates.place   ?? null},  place),
-          dropped  = COALESCE(${updates.dropped ?? null},  dropped),
-          shadow   = COALESCE(${updates.shadow  ?? null},  shadow),
-          subteam  = COALESCE(${updates.subteam ?? null},  subteam)
-        WHERE id = ${resultId}
-      `;
-      return res.status(200).json({ success: true });
-    } catch (e) {
-      return res.status(500).json({ error: e.message });
+    // Patch a result row
+    if (resultId) {
+      try {
+        await sql`
+          UPDATE event_results SET
+            faction   = COALESCE(${updates.faction   ?? null}, faction),
+            wins      = COALESCE(${updates.wins      ?? null}, wins),
+            losses    = COALESCE(${updates.losses    ?? null}, losses),
+            draws     = COALESCE(${updates.draws     ?? null}, draws),
+            place     = COALESCE(${updates.place     ?? null}, place),
+            dropped   = COALESCE(${updates.dropped   ?? null}, dropped),
+            shadow    = COALESCE(${updates.shadow    ?? null}, shadow),
+            subteam   = COALESCE(${updates.subteam   ?? null}, subteam)
+          WHERE id = ${resultId}
+        `;
+        return res.status(200).json({ success: true });
+      } catch (e) {
+        return res.status(500).json({ error: e.message });
+      }
     }
+
+    // Patch event metadata (name, date, format etc)
+    if (eventId) {
+      try {
+        await sql`
+          UPDATE events SET
+            name         = COALESCE(${updates.name         ?? null}, name),
+            event_date   = COALESCE(${updates.event_date   ?? null}, event_date),
+            format       = COALESCE(${updates.format       ?? null}, format),
+            sort_date    = COALESCE(${updates.sort_date    ?? null}, sort_date),
+            total_players = COALESCE(${updates.total_players ?? null}, total_players),
+            total_teams  = COALESCE(${updates.total_teams  ?? null}, total_teams),
+            bcp_url      = COALESCE(${updates.bcp_url      ?? null}, bcp_url)
+          WHERE id = ${eventId}
+        `;
+        return res.status(200).json({ success: true });
+      } catch (e) {
+        return res.status(500).json({ error: e.message });
+      }
+    }
+
+    return res.status(400).json({ error: 'resultId or eventId required' });
   }
 
   // ── DELETE — remove an event and all its results ──
