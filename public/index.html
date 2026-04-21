@@ -884,7 +884,7 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
             <div>
               <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Display date</label>
-              <input id="wiz-ev-date" type="text" placeholder="Mar 2026"
+              <input id="wiz-ev-date" type="text" placeholder="3–4 Mar 2026"
                 oninput="wizardAutoSortDate(this.value)"
                 style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;"/>
             </div>
@@ -1179,6 +1179,61 @@
     <div id="admin-event-submissions"></div>
 
     <div class="section-head" style="margin-top:2rem;">
+      <div class="section-title">Schedule an Event</div>
+      <div class="section-rule"></div>
+    </div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Add a future event to the calendar before results are available. Members can sign up in Who's Going once it appears.</div>
+    <div style="max-width:680px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div style="grid-column:1/-1;">
+          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Event name</label>
+          <input id="sched-ev-name" type="text" placeholder="e.g. Spring ITT 2026"
+            oninput="checkEventDuplicate(this.value)"
+            style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;"/>
+          <div id="sched-duplicate-warning" style="display:none;font-size:0.78rem;color:var(--draw);background:var(--draw-bg);border:1px solid var(--draw);border-radius:4px;padding:6px 10px;margin-top:4px;"></div>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Date range</label>
+          <input id="sched-ev-date" type="text" placeholder="3–4 May 2026"
+            oninput="schedAutoSortDate(this.value)"
+            style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;"/>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Sort date (auto-filled)</label>
+          <input id="sched-ev-sortdate" type="number" placeholder="20260503"
+            style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;"/>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Format</label>
+          <select id="sched-ev-format"
+            style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+            <option value="GT">GT</option>
+            <option value="RTT">RTT</option>
+            <option value="Teams">Teams / ITT</option>
+            <option value="Club">Club Event</option>
+            <option value="Championship">Championship</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Total players (optional)</label>
+          <input id="sched-ev-players" type="number" min="1" placeholder="e.g. 180"
+            style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;"/>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">BCP URL (optional)</label>
+          <input id="sched-ev-bcp" type="text" placeholder="https://bestcoastpairings.com/..."
+            style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;"/>
+        </div>
+      </div>
+      <button onclick="scheduleEvent()"
+        style="padding:8px 20px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;"
+        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        Add to calendar
+      </button>
+      <div id="sched-message" style="font-size:0.82rem;margin-top:10px;display:none;padding:8px 12px;border-radius:4px;"></div>
+    </div>
+
+    <div class="section-head" style="margin-top:2rem;">
       <div class="section-title">Import from BCP Bookmarklet</div>
       <div class="section-rule"></div>
     </div>
@@ -1239,7 +1294,7 @@
           </div>
           <div>
             <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Display date (e.g. May 2026)</label>
-            <input id="bcp-ev-date" type="text" placeholder="May 2026" oninput="bcpAutoSortDate(this.value)"
+            <input id="bcp-ev-date" type="text" placeholder="3–4 May 2026" oninput="bcpAutoSortDate(this.value)"
               style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
           </div>
           <div>
@@ -2925,6 +2980,79 @@ function switchCalView(view) {
   renderCalendar();
 }
 
+// ── Schedule Event ──
+function schedAutoSortDate(val) {
+  const MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+  const s = val.trim().toLowerCase();
+  const mDay = s.match(/(\d{1,2})[\s\u2013\-\u2013]+\d{0,2}\s*([a-z]+)\s+(\d{4})/);
+  if (mDay && MONTHS[mDay[2]] && parseInt(mDay[3]) > 2020) {
+    const el = document.getElementById('sched-ev-sortdate');
+    if (el) el.value = parseInt(mDay[3]) * 10000 + MONTHS[mDay[2]] * 100 + parseInt(mDay[1]);
+    return;
+  }
+  const mMon = s.match(/([a-z]+)[\s\-]+(\d{4})/);
+  if (mMon && MONTHS[mMon[1]] && parseInt(mMon[2]) > 2020) {
+    const el = document.getElementById('sched-ev-sortdate');
+    if (el) el.value = parseInt(mMon[2]) * 10000 + MONTHS[mMon[1]] * 100 + 1;
+  }
+}
+
+async function scheduleEvent() {
+  const msg      = document.getElementById('sched-message');
+  const name     = document.getElementById('sched-ev-name').value.trim();
+  const date     = document.getElementById('sched-ev-date').value.trim();
+  const sortDate = parseInt(document.getElementById('sched-ev-sortdate').value);
+  const format   = document.getElementById('sched-ev-format').value;
+  const players  = parseInt(document.getElementById('sched-ev-players').value) || 0;
+  const bcp      = document.getElementById('sched-ev-bcp').value.trim();
+
+  if (!name || !date || !sortDate || !format) {
+    msg.style.display = 'block'; msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Please fill in event name, date and format.'; return;
+  }
+
+  // Duplicate check
+  if (dbEvents.some(e => e.name.toLowerCase() === name.toLowerCase())) {
+    msg.style.display = 'block'; msg.style.background = 'var(--draw-bg)'; msg.style.color = 'var(--draw)';
+    msg.textContent = `"${name}" already exists in the database.`; return;
+  }
+
+  msg.style.display = 'block'; msg.style.background = 'var(--surface2)'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Saving...';
+
+  try {
+    const res = await fetch(`${API}/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pin: getAdminPin(),
+        event: { name, event_date: date, sort_date: sortDate, format, total_players: players, bcp_url: bcp },
+        results: []
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.style.background = 'var(--win-bg)'; msg.style.color = 'var(--win)';
+      msg.textContent = `✓ "${name}" added to calendar. Members can now sign up in Who's Going.`;
+      // Clear form
+      ['sched-ev-name','sched-ev-date','sched-ev-sortdate','sched-ev-players','sched-ev-bcp']
+        .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      // Reload events so calendar + countdown update immediately
+      await loadDbEvents();
+      await loadApprovedSubmissions();
+      rebuildStats();
+      setTimeout(() => { msg.style.display = 'none'; }, 4000);
+    } else {
+      msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown');
+    }
+  } catch(e) {
+    msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error — try again.';
+  }
+}
+
+
 // ── Calendar events from DB ──
 // Returns events in CALENDAR-compatible shape, sourced from dbEvents
 // Falls back to CALENDAR constant if dbEvents not yet loaded
@@ -2937,7 +3065,7 @@ function getCalendarEvents() {
     name:     ev.name,
     dates:    ev.event_date || '',
     type:     ev.format || 'GT',
-    attended: Array.isArray(ev.results) && ev.results.length > 0,
+    attended: Array.isArray(ev.results) && ev.results.some(r => D.players.some(p => p.name === r.player_name)),
     sortDate: ev.sort_date || 0,
     bcp:      ev.bcp_url || '',
     id:       ev.id,
@@ -3102,7 +3230,7 @@ function renderCountdown() {
     <div style="background:${next.attended?'var(--accent-bg)':'var(--surface)'};border:${next.attended?'2px solid var(--accent-muted)':'1px solid var(--border)'};border-radius:6px;padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:1rem;">
       <div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:0.04em;color:var(--text);">${next.name}</div>
-        <div style="font-size:0.8rem;color:var(--muted);margin-top:3px;">${next.dates} · <span style="color:${typeColor[next.type]}">${next.type}</span>${next.attended?' · <span style="color:var(--accent);">PSSN attending</span>':''}</div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-top:3px;">${next.dates}${next.bcp ? ' · <a href="' + next.bcp + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-size:0.75rem;">BCP \u2197</a>' : ''} · <span style="color:${typeColor[next.type]}">${next.type}</span>${next.attended?' · <span style="color:var(--accent);">PSSN attending</span>':''}</div>
       </div>
       <div style="text-align:right;">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;line-height:1;color:${days<=7?'#ff6a00':'var(--text)'};">${days}</div>
@@ -5471,10 +5599,21 @@ function wizardShowStep2() {
 }
 
 function wizardAutoSortDate(val) {
+  // Parses "3–4 May 2026", "11 Apr 2026", "May 2026" etc → YYYYMMDD sort date
   const MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
-  const m = val.trim().toLowerCase().match(/([a-z]+)[\s\-]+(\d{4})/);
-  if (m && MONTHS[m[1]] && parseInt(m[2]) > 2020) {
-    const sortDate = parseInt(m[2]) * 10000 + MONTHS[m[1]] * 100 + 1;
+  const s = val.trim().toLowerCase();
+  // Try: one or two day numbers, then month, then year e.g. "3-4 may 2026" or "11 apr 2026"
+  const mDay = s.match(/(\d{1,2})[\s–\-–]+\d{0,2}\s*([a-z]+)\s+(\d{4})/);
+  if (mDay && MONTHS[mDay[2]] && parseInt(mDay[3]) > 2020) {
+    const sortDate = parseInt(mDay[3]) * 10000 + MONTHS[mDay[2]] * 100 + parseInt(mDay[1]);
+    const el = document.getElementById('wiz-ev-sortdate');
+    if (el && !el.value) el.value = sortDate;
+    return;
+  }
+  // Fallback: month + year only e.g. "May 2026" → first of month
+  const mMon = s.match(/([a-z]+)[\s\-]+(\d{4})/);
+  if (mMon && MONTHS[mMon[1]] && parseInt(mMon[2]) > 2020) {
+    const sortDate = parseInt(mMon[2]) * 10000 + MONTHS[mMon[1]] * 100 + 1;
     const el = document.getElementById('wiz-ev-sortdate');
     if (el && !el.value) el.value = sortDate;
   }
@@ -6135,11 +6274,17 @@ let _bcpParsed = null;       // { mode: 'individual'|'teams', teamStandings, ind
 
 function bcpAutoSortDate(val) {
   const MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
-  const m = val.trim().toLowerCase().match(/([a-z]+)[\s\-]+(\d{4})/);
-  if (m && MONTHS[m[1]] && parseInt(m[2]) > 2020) {
-    const sd = parseInt(m[2]) * 10000 + MONTHS[m[1]] * 100 + 1;
+  const s = val.trim().toLowerCase();
+  const mDay = s.match(/(\d{1,2})[\s–\-–]+\d{0,2}\s*([a-z]+)\s+(\d{4})/);
+  if (mDay && MONTHS[mDay[2]] && parseInt(mDay[3]) > 2020) {
     const el = document.getElementById('bcp-ev-sortdate');
-    if (el) el.value = sd;
+    if (el) el.value = parseInt(mDay[3]) * 10000 + MONTHS[mDay[2]] * 100 + parseInt(mDay[1]);
+    return;
+  }
+  const mMon = s.match(/([a-z]+)[\s\-]+(\d{4})/);
+  if (mMon && MONTHS[mMon[1]] && parseInt(mMon[2]) > 2020) {
+    const el = document.getElementById('bcp-ev-sortdate');
+    if (el) el.value = parseInt(mMon[2]) * 10000 + MONTHS[mMon[1]] * 100 + 1;
   }
 }
 
@@ -6573,16 +6718,19 @@ async function loadDbEvents() {
 }
 
 function checkEventDuplicate(name) {
-  const warn = document.getElementById('ev-duplicate-warning');
-  if (!warn) return;
-  if (!name.trim() || !dbEvents.length) { warn.style.display = 'none'; return; }
-  const match = dbEvents.find(e => e.name.toLowerCase() === name.toLowerCase().trim());
-  if (match) {
-    warn.style.display = 'block';
-    warn.textContent = `⚠️ An event called "${match.name}" (${match.event_date}) already exists in the database. Add another only if this is a genuinely different event.`;
-  } else {
-    warn.style.display = 'none';
-  }
+  // Update any duplicate warning element on the page (wizard or sched form)
+  ['ev-duplicate-warning', 'sched-duplicate-warning'].forEach(id => {
+    const warn = document.getElementById(id);
+    if (!warn) return;
+    if (!name.trim() || !dbEvents.length) { warn.style.display = 'none'; return; }
+    const match = dbEvents.find(e => e.name.toLowerCase() === name.toLowerCase().trim());
+    if (match) {
+      warn.style.display = 'block';
+      warn.textContent = `⚠️ "${match.name}" (${match.event_date}) already exists in the database.`;
+    } else {
+      warn.style.display = 'none';
+    }
+  });
 }
 
 function factionOptions() {
