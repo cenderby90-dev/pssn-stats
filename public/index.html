@@ -738,12 +738,7 @@
   <div id="sec-awards">
     <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.25rem;margin-top:8px;">Auto-calculated from this season's data. Click any winner to view their profile.</div>
     <div id="awards-grid"></div>
-    <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
-      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Ready to archive this edition? Click below to save the current awards to the database.</div>
-      <button onclick="saveAwardsToArchive()" style="font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">💾 Save to Archive</button>
-      <span id="archive-save-confirm" style="display:none;font-size:0.75rem;color:var(--win);margin-left:8px;">✓ Saved!</span>
-      <span id="archive-save-error" style="display:none;font-size:0.75rem;color:var(--loss);margin-left:8px;"></span>
-    </div>
+
   </div>
 
   <div class="section-head" style="margin-top:2rem;cursor:pointer;" onclick="toggleSection('sec-milestones')">
@@ -881,6 +876,7 @@
           oninput="wizardSearchEvent(this.value)"
           style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;margin-bottom:10px;"/>
         <div id="wiz-search-results" style="display:none;margin-bottom:12px;"></div>
+        <div id="ev-duplicate-warning" style="display:none;font-size:0.78rem;color:var(--draw);background:var(--draw-bg);border:1px solid var(--draw);border-radius:4px;padding:7px 10px;margin-bottom:8px;"></div>
         <div id="wiz-new-event-fields" style="display:none;">
           <div style="font-size:0.75rem;color:#f0c040;margin-bottom:12px;padding:8px 10px;background:#2a2000;border:1px solid #f0c040;border-radius:4px;">
             No existing event found — fill in the details to create it.
@@ -1239,7 +1235,7 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
           <div>
             <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Event name</label>
-            <input id="bcp-ev-name" type="text" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+            <input id="bcp-ev-name" type="text" oninput="checkEventDuplicate(this.value)" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
           </div>
           <div>
             <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Display date (e.g. May 2026)</label>
@@ -2067,7 +2063,7 @@ function buildNowPanel() {
 
   // Next calendar event
   const todayNum = getTodaySortDate ? getTodaySortDate() : parseInt(new Date().toISOString().slice(0,10).replace(/-/g,''));
-  const nextCalEv = (CALENDAR||[]).filter(e => (e.sortDate||0) > todayNum)
+  const nextCalEv = getCalendarEvents().filter(e => (e.sortDate||0) > todayNum)
     .sort((a,b) => a.sortDate - b.sortDate)[0];
 
   // Top 3 champions — opted-in players only
@@ -2849,70 +2845,10 @@ function clearMemberIdentity() {
   });
 }
 
-function checkMemberAdminPin(val) {
-  if (val.length < 4) return;
-  // Validate against submissions API (same admin PIN)
-  fetch(`${API}/submissions?pin=${encodeURIComponent(val)}`)
-    .then(r => r.json())
-    .then(data => {
-      if (data.submissions !== undefined) {
-        window._adminPin = val;
-        sessionStorage.setItem('pssn_admin_pin', val);
-        document.getElementById('member-admin-gate').style.display = 'none';
-        document.getElementById('member-admin-content').style.display = 'block';
-      } else {
-        document.getElementById('member-admin-pin-error').style.display = 'block';
-        document.getElementById('member-admin-pin').value = '';
-        setTimeout(() => { document.getElementById('member-admin-pin-error').style.display = 'none'; }, 2000);
-      }
-    });
-}
-
-async function addNewMember() {
-  const name = document.getElementById('new-member-name').value.trim();
-  const msg = document.getElementById('new-member-message');
-
-  if (!name) {
-    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
-    msg.textContent = 'Please enter a name.'; return;
-  }
-
-  // Check for duplicate
-  if (D.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
-    msg.textContent = `${name} is already in the player list.`; return;
-  }
-
-  // Add to D.players in memory
-  D.players.push({ name, faction: '', pod: null });
-
-  // Add to league_players via API so they appear in league dropdowns
-  try {
-    const res = await fetch(`${API}/league`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: getAdminPin(), type: 'add_player', name })
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error);
-  } catch(e) {
-    // Non-fatal — player added in memory even if API fails
-    console.warn('Failed to add to league_players:', e.message);
-  }
-
-  // Rebuild member list so new name appears
-  const listEl = document.getElementById('members-name-list');
-  listEl.innerHTML = '';
-  buildMemberNameList();
-
-  msg.style.display = 'block'; msg.style.color = 'var(--win)';
-  msg.textContent = `✓ ${name} added. Remember to update the HTML data block to make this permanent.`;
-  document.getElementById('new-member-name').value = '';
-}
 
 // ── tab switching ──
 function switchTab(tab) {
-  const tabs = ['stats','calendar','league','club','more','submit','members','admin'];
+  const tabs = ['stats','calendar','league','submit','members','admin'];
   tabs.forEach(t => {
     const el = document.getElementById('tab-' + t);
     if (el) el.style.display = t === tab ? '' : 'none';
@@ -2989,9 +2925,31 @@ function switchCalView(view) {
   renderCalendar();
 }
 
+// ── Calendar events from DB ──
+// Returns events in CALENDAR-compatible shape, sourced from dbEvents
+// Falls back to CALENDAR constant if dbEvents not yet loaded
+function getCalendarEvents() {
+  if (!dbEvents || !dbEvents.length) {
+    // dbEvents not loaded yet — return CALENDAR as fallback
+    return (typeof CALENDAR !== 'undefined' ? CALENDAR : []);
+  }
+  return dbEvents.map(ev => ({
+    name:     ev.name,
+    dates:    ev.event_date || '',
+    type:     ev.format || 'GT',
+    attended: Array.isArray(ev.results) && ev.results.length > 0,
+    sortDate: ev.sort_date || 0,
+    bcp:      ev.bcp_url || '',
+    id:       ev.id,
+  })).filter(ev => ev.sortDate > 0);
+}
+
+
 async function renderCalendar() {
   const el = document.getElementById('calendar-grid');
   el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);">Loading...</div>`;
+  // Ensure DB events are loaded — needed for getCalendarEvents()
+  if (!dbEvents || !dbEvents.length) await loadDbEvents();
   // Load fresh attendance data so calendar shows who's going
   await loadAttendance();
   el.innerHTML = '';
@@ -3001,9 +2959,10 @@ async function renderCalendar() {
   const typeBg    = { GT: 'var(--accent-bg)', Teams: 'var(--draw-bg)', RTT: 'var(--win-bg)' };
 
   // split and sort
+  const calEvs = getCalendarEvents();
   let events = calView === 'upcoming'
-    ? CALENDAR.filter(ev => ev.sortDate >= TODAY).sort((a,b) => a.sortDate - b.sortDate)
-    : CALENDAR.filter(ev => ev.sortDate < TODAY).sort((a,b) => b.sortDate - a.sortDate);
+    ? calEvs.filter(ev => ev.sortDate >= TODAY).sort((a,b) => a.sortDate - b.sortDate)
+    : calEvs.filter(ev => ev.sortDate < TODAY).sort((a,b) => b.sortDate - a.sortDate);
 
   if (!events.length) {
     el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No ${calView} events.</div>`;
@@ -3125,7 +3084,7 @@ function renderCountdown() {
   const today = new Date();
   today.setHours(0,0,0,0);
   const todaySortDate = getTodaySortDate();
-  const upcoming = CALENDAR.filter(ev => {
+  const upcoming = getCalendarEvents().filter(ev => {
     return ev.sortDate >= todaySortDate;
   }).sort((a,b) => a.sortDate - b.sortDate);
 
@@ -3163,12 +3122,12 @@ function renderTimeline() {
   el.innerHTML = `
     <div style="overflow-x:auto;padding-bottom:1rem;margin-top:1rem;">
       <div style="display:flex;align-items:flex-start;min-width:max-content;padding:1rem 0 0.5rem;">
-        ${CALENDAR.map((ev,i) => {
+        ${getCalendarEvents().sort((a,b)=>a.sortDate-b.sortDate).map((ev,i) => {
           const isPast = ev.sortDate < today;
           const attended = ev.attended;
           const opacity = isPast && !attended ? '0.4' : '1';
           const borderCol = attended ? 'var(--accent)' : 'var(--border)';
-          const connector = i < CALENDAR.length-1 ? `<div style="width:20px;height:2px;background:var(--border);flex-shrink:0;margin-top:22px;"></div>` : '';
+          const connector = i < getCalendarEvents().length-1 ? `<div style="width:20px;height:2px;background:var(--border);flex-shrink:0;margin-top:22px;"></div>` : '';
           return `<div style="display:flex;align-items:flex-start;">
             <div style="display:flex;flex-direction:column;align-items:center;width:110px;opacity:${opacity};">
               <div style="width:12px;height:12px;border-radius:50%;background:${attended?'var(--accent)':isPast?'var(--faint)':'var(--surface2)'};border:2px solid ${borderCol};margin-bottom:5px;"></div>
@@ -3227,10 +3186,11 @@ async function renderWhosGoing() {
   const el = document.getElementById('whos-going-grid');
   if (!el) return;
   el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">Loading attendance...</div>`;
+  if (!dbEvents || !dbEvents.length) await loadDbEvents();
   await loadAttendance();
   const now = new Date(); now.setHours(0,0,0,0);
   const today = now.getFullYear()*10000 + (now.getMonth()+1)*100 + now.getDate();
-  const upcoming = CALENDAR.filter(ev => ev.sortDate >= today).slice(0,6);
+  const upcoming = getCalendarEvents().filter(ev => ev.sortDate >= today).sort((a,b) => a.sortDate - b.sortDate).slice(0,6);
   const players = D.players.map(p => p.name).filter(Boolean).sort();
 
   el.innerHTML = `<div style="overflow-x:auto;">
@@ -3713,7 +3673,7 @@ async function approveCorrection(key) {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              pin: window._adminPin || sessionStorage.getItem('pssn_admin_pin'),
+              pin: getAdminPin(),
               resultId: dbResult.id,
               updates: {
                 ...(proposed.faction !== undefined && { faction: proposed.faction }),
@@ -4547,7 +4507,7 @@ async function submitPlayoffResult() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        pin: '1719',
+        pin: TEAM_PIN,
         type: 'playoff',
         season_id: seasonId,
         round, match_number: num,
@@ -5372,7 +5332,7 @@ async function submitLeagueGameAsPlayer() {
     const res = await fetch(`${API}/league`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: '1719', pod_id, player1: me, player2: opponent, bp1: mybp, bp2: oppbp })
+      body: JSON.stringify({ pin: TEAM_PIN, pod_id, player1: me, player2: opponent, bp1: mybp, bp2: oppbp })
     });
     const data = await res.json();
     if (data.success) {
@@ -5440,6 +5400,7 @@ function wizardSearchEvent(val) {
     });
   } else {
     resultsEl.style.display = 'none';
+    if (val.length >= 3) checkEventDuplicate(val);
     newFieldsEl.style.display = 'block';
   }
 }
@@ -5870,6 +5831,8 @@ async function addMember() {
         wizSel.appendChild(opt);
       }
       await loadAndRenderMembers();
+      // Refresh league data so new member appears in league dropdowns immediately
+      leagueLoaded = false;
       setTimeout(() => { msg.style.display = 'none'; }, 3000);
     } else {
       msg.style.display = 'block'; msg.style.color = 'var(--loss)';
@@ -6611,6 +6574,7 @@ async function loadDbEvents() {
 
 function checkEventDuplicate(name) {
   const warn = document.getElementById('ev-duplicate-warning');
+  if (!warn) return;
   if (!name.trim() || !dbEvents.length) { warn.style.display = 'none'; return; }
   const match = dbEvents.find(e => e.name.toLowerCase() === name.toLowerCase().trim());
   if (match) {
