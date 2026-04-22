@@ -2928,6 +2928,8 @@ function switchTab(tab) {
       if (form) {
         form.style.display = 'block';
         renderWhosGoing();
+        // Re-populate correction dropdown on each tab visit (may be empty after nav)
+        populateCorrectionDropdowns();
       }
     }
   }
@@ -2935,6 +2937,27 @@ function switchTab(tab) {
 }
 
 // ── PIN gate ──
+function populateCorrectionDropdowns() {
+  const corrSel = document.getElementById('corr-player');
+  if (corrSel) {
+    const sorted = [...D.players].sort((a,b) => a.name.localeCompare(b.name));
+    corrSel.innerHTML = '<option value="">Select your name...</option>';
+    sorted.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.name; opt.textContent = p.name;
+      corrSel.appendChild(opt);
+    });
+  }
+  const corrFac = document.getElementById('corr-faction');
+  if (corrFac && corrFac.options.length <= 1) {
+    ALL_FACTIONS.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f; opt.textContent = f;
+      corrFac.appendChild(opt);
+    });
+  }
+}
+
 async function checkPin(val) {
   if (val.length < 4) return;
   if (val === TEAM_PIN) {
@@ -2945,24 +2968,8 @@ async function checkPin(val) {
     await loadDbEvents();
     renderWhosGoing();
     renderTeamsSignup();
-    // Populate correction player dropdown
-    const corrSel = document.getElementById('corr-player');
-    if (corrSel && corrSel.options.length <= 1) {
-      [...D.players].sort((a,b) => a.name.localeCompare(b.name)).forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.name; opt.textContent = p.name;
-        corrSel.appendChild(opt);
-      });
-    }
-    // Populate correction faction dropdown
-    const corrFac = document.getElementById('corr-faction');
-    if (corrFac && corrFac.options.length <= 1) {
-      ALL_FACTIONS.forEach(f => {
-        const opt = document.createElement('option');
-        opt.value = f; opt.textContent = f;
-        corrFac.appendChild(opt);
-      });
-    }
+    // Populate correction dropdowns
+    populateCorrectionDropdowns();
   } else {
     document.getElementById('pin-error').style.display = 'block';
     document.getElementById('pin-input').value = '';
