@@ -4186,6 +4186,7 @@ async function renderTeamsSignup() {
   const el = document.getElementById('whos-going-teams-grid');
   if (!el) return;
   el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);">Loading...</div>`;
+  if (!dbEvents || !dbEvents.length) await loadDbEvents();
   await loadAttendance();
 
   const TODAY = getTodaySortDate();
