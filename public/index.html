@@ -3337,7 +3337,7 @@ async function renderWhosGoing() {
   }
 
   // ── Player dropdown — pre-fill from localStorage ──
-  const storedMember = localStorage.getItem('pssn_member') || '';
+  const storedMember = sessionStorage.getItem('pssn_wg_player') || localStorage.getItem('pssn_member') || '';
   const playerOptions = `<option value="">Select your name...</option>` +
     players.map(n => `<option value="${n.replace(/"/g,'&quot;')}"${n === storedMember ? ' selected' : ''}>${n}</option>`).join('');
 
@@ -3423,7 +3423,7 @@ function wgToggleCard(idx) {
 }
 
 function wgOnPlayerChange(name) {
-  if (name) localStorage.setItem('pssn_member', name);
+  if (name) sessionStorage.setItem('pssn_wg_player', name);
   const cardsEl = document.getElementById('wg-cards');
   if (cardsEl && window._wgBuildCards) {
     // Remember which cards were open
@@ -4189,7 +4189,7 @@ async function renderTeamsSignup() {
   await loadAttendance();
 
   const TODAY = getTodaySortDate();
-  const ittEvents = CALENDAR.filter(ev => ev.type === 'Teams' && ev.sortDate >= TODAY)
+  const ittEvents = getCalendarEvents().filter(ev => ev.type === 'Teams' && ev.sortDate >= TODAY)
     .sort((a,b) => a.sortDate - b.sortDate).slice(0, 4);
 
   if (!ittEvents.length) {
