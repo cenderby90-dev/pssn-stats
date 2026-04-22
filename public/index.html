@@ -4121,6 +4121,10 @@ const DEFAULT_ITT_TEAMS = [
 // Key format: team_list_SORTDATE → JSON array of team names
 
 async function saveTeamData(sortDate, teams) {
+  const encoded = JSON.stringify(teams);
+  // Optimistically update both key formats in memory so re-render is instant
+  attendanceData[`_teams_${sortDate}`] = encoded;
+  attendanceData[`_teams_${sortDate}_${sortDate}`] = encoded;
   try {
     await fetch(`${API}/attendance`, {
       method: 'POST',
@@ -4128,11 +4132,11 @@ async function saveTeamData(sortDate, teams) {
       body: JSON.stringify({
         player_name: `_teams_${sortDate}`,
         event_sort_date: sortDate,
-        status: JSON.stringify(teams),
+        status: encoded,
         pin: TEAM_PIN
       })
     });
-    await loadAttendance();
+    await loadAttendance(true); // force cache bypass so we get fresh server state
   } catch(e) {
     console.error('Failed to save team data', e);
   }
