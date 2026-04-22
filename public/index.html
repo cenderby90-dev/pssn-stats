@@ -4175,12 +4175,14 @@ async function saveTeamRegistry(names) {
 }
 
 function getTeamsForEvent(sortDate) {
-  const raw = attendanceData[`_teams_${sortDate}`];
+  // Try clean key first, then legacy doubled key (_teams_SD_SD from old save format)
+  const raw = attendanceData[`_teams_${sortDate}`]
+           || attendanceData[`_teams_${sortDate}_${sortDate}`];
   if (raw) {
     try { return JSON.parse(raw); } catch(e) {}
   }
   // No saved state — return team shells with no players assigned
-  // Use "↩ Reset to last ITT" button to copy the default roster
+  // Use "↩ Load last ITT roster" button to copy the default roster
   return DEFAULT_ITT_TEAMS.map(t => ({ name: t.name, players: [] }));
 }
 
@@ -4245,7 +4247,8 @@ async function renderTeamsSignup() {
               <div style="display:flex;align-items:center;gap:4px;background:var(--surface2);
                           border:1px solid var(--border);border-radius:4px;padding:3px 8px;">
                 <span style="font-size:0.78rem;color:var(--text);">${p}</span>
-                <button onclick="removePlayerFromTeam(${ev.sortDate},${ti},'${p.replace(/'/g,"\\'")}')"
+                <button data-sortdate="${ev.sortDate}" data-ti="${ti}" data-player="${p.replace(/"/g,'&quot;')}"
+                  onclick="removePlayerFromTeam(parseInt(this.dataset.sortdate),parseInt(this.dataset.ti),this.dataset.player)"
                   style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;line-height:1;padding:0 2px;">✕</button>
               </div>`).join('') : `<span style="font-size:0.75rem;color:var(--faint);">No players yet</span>`}
           </div>
