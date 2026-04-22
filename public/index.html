@@ -1620,11 +1620,12 @@ async function initSite() {
   const headerMeta = document.getElementById('header-meta');
   if (headerMeta) headerMeta.innerHTML = '<span style="color:var(--muted);animation:pulse 1.2s ease-in-out infinite;">Loading season data...</span>';
 
-  // Load players, events/submissions, and attendance in parallel
+  // Load players, events/submissions, attendance, and db events in parallel
   await Promise.all([
     loadPlayers(),
     loadApprovedSubmissions(),
-    loadAttendance()   // must be before rebuildStats so CoS optins render correctly
+    loadAttendance(),   // must be before rebuildStats so CoS optins render correctly
+    loadDbEvents(),     // needed for calendar, countdown, and who's going
   ]);
 
   rebuildStats();
@@ -3093,7 +3094,11 @@ async function renderCalendar() {
     : calEvs.filter(ev => ev.sortDate < TODAY).sort((a,b) => b.sortDate - a.sortDate);
 
   if (!events.length) {
-    el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No ${calView} events.</div>`;
+    if (calView === 'upcoming') {
+      el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No upcoming events yet. Use <strong style="color:var(--text);">Admin → Schedule an Event</strong> to add the next event to the calendar.</div>`;
+    } else {
+      el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No past events found.</div>`;
+    }
     return;
   }
 
