@@ -698,8 +698,8 @@
   </div>
   <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.25rem;">Full UKTC calendar. Events your team attended are highlighted.</div>
   <div style="display:flex;gap:2px;margin-bottom:1.5rem;border-bottom:1px solid var(--border);">
-    <button id="cal-btn-upcoming" class="tab-btn" onclick="switchCalView('upcoming')">Upcoming</button>
-    <button id="cal-btn-past" class="tab-btn active" onclick="switchCalView('past')">Past</button>
+    <button id="cal-btn-upcoming" class="tab-btn active" onclick="switchCalView('upcoming')">Upcoming</button>
+    <button id="cal-btn-past" class="tab-btn" onclick="switchCalView('past')">Past</button>
   </div>
   <div id="calendar-grid"></div>
 </main>
@@ -810,7 +810,7 @@
   <div id="pin-gate" style="max-width:400px;margin:3rem auto 0;">
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2rem;text-align:center;">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:0.06em;color:var(--text);margin-bottom:0.5rem;">Team Access</div>
-      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Enter the team PIN to sign up for events and submit results</div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">Enter the team PIN to submit results and sign up for events</div>
       <input type="password" id="pin-input" maxlength="4" placeholder="••••"
         autocomplete="new-password"
         style="width:120px;text-align:center;font-size:1.4rem;letter-spacing:0.3em;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);outline:none;margin-bottom:1rem;display:block;margin-left:auto;margin-right:auto;"
@@ -826,13 +826,13 @@
     <div class="section-head" style="margin-top:0;cursor:pointer;" onclick="toggleSection('sec-whos-going')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
       <div>
         <div class="section-title">Who's Going?</div>
-        <div id="sec-whos-going-hint" style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Sign up for upcoming events so your teammates know to look out for you — click to open</div>
+        <div id="sec-whos-going-hint" style="font-size:0.72rem;color:var(--muted);margin-top:3px;">Select your name then tap any event to mark yourself as going — visible to everyone with the team PIN</div>
       </div>
       <div class="section-rule"></div>
       <span id="sec-whos-going-arrow" style="color:var(--muted);font-size:0.75rem;margin-left:8px;transition:transform 0.2s;transform:rotate(0deg);">▼</span>
     </div>
     <div id="sec-whos-going" style="display:block;">
-      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">Tick ✓ if you're going, ? if you're not sure. Visible to everyone with the team PIN.</div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;margin-top:8px;">Select your name from the dropdown, then tap an event to sign up. Your status is visible to everyone with the team PIN.</div>
       <!-- Sub-tabs -->
       <div style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:1rem;">
         <button id="wg-btn-individual" class="tab-btn active" onclick="switchWgTab('individual')">Individual Events</button>
@@ -2972,7 +2972,7 @@ function checkPin(val) {
 
 
 // ── calendar ──
-let calView = 'past';
+let calView = 'upcoming';
 
 function switchCalView(view) {
   calView = view;
@@ -3318,51 +3318,144 @@ async function loadAttendance(forceReload = false) {
 async function renderWhosGoing() {
   const el = document.getElementById('whos-going-grid');
   if (!el) return;
-  el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">Loading attendance...</div>`;
+  el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:1rem 0;">Loading...</div>`;
   if (!dbEvents || !dbEvents.length) await loadDbEvents();
   await loadAttendance();
   const now = new Date(); now.setHours(0,0,0,0);
   const today = now.getFullYear()*10000 + (now.getMonth()+1)*100 + now.getDate();
-  const upcoming = getCalendarEvents().filter(ev => ev.sortDate >= today).sort((a,b) => a.sortDate - b.sortDate).slice(0,6);
+  const upcoming = getCalendarEvents().filter(ev => ev.sortDate >= today).sort((a,b) => a.sortDate - b.sortDate);
   const players = D.players.map(p => p.name).filter(Boolean).sort();
 
   if (!upcoming.length) {
     el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">
       No upcoming events to sign up for yet.
       <span style="display:block;margin-top:6px;font-size:0.78rem;">
-        Use <strong>Admin → Schedule an Event</strong> to add upcoming events — members can then mark themselves as going here.
+        Use <strong>Admin → Schedule an Event</strong> to add upcoming events.
       </span>
     </div>`;
     return;
   }
 
-  el.innerHTML = `<div style="overflow-x:auto;">
-    <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
-      <thead><tr>
-        <th style="text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:500;font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;min-width:130px;">Player</th>
-        ${upcoming.map(ev=>`<th style="text-align:center;padding:8px 6px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:400;font-size:0.65rem;min-width:100px;">${ev.name}<br><span style="opacity:0.6;">${ev.dates.split('–')[0]}</span></th>`).join('')}
-      </tr></thead>
-      <tbody>
-        ${players.map(name=>`
-          <tr onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
-            <td style="padding:7px 12px;border-bottom:1px solid var(--border);color:var(--text);">${name}</td>
-            ${upcoming.map(ev=>{
-              const key=`${name}_${ev.sortDate}`;
-              const stored=attendanceData[key];
-              const going=stored==='yes', maybe=stored==='maybe', notgoing=stored==='no';
-              return `<td style="text-align:center;padding:5px;border-bottom:1px solid var(--border);">
-                <div style="display:flex;gap:3px;justify-content:center;">
-                  <button onclick="setGoing('${name.replace(/'/g,"\\'")}',${ev.sortDate},'yes')" title="Going" style="width:26px;height:26px;border-radius:4px;border:1px solid ${going?'var(--win)':'var(--border)'};background:${going?'var(--win-bg)':'transparent'};cursor:pointer;font-size:0.85rem;color:${going?'var(--win)':'var(--muted)'};transition:all 0.15s;">✓</button>
-                  <button onclick="setGoing('${name.replace(/'/g,"\\'")}',${ev.sortDate},'maybe')" title="Maybe" style="width:26px;height:26px;border-radius:4px;border:1px solid ${maybe?'#f0c040':'var(--border)'};background:${maybe?'#2a2000':'transparent'};cursor:pointer;font-size:0.85rem;color:${maybe?'#f0c040':'var(--muted)'};transition:all 0.15s;">?</button>
-                  <button onclick="setGoing('${name.replace(/'/g,"\\'")}',${ev.sortDate},'no')" title="Not going" style="width:26px;height:26px;border-radius:4px;border:1px solid ${notgoing?'var(--loss)':'var(--border)'};background:${notgoing?'var(--loss-bg)':'transparent'};cursor:pointer;font-size:0.85rem;color:${notgoing?'var(--loss)':'var(--muted)'};transition:all 0.15s;">✗</button>
-                </div>
-              </td>`;
-            }).join('')}
-          </tr>`).join('')}
-      </tbody>
-    </table>
-  </div>
-  <div style="font-size:0.75rem;color:var(--muted);margin-top:10px;">✓ = Going &nbsp;·&nbsp; ? = Maybe &nbsp;·&nbsp; ✗ = Not going &nbsp;·&nbsp; Shared across all devices.</div>`;
+  // ── Player dropdown — pre-fill from localStorage ──
+  const storedMember = localStorage.getItem('pssn_member') || '';
+  const playerOptions = `<option value="">Select your name...</option>` +
+    players.map(n => `<option value="${n.replace(/"/g,'&quot;')}"${n === storedMember ? ' selected' : ''}>${n}</option>`).join('');
+
+  // ── Build accordion cards ──
+  function buildCards(selectedPlayer) {
+    return upcoming.map((ev, idx) => {
+      const going   = players.filter(n => attendanceData[`${n}_${ev.sortDate}`] === 'yes');
+      const maybe   = players.filter(n => attendanceData[`${n}_${ev.sortDate}`] === 'maybe');
+      const typeColors = { GT: 'var(--accent)', Teams: 'var(--draw)', RTT: 'var(--win)', Championship: 'var(--accent)', Club: 'var(--win)' };
+      const typeBgs   = { GT: 'var(--accent-bg)', Teams: 'var(--draw-bg)', RTT: 'var(--win-bg)', Championship: 'var(--accent-bg)', Club: 'var(--win-bg)' };
+      const tc = typeColors[ev.type] || 'var(--muted)';
+      const tb = typeBgs[ev.type] || 'var(--surface2)';
+
+      const goingChips  = going.map(n  => `<span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;background:var(--win-bg);color:var(--win);border:1px solid var(--win);">${n}</span>`).join('');
+      const maybeChips  = maybe.map(n  => `<span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;background:var(--draw-bg);color:var(--draw);border:1px solid var(--draw);">${n}</span>`).join('');
+
+      // Sign-up row for selected player
+      const myStatus = selectedPlayer ? attendanceData[`${selectedPlayer}_${ev.sortDate}`] : null;
+      const safeName = selectedPlayer ? selectedPlayer.replace(/\\/g,'\\\\').replace(/'/g,"\\'") : '';
+      const signupHtml = selectedPlayer ? `
+        <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <span style="font-size:0.8rem;color:var(--muted);">Your status</span>
+          <div style="display:flex;border-radius:5px;overflow:hidden;border:1px solid var(--border);">
+            <button onclick="wgSetGoing('${safeName}',${ev.sortDate},'yes')" style="padding:6px 12px;font-size:0.78rem;font-weight:500;font-family:'DM Sans',sans-serif;border:none;border-right:1px solid var(--border);cursor:pointer;background:${myStatus==='yes'?'var(--win-bg)':'var(--surface2)'};color:${myStatus==='yes'?'var(--win)':'var(--muted)'};transition:all 0.1s;">✓ Going</button>
+            <button onclick="wgSetGoing('${safeName}',${ev.sortDate},'maybe')" style="padding:6px 12px;font-size:0.78rem;font-weight:500;font-family:'DM Sans',sans-serif;border:none;cursor:pointer;background:${myStatus==='maybe'?'var(--draw-bg)':'var(--surface2)'};color:${myStatus==='maybe'?'var(--draw)':'var(--muted)'};transition:all 0.1s;">? Maybe</button>
+          </div>
+        </div>` : '';
+
+      const attendanceBody = (going.length || maybe.length) ? `
+        <div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:4px;">
+          ${goingChips}${maybeChips}
+        </div>` : `<div style="padding:10px 14px;font-size:0.78rem;color:var(--faint);">No sign-ups yet.</div>`;
+
+      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;">
+        <!-- Header — always visible -->
+        <div onclick="wgToggleCard(${idx})" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:0.88rem;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ev.name}</div>
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">${ev.dates}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            ${going.length  ? `<span style="font-size:0.7rem;font-weight:500;padding:2px 8px;border-radius:10px;background:var(--win-bg);color:var(--win);">✓ ${going.length}</span>` : ''}
+            ${maybe.length  ? `<span style="font-size:0.7rem;font-weight:500;padding:2px 8px;border-radius:10px;background:var(--draw-bg);color:var(--draw);">? ${maybe.length}</span>` : ''}
+            ${!going.length && !maybe.length ? `<span style="font-size:0.7rem;color:var(--faint);">No sign-ups</span>` : ''}
+            <span style="font-size:0.7rem;font-weight:500;padding:2px 7px;border-radius:3px;background:${tb};color:${tc};">${ev.type}</span>
+            <span id="wg-chev-${idx}" style="font-size:0.65rem;color:var(--muted);transition:transform 0.2s;">▼</span>
+          </div>
+        </div>
+        <!-- Body — toggled -->
+        <div id="wg-body-${idx}" style="display:none;border-top:1px solid var(--border);">
+          ${attendanceBody}
+          ${signupHtml}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  el.innerHTML = `
+    <!-- Player selector -->
+    <div style="margin-bottom:14px;">
+      <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Who are you?</label>
+      <select id="wg-player-sel" onchange="wgOnPlayerChange(this.value)"
+        style="width:100%;padding:8px 11px;background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;appearance:none;">
+        ${playerOptions}
+      </select>
+    </div>
+    <!-- Event accordion cards -->
+    <div id="wg-cards">${buildCards(storedMember)}</div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:6px;">Sign-ups are shared across all devices.</div>`;
+
+  // Expose buildCards so wgOnPlayerChange can re-render cards
+  window._wgBuildCards = buildCards;
+  window._wgUpcoming = upcoming;
+}
+
+function wgToggleCard(idx) {
+  const body  = document.getElementById('wg-body-' + idx);
+  const chev  = document.getElementById('wg-chev-' + idx);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+function wgOnPlayerChange(name) {
+  if (name) localStorage.setItem('pssn_member', name);
+  const cardsEl = document.getElementById('wg-cards');
+  if (cardsEl && window._wgBuildCards) {
+    // Remember which cards were open
+    const openCards = (window._wgUpcoming || []).map((_,i) => {
+      const b = document.getElementById('wg-body-' + i);
+      return b && b.style.display !== 'none';
+    });
+    cardsEl.innerHTML = window._wgBuildCards(name);
+    // Restore open state
+    openCards.forEach((wasOpen, i) => {
+      if (wasOpen) {
+        const body = document.getElementById('wg-body-' + i);
+        const chev = document.getElementById('wg-chev-' + i);
+        if (body) body.style.display = 'block';
+        if (chev) chev.style.transform = 'rotate(180deg)';
+      }
+    });
+  }
+}
+
+async function wgSetGoing(name, sortDate, status) {
+  await setGoing(name, sortDate, status);
+  // After setGoing re-renders, restore the card that was open
+  // setGoing calls renderWhosGoing() which rebuilds everything —
+  // we open the card for this event after re-render
+  const idx = (window._wgUpcoming || []).findIndex(ev => ev.sortDate === sortDate);
+  if (idx >= 0) {
+    const body = document.getElementById('wg-body-' + idx);
+    const chev = document.getElementById('wg-chev-' + idx);
+    if (body) { body.style.display = 'block'; }
+    if (chev) { chev.style.transform = 'rotate(180deg)'; }
+  }
 }
 
 async function setGoing(name, sortDate, status) {
