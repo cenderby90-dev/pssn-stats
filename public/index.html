@@ -2925,7 +2925,7 @@ function switchTab(tab) {
       const gate = document.getElementById('pin-gate');
       const form = document.getElementById('submit-form');
       if (gate) gate.style.display = 'none';
-      if (form && form.style.display === 'none') {
+      if (form) {
         form.style.display = 'block';
         renderWhosGoing();
       }
@@ -2935,16 +2935,16 @@ function switchTab(tab) {
 }
 
 // ── PIN gate ──
-function checkPin(val) {
+async function checkPin(val) {
   if (val.length < 4) return;
   if (val === TEAM_PIN) {
     document.getElementById('pin-gate').style.display = 'none';
     document.getElementById('submit-form').style.display = 'block';
     sessionStorage.setItem('pssn_team_unlocked', '1');
-    // Load attendance for who's going and db events for wizard
+    // Load db events first, then render who's going with data available
+    await loadDbEvents();
     renderWhosGoing();
     renderTeamsSignup();
-    loadDbEvents();
     // Populate correction player dropdown
     const corrSel = document.getElementById('corr-player');
     if (corrSel && corrSel.options.length <= 1) {
