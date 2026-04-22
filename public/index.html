@@ -4179,7 +4179,9 @@ function getTeamsForEvent(sortDate) {
   if (raw) {
     try { return JSON.parse(raw); } catch(e) {}
   }
-  return JSON.parse(JSON.stringify(DEFAULT_ITT_TEAMS));
+  // No saved state — return team shells with no players assigned
+  // Use "↩ Reset to last ITT" button to copy the default roster
+  return DEFAULT_ITT_TEAMS.map(t => ({ name: t.name, players: [] }));
 }
 
 async function renderTeamsSignup() {
@@ -4286,7 +4288,7 @@ async function renderTeamsSignup() {
                    color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;white-space:nowrap;"
             onmouseover="this.style.borderColor='var(--faint)';this.style.color='var(--text)'"
             onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-            ↩ Reset to last ITT
+            ↩ Load last ITT roster
           </button>
         </div>
         <!-- Registry viewer -->
@@ -4397,7 +4399,7 @@ async function renderTeamsSignup() {
   };
 
   window.copyTeamsFromLastItt = async (sortDate) => {
-    if (!confirm('Reset to last recorded ITT roster? This will overwrite the current setup.')) return;
+    if (!confirm('Load last ITT roster into these teams? This will overwrite the current setup.')) return;
     await saveTeamData(sortDate, JSON.parse(JSON.stringify(DEFAULT_ITT_TEAMS)));
     renderIttEvent(activeIttIdx);
   };
