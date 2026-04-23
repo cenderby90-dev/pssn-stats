@@ -1,47 +1,6 @@
 import { sql } from '@vercel/postgres';
 
 const ADMIN_PIN = process.env.ADMIN_PIN;
-const TEAM_PIN = '1719';
-
-function calcSeedings(pods, players, games) {
-  const podResults = pods.map(pod => {
-    const podPlayers = players.filter(p => p.pod_id === pod.id).map(p => p.player_name);
-    const podGames = games.filter(g => g.pod_id === pod.id);
-    const standings = {};
-    podPlayers.forEach(n => { standings[n] = { name: n, pts: 0, bp: 0, played: 0 }; });
-    podGames.forEach(g => {
-      if (!standings[g.player1]) standings[g.player1] = { name: g.player1, pts: 0, bp: 0, played: 0 };
-      if (!standings[g.player2]) standings[g.player2] = { name: g.player2, pts: 0, bp: 0, played: 0 };
-      standings[g.player1].bp += g.bp1; standings[g.player2].bp += g.bp2;
-      standings[g.player1].played++; standings[g.player2].played++;
-      if (g.bp1 > g.bp2) standings[g.player1].pts += 2;
-      else if (g.bp2 > g.bp1) standings[g.player2].pts += 2;
-      else { standings[g.player1].pts++; standings[g.player2].pts++; }
-    });
-    const sorted = Object.values(standings).sort((a, b) => b.pts - a.pts || b.bp - a.bp);
-    return { pod: pod.name, podId: pod.id, winner: sorted[0], runnerUp: sorted[1] };
-  });
-  const winners = podResults.map(p => ({ ...p.winner, pod: p.pod })).sort((a, b) => b.bp - a.bp);
-  const runnersUp = podResults.map(p => ({ ...p.runnerUp, pod: p.pod })).sort((a, b) => b.bp - a.bp);
-  return {
-    byeWinners: winners.slice(0, 4),
-    qfWinners: winners.slice(4, 6),
-    runnersUp,
-    bracket: {
-      QF1: { p1: runnersUp[0], p2: runnersUp[5] },
-      QF2: { p1: runnersUp[1], p2: runnersUp[4] },
-      QF3: { p1: runnersUp[2], p2: runnersUp[3] },
-      QF4: { p1: winners[4], p2: winners[5] },
-      SF1: { p1: winners[0], p2: null },
-      SF2: { p1: winners[1], p2: null },
-      SF3: { p1: winners[2], p2: null },
-      SF4: { p1: winners[3], p2: null },
-      F1: { p1: null, p2: null },
-      F2: { p1: null, p2: null },
-      GF: { p1: null, p2: null },
-    }
-  };
-}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -51,180 +10,291 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-
-    // ── GET ──
+    // ── GET — fetch full league state ──
     if (req.method === 'GET') {
-      const { rows: seasons } = await sql`SELECT * FROM league_seasons WHERE active = true ORDER BY id DESC LIMIT 1`;
-      if (!seasons.length) return res.status(200).json({ season: null });
-      const season = seasons[0];
 
-      const [{ rows: pods }, { rows: players }, { rows: games }, { rows: pending },
-             { rows: playoffs }, { rows: pendingPlayoffs }, { rows: archive }] = await Promise.all([
-        sql`SELECT * FROM league_pods WHERE season_id = ${season.id} ORDER BY pod_number`,
-        sql`SELECT lpp.*, lp.pod_number FROM league_pod_players lpp JOIN league_pods lp ON lpp.pod_id = lp.id WHERE lp.season_id = ${season.id}`,
-        sql`SELECT * FROM league_games WHERE season_id = ${season.id} AND approved = true ORDER BY created_at`,
-        sql`SELECT * FROM league_games WHERE season_id = ${season.id} AND approved = false ORDER BY created_at DESC`,
-        sql`SELECT * FROM league_playoff_matches WHERE season_id = ${season.id} AND approved = true ORDER BY round, match_number`,
-        sql`SELECT * FROM league_playoff_matches WHERE season_id = ${season.id} AND approved = false ORDER BY created_at DESC`,
-        sql`SELECT id, label, data, created_at FROM league_archive ORDER BY created_at DESC`,
-      ]);
+      // Active season
+      const seasonRes = await sql`SELECT * FROM league_seasons WHERE active = true LIMIT 1`;
+      const season = seasonRes.rows[0] || null;
+      if (!season) return res.status(200).json({ season: null, pods: [], players: [], games: [], pending: [], playoffs: [], pendingPlayoffs: [], allPlayers: [], archive: [] });
 
-      let allPlayers = [];
-      try {
-        const { rows } = await sql`SELECT * FROM league_players WHERE active = true ORDER BY name`;
-        allPlayers = rows;
-      } catch(e) {
-        console.warn('league_players table not available:', e.message);
-      }
+      // Pods
+      const podsRes = await sql`SELECT * FROM league_pods WHERE season_id = ${season.id} ORDER BY pod_number ASC`;
+      const pods = podsRes.rows;
 
+      // Pod assignments (player_name as text — unchanged for Season 1 history)
+      const playersRes = await sql`SELECT * FROM league_players ORDER BY pod_number ASC`;
+      const players = playersRes.rows;
+
+      // All approved games
+      const gamesRes = await sql`SELECT * FROM league_games WHERE season_id = ${season.id} AND approved = true ORDER BY created_at ASC`;
+      const games = gamesRes.rows;
+
+      // Pending games (submitted, not yet approved)
+      const pendingRes = await sql`SELECT * FROM league_games WHERE season_id = ${season.id} AND approved = false ORDER BY created_at DESC`;
+      const pending = pendingRes.rows;
+
+      // Playoffs
+      const playoffsRes = await sql`SELECT * FROM league_playoffs WHERE season_id = ${season.id} AND approved = true ORDER BY created_at ASC`;
+      const playoffs = playoffsRes.rows;
+
+      const pendingPlayoffsRes = await sql`SELECT * FROM league_playoffs WHERE season_id = ${season.id} AND approved = false ORDER BY created_at DESC`;
+      const pendingPlayoffs = pendingPlayoffsRes.rows;
+
+      // ── allPlayers: sourced from MASTER players table ──
+      // This is the single source of truth — shared with /api/players
+      // Replaces the old league-specific players table for new seasons
+      const allPlayersRes = await sql`SELECT id, name, active FROM players ORDER BY name ASC`;
+      const allPlayers = allPlayersRes.rows;
+
+      // Archive (past seasons)
+      const archiveRes = await sql`SELECT * FROM league_seasons WHERE active = false ORDER BY id DESC`;
+      const archive = archiveRes.rows;
+
+      // Seedings / bracket (calculated server-side for consistency)
       const seedings = calcSeedings(pods, players, games);
+      const bracket = calcBracket(seedings, playoffs);
 
-      const bracket = seedings.bracket;
-      playoffs.forEach(m => {
-        const key = `${m.round}${m.match_number}`;
-        if (bracket[key]) { bracket[key].bp1 = m.bp1; bracket[key].bp2 = m.bp2; bracket[key].winner = m.winner; }
-        const winner = m.winner;
-        if (m.round === 'QF') { const sfKey = `SF${m.match_number}`; if (bracket[sfKey]) bracket[sfKey].p2 = { name: winner }; }
-        if (m.round === 'SF') {
-          const fKey = m.match_number <= 2 ? 'F1' : 'F2';
-          const slot = m.match_number % 2 === 1 ? 'p1' : 'p2';
-          if (bracket[fKey]) bracket[fKey][slot] = { name: winner };
-        }
-        if (m.round === 'F') {
-          const slot = m.match_number === 1 ? 'p1' : 'p2';
-          if (bracket['GF']) bracket['GF'][slot] = { name: winner };
-        }
+      return res.status(200).json({
+        season, pods, players, games, pending,
+        playoffs, pendingPlayoffs,
+        seedings, bracket,
+        archive,
+        allPlayers,  // now from master players table
       });
-
-      return res.status(200).json({ season, pods, players, games, pending, playoffs, pendingPlayoffs, seedings, bracket, archive, allPlayers });
     }
 
-    // ── POST ──
+    // ── POST — create game, add player to pod, new season ──
     if (req.method === 'POST') {
       const { pin, type } = req.body;
-      if (!pin || (pin !== TEAM_PIN && pin !== ADMIN_PIN)) return res.status(401).json({ error: 'Unauthorised' });
-      const approved = pin === ADMIN_PIN;
+      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
 
+      // Add player — now writes to MASTER players table
       if (type === 'add_player') {
-        if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
         const { name } = req.body;
-        if (!name?.trim()) return res.status(400).json({ error: 'Name required' });
-        await sql`INSERT INTO league_players (name) VALUES (${name.trim()}) ON CONFLICT (name) DO UPDATE SET active = true`;
+        if (!name) return res.status(400).json({ error: 'Name required' });
+        await sql`
+          INSERT INTO players (name, factions, active)
+          VALUES (${name}, ARRAY[]::text[], true)
+          ON CONFLICT (name) DO UPDATE SET active = true
+        `;
         return res.status(200).json({ success: true });
       }
 
-      if (type === 'playoff') {
-        const { season_id, round, match_number, player1, player2, bp1, bp2, winner } = req.body;
-        if (!round || !match_number || !player1 || !player2 || bp1 === undefined || bp2 === undefined || !winner)
-          return res.status(400).json({ error: 'Missing fields' });
-        if (bp1 < 0 || bp1 > 100 || bp2 < 0 || bp2 > 100)
-          return res.status(400).json({ error: 'Battle Points must be between 0 and 100' });
-        const { rows: existing } = await sql`SELECT id FROM league_playoff_matches WHERE season_id = ${season_id} AND round = ${round} AND match_number = ${match_number} AND approved = true`;
-        if (existing.length) return res.status(400).json({ error: 'Result already exists for this match' });
-        await sql`INSERT INTO league_playoff_matches (season_id, round, match_number, player1, player2, bp1, bp2, winner, approved) VALUES (${season_id}, ${round}, ${match_number}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${winner}, ${approved})`;
-        return res.status(200).json({ success: true, approved });
-      }
-
-      const { pod_id, player1, player2, bp1, bp2 } = req.body;
-      if (!pod_id || !player1 || !player2 || bp1 === undefined || bp2 === undefined)
-        return res.status(400).json({ error: 'Missing required fields' });
-      if (bp1 < 0 || bp1 > 100 || bp2 < 0 || bp2 > 100)
-        return res.status(400).json({ error: 'Battle Points must be between 0 and 100' });
-
-      const { rows: pods } = await sql`SELECT season_id FROM league_pods WHERE id = ${pod_id}`;
-      if (!pods.length) return res.status(400).json({ error: 'Pod not found' });
-
-      const { rows: members } = await sql`SELECT player_name FROM league_pod_players WHERE pod_id = ${pod_id}`;
-      const memberNames = members.map(m => m.player_name);
-      if (!memberNames.includes(player1)) return res.status(400).json({ error: `${player1} is not in this pod` });
-      if (!memberNames.includes(player2)) return res.status(400).json({ error: `${player2} is not in this pod` });
-
-      const { rows: dupes } = await sql`
-        SELECT id FROM league_games 
-        WHERE pod_id = ${pod_id} AND approved = true
-        AND (
-          (player1 = ${player1} AND player2 = ${player2}) OR
-          (player1 = ${player2} AND player2 = ${player1})
-        )`;
-      if (dupes.length) return res.status(400).json({ error: `${player1} vs ${player2} has already been played in this pod` });
-
-      await sql`INSERT INTO league_games (season_id, pod_id, player1, player2, bp1, bp2, approved) VALUES (${pods[0].season_id}, ${pod_id}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${approved})`;
-      return res.status(200).json({ success: true, approved });
-    }
-
-    // ── PATCH — approve/reject, edit scores, or toggle player ──
-    if (req.method === 'PATCH') {
-      const { pin, gameId, playoffId, playerId, active, approved, bp1, bp2 } = req.body;
-      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
-
-      // Toggle player active state
-      if (playerId !== undefined) {
-        await sql`UPDATE league_players SET active = ${active} WHERE id = ${playerId}`;
+      // Submit a game result
+      if (type === 'submit_game') {
+        const { seasonId, podId, player1, player2, bp1, bp2 } = req.body;
+        await sql`
+          INSERT INTO league_games (season_id, pod_id, player1, player2, bp1, bp2, approved)
+          VALUES (${seasonId}, ${podId}, ${player1}, ${player2}, ${bp1}, ${bp2}, false)
+        `;
         return res.status(200).json({ success: true });
       }
 
-      // Edit existing game scores
-      if (gameId && bp1 !== undefined && bp2 !== undefined) {
-        if (bp1 < 0 || bp1 > 100 || bp2 < 0 || bp2 > 100)
-          return res.status(400).json({ error: 'Battle Points must be between 0 and 100' });
-        await sql`UPDATE league_games SET bp1 = ${bp1}, bp2 = ${bp2} WHERE id = ${gameId}`;
+      // Submit a playoff result
+      if (type === 'submit_playoff') {
+        const { seasonId, round, matchNum, player1, player2, bp1, bp2 } = req.body;
+        await sql`
+          INSERT INTO league_playoffs (season_id, round, match_num, player1, player2, bp1, bp2, approved)
+          VALUES (${seasonId}, ${round}, ${matchNum}, ${player1}, ${player2}, ${bp1}, ${bp2}, false)
+        `;
         return res.status(200).json({ success: true });
       }
 
-      // Approve/reject game or playoff
-      if (playoffId) {
-        if (approved) await sql`UPDATE league_playoff_matches SET approved = true WHERE id = ${playoffId}`;
-        else await sql`DELETE FROM league_playoff_matches WHERE id = ${playoffId}`;
-      } else {
-        if (approved) await sql`UPDATE league_games SET approved = true WHERE id = ${gameId}`;
-        else await sql`DELETE FROM league_games WHERE id = ${gameId}`;
+      // Add player to pod assignment
+      if (type === 'add_to_pod') {
+        const { podId, playerName, podNumber } = req.body;
+        await sql`
+          INSERT INTO league_players (pod_id, player_name, pod_number)
+          VALUES (${podId}, ${playerName}, ${podNumber})
+          ON CONFLICT DO NOTHING
+        `;
+        return res.status(200).json({ success: true });
       }
-      return res.status(200).json({ success: true });
-    }
 
-    // ── PUT — create new season ──
-    if (req.method === 'PUT') {
-      const { pin, name, pods } = req.body;
-      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
-      await sql`UPDATE league_seasons SET active = false`;
-      const { rows } = await sql`INSERT INTO league_seasons (name, active) VALUES (${name}, true) RETURNING id`;
-      const seasonId = rows[0].id;
-      for (const pod of pods) {
-        const { rows: podRows } = await sql`INSERT INTO league_pods (season_id, pod_number, name) VALUES (${seasonId}, ${pod.number}, ${pod.name}) RETURNING id`;
-        for (const player of pod.players) {
-          await sql`INSERT INTO league_pod_players (pod_id, player_name) VALUES (${podRows[0].id}, ${player})`;
+      // Remove player from pod
+      if (type === 'remove_from_pod') {
+        const { playerId } = req.body;
+        await sql`DELETE FROM league_players WHERE id = ${playerId}`;
+        return res.status(200).json({ success: true });
+      }
+
+      // Create new season with pods and player assignments
+      if (type === 'new_season') {
+        const { name, pods: podDefs } = req.body;
+        // Deactivate current season
+        await sql`UPDATE league_seasons SET active = false WHERE active = true`;
+        // Create new season
+        const newSeason = await sql`
+          INSERT INTO league_seasons (name, active) VALUES (${name}, true) RETURNING id
+        `;
+        const seasonId = newSeason.rows[0].id;
+        // Create pods and assign players
+        for (const pod of podDefs) {
+          const podRes = await sql`
+            INSERT INTO league_pods (season_id, pod_number, name)
+            VALUES (${seasonId}, ${pod.number}, ${pod.name}) RETURNING id
+          `;
+          const podId = podRes.rows[0].id;
+          for (const playerName of pod.players) {
+            await sql`
+              INSERT INTO league_players (pod_id, player_name, pod_number)
+              VALUES (${podId}, ${playerName}, ${pod.number})
+            `;
+          }
         }
+        return res.status(200).json({ success: true, seasonId });
       }
-      return res.status(200).json({ success: true, seasonId });
+
+      return res.status(400).json({ error: 'Unknown type' });
     }
 
-    // ── DELETE — archive season ──
-    if (req.method === 'DELETE') {
-      const { pin, label, snapshot } = req.body;
+    // ── PATCH — approve game/playoff, toggle player active, update game ──
+    if (req.method === 'PATCH') {
+      const { pin, gameId, playoffId, playerId, active, bp1, bp2 } = req.body;
       if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
 
-      const { rows: activeSeason } = await sql`SELECT id FROM league_seasons WHERE active = true LIMIT 1`;
-      const seasonId = activeSeason[0]?.id;
-
-      let playoffResults = [];
-      if (seasonId) {
-        const { rows } = await sql`
-          SELECT * FROM league_playoff_matches 
-          WHERE season_id = ${seasonId} AND approved = true 
-          ORDER BY round, match_number`;
-        playoffResults = rows;
+      // Approve/reject a league game
+      if (gameId !== undefined) {
+        if (bp1 !== undefined && bp2 !== undefined) {
+          // Update scores and approve
+          await sql`UPDATE league_games SET bp1 = ${bp1}, bp2 = ${bp2}, approved = true WHERE id = ${gameId}`;
+        } else {
+          await sql`UPDATE league_games SET approved = ${active !== false} WHERE id = ${gameId}`;
+        }
+        return res.status(200).json({ success: true });
       }
 
-      const fullSnapshot = { ...snapshot, playoffs: playoffResults };
-      await sql`INSERT INTO league_archive (label, data) VALUES (${label}, ${JSON.stringify(fullSnapshot)})`;
-      await sql`UPDATE league_seasons SET active = false`;
+      // Approve/reject a playoff game
+      if (playoffId !== undefined) {
+        await sql`UPDATE league_playoffs SET approved = ${active !== false} WHERE id = ${playoffId}`;
+        return res.status(200).json({ success: true });
+      }
+
+      // Toggle player active — now targets MASTER players table
+      if (playerId !== undefined && active !== undefined) {
+        await sql`UPDATE players SET active = ${active} WHERE id = ${playerId}`;
+        return res.status(200).json({ success: true });
+      }
+
+      return res.status(400).json({ error: 'gameId, playoffId, or playerId required' });
+    }
+
+    // ── DELETE — remove a game ──
+    if (req.method === 'DELETE') {
+      const { pin, gameId } = req.body;
+      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+      await sql`DELETE FROM league_games WHERE id = ${gameId}`;
       return res.status(200).json({ success: true });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
 
   } catch (err) {
-    console.error(err);
+    console.error('League API error:', err);
     return res.status(500).json({ error: 'Database error', detail: err.message });
   }
+}
+
+// ── Seedings calculation ──
+function calcSeedings(pods, players, games) {
+  const standings = {};
+  for (const pod of pods) {
+    const podPlayers = players.filter(p => p.pod_id === pod.id).map(p => p.player_name);
+    const podGames = games.filter(g => g.pod_id === pod.id);
+    const podStandings = calcPodStandings(podPlayers, podGames, pod.name);
+    standings[pod.id] = podStandings;
+  }
+
+  // Seeding logic: top player per pod gets bye, runners-up go to QF
+  const allStandings = Object.values(standings).flat();
+  const byeWinners = [];
+  const runnersUp = [];
+  const qfWinners = [];
+
+  for (const pod of pods) {
+    const podStandings = standings[pod.id] || [];
+    if (podStandings.length === 0) continue;
+    const sorted = [...podStandings].sort((a, b) => b.pts - a.pts || b.bp - a.bp);
+    if (sorted[0]) byeWinners.push({ ...sorted[0], pod: pod.name });
+    if (sorted[1]) runnersUp.push({ ...sorted[1], pod: pod.name });
+  }
+
+  // Sort bye winners and runners up
+  byeWinners.sort((a, b) => b.pts - a.pts || b.bp - a.bp);
+  runnersUp.sort((a, b) => b.pts - a.pts || b.bp - a.bp);
+
+  // Top 2 bye winners get SF byes; next 2 get QF byes
+  const sfByes = byeWinners.slice(0, 4);
+  const qfByes = byeWinners.slice(4);
+  const qfField = [...qfByes, ...runnersUp].sort((a, b) => b.pts - a.pts || b.bp - a.bp);
+  // QF winners are the top 2 of that field (would be seeded into bracket)
+  const qfWinnersSeeded = qfField.slice(0, 2);
+
+  return { byeWinners: sfByes, qfWinners: qfWinnersSeeded, runnersUp: runnersUp.slice(0, 6) };
+}
+
+function calcPodStandings(playerNames, games, podName) {
+  const stats = {};
+  for (const name of playerNames) {
+    stats[name] = { name, pts: 0, bp: 0, played: 0, pod: podName };
+  }
+  for (const g of games) {
+    if (!stats[g.player1]) stats[g.player1] = { name: g.player1, pts: 0, bp: 0, played: 0, pod: podName };
+    if (!stats[g.player2]) stats[g.player2] = { name: g.player2, pts: 0, bp: 0, played: 0, pod: podName };
+    const s1 = stats[g.player1];
+    const s2 = stats[g.player2];
+    s1.played++; s2.played++;
+    s1.bp += g.bp1; s2.bp += g.bp2;
+    if (g.bp1 > g.bp2) { s1.pts += 2; }
+    else if (g.bp2 > g.bp1) { s2.pts += 2; }
+    else { s1.pts += 1; s2.pts += 1; }
+  }
+  return Object.values(stats).sort((a, b) => b.pts - a.pts || b.bp - a.bp);
+}
+
+function calcBracket(seedings, playoffs) {
+  const { byeWinners, qfWinners, runnersUp } = seedings;
+  const getResult = (round, num) => {
+    const g = playoffs.find(p => p.round === round && p.match_num === num);
+    if (!g) return null;
+    return g.bp1 > g.bp2 ? g.player1 : g.player1 === g.player2 ? null : g.player2;
+  };
+
+  const qf1Winner = getResult('QF', 1);
+  const qf2Winner = getResult('QF', 2);
+  const qf3Winner = getResult('QF', 3);
+  const qf4Winner = getResult('QF', 4);
+
+  const bracket = {
+    QF1: { p1: runnersUp[0] || null, p2: runnersUp[5] || null },
+    QF2: { p1: runnersUp[1] || null, p2: runnersUp[4] || null },
+    QF3: { p1: runnersUp[2] || null, p2: runnersUp[3] || null },
+    QF4: { p1: qfWinners[0] || null, p2: qfWinners[1] || null },
+    SF1: { p1: byeWinners[0] || null, p2: qf1Winner ? { name: qf1Winner } : null },
+    SF2: { p1: byeWinners[1] || null, p2: qf2Winner ? { name: qf2Winner } : null },
+    SF3: { p1: byeWinners[2] || null, p2: qf3Winner ? { name: qf3Winner } : null },
+    SF4: { p1: byeWinners[3] || null, p2: qf4Winner ? { name: qf4Winner } : null },
+    F1:  { p1: null, p2: null },
+    F2:  { p1: null, p2: null },
+    GF:  { p1: null, p2: null },
+  };
+
+  // Propagate SF results
+  const sf1Winner = getResult('SF', 1);
+  const sf2Winner = getResult('SF', 2);
+  const sf3Winner = getResult('SF', 3);
+  const sf4Winner = getResult('SF', 4);
+  bracket.F1.p1 = sf1Winner ? { name: sf1Winner } : null;
+  bracket.F1.p2 = sf2Winner ? { name: sf2Winner } : null;
+  bracket.F2.p1 = sf3Winner ? { name: sf3Winner } : null;
+  bracket.F2.p2 = sf4Winner ? { name: sf4Winner } : null;
+
+  // Propagate final results
+  const f1Winner = getResult('F', 1);
+  const f2Winner = getResult('F', 2);
+  bracket.GF.p1 = f1Winner ? { name: f1Winner } : null;
+  bracket.GF.p2 = f2Winner ? { name: f2Winner } : null;
+
+  return bracket;
 }
