@@ -1,11 +1,11 @@
 {
   "name": "pssn-stats",
   "version": "1.0.0",
-  "type": "module",
+  "private": true,
   "engines": {
     "node": "24.x"
   },
   "dependencies": {
-    "@vercel/postgres": "0.10.0"
+    "@vercel/postgres": "^0.10.0"
   }
 }
