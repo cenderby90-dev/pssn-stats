@@ -2646,12 +2646,7 @@ function toggleSection(id) {
   if (arrow) arrow.style.transform = open ? 'rotate(-90deg)' : '';
 }
 
-function toggleFmtGroup(id) {
-  const el = document.getElementById(id);
-  const arrow = document.getElementById(id + '-arrow');
-  el.classList.toggle('open');
-  arrow.style.transform = el.classList.contains('open') ? '' : 'rotate(-90deg)';
-}
+
 function toggleEvt(id) {
   const el = document.getElementById(id);
   const arrow = document.getElementById(id + '-arrow');
@@ -3049,6 +3044,8 @@ async function scheduleEvent() {
       await loadDbEvents();
       await loadApprovedSubmissions();
       rebuildStats();
+      buildNowPanel();
+      if (document.getElementById('tab-calendar')?.style.display !== 'none') renderCalendar();
       setTimeout(() => { msg.style.display = 'none'; }, 4000);
     } else {
       msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
@@ -3469,18 +3466,23 @@ async function setGoing(name, sortDate, status) {
   const key = `${name}_${sortDate}`;
   const current = attendanceData[key];
   try {
+    let res;
     if (current === status) {
-      await fetch(`${API}/attendance`, {
+      res = await fetch(`${API}/attendance`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ player_name: name, event_sort_date: sortDate, pin: TEAM_PIN })
       });
     } else {
-      await fetch(`${API}/attendance`, {
+      res = await fetch(`${API}/attendance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ player_name: name, event_sort_date: sortDate, status, pin: TEAM_PIN })
       });
+    }
+    if (!res.ok) {
+      console.error('Attendance write failed:', res.status);
+      return; // don't re-render with stale state
     }
     await loadAttendance(true); // force reload so tick updates immediately
     await renderWhosGoing();
@@ -4079,6 +4081,10 @@ async function approveEventSubmission(key) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ player_name: dbPlayerName, event_sort_date: 19700101, status: JSON.stringify(s) , pin: getAdminPin() })
       });
+      await loadApprovedSubmissions();
+      rebuildStats();
+      buildNowPanel();
+      await loadDbEvents();
       await loadAdminEventSubmissions();
     } else {
       if (msgEl) { msgEl.textContent = 'Error: ' + (data.error || 'Unknown'); }
@@ -5059,11 +5065,14 @@ function buildLeagueAdmin() {
       <div class="section-title">Player Manager</div>
       <div class="section-rule"></div>
     </div>
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Add new members or deactivate players who are no longer in the league.</div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Add members from the club roster to the league player list, or deactivate players who are no longer participating. Adding a member here makes them available for pod assignment in future seasons.</div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;max-width:500px;margin-bottom:1rem;">
       <div style="display:flex;gap:8px;margin-bottom:1rem;">
-        <input id="pm-new-name" type="text" placeholder="New player name"
-          style="flex:1;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+        <select id="pm-new-name"
+          style="flex:1;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;appearance:none;">
+          <option value="">Select member to add...</option>
+          ${D.players.filter(p => p.active && !(leagueData.allPlayers||[]).some(lp => lp.name === p.name)).sort((a,b) => a.name.localeCompare(b.name)).map(p => `<option value="${p.name.replace(/"/g,'&quot;')}">${p.name}</option>`).join('')}
+        </select>
         <button onclick="addLeaguePlayer()"
           style="padding:8px 14px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;white-space:nowrap;">
           + Add
@@ -5383,7 +5392,7 @@ async function addLeaguePlayer() {
   const input = document.getElementById('pm-new-name');
   const msg = document.getElementById('pm-add-message');
   const name = input.value.trim();
-  if (!name) return;
+  if (!name) { msg.style.display = 'block'; msg.style.color = 'var(--loss)'; msg.textContent = 'Please select a member.'; return; }
   const adminPin = getLeagueAdminPin();
 
   try {
@@ -5490,15 +5499,7 @@ function setWizardType(type) {
 }
 
 // When pod changes — populate "Your name" with pod players
-function updateLeagueSubDropdowns() {
-  // Legacy — now handled by autoDetectPodAndOpponents
-  autoDetectPodAndOpponents();
-}
 
-function updateLeagueSubOpponent() {
-  // Legacy — now handled by autoDetectPodAndOpponents
-  autoDetectPodAndOpponents();
-}
 
 // Populate "Your name" dropdown with all league players, then auto-detect pod on selection
 function initLeagueSubMe() {
@@ -6807,7 +6808,9 @@ async function bcpImport() {
       msg.textContent = '✓ Imported "' + name + '" with ' + _bcpParsed.merged.length + ' results. Reloading stats...';
       await loadApprovedSubmissions();
       rebuildStats();
+      buildNowPanel();
       await loadDbEvents();
+      if (document.getElementById('tab-calendar')?.style.display !== 'none') renderCalendar();
       updatePendingBadge();
       setTimeout(bcpClear, 2500);
     } else {
@@ -6858,9 +6861,7 @@ function checkEventDuplicate(name) {
   });
 }
 
-function factionOptions() {
-  return ALL_FACTIONS.map(f => `<option value="${f}">${f}</option>`).join('');
-}
+
 
 function playerOptions() {
   return D.players.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
