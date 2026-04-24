@@ -22,8 +22,13 @@ export default async function handler(req, res) {
       const podsRes = await sql`SELECT * FROM league_pods WHERE season_id = ${season.id} ORDER BY pod_number ASC`;
       const pods = podsRes.rows;
 
-      // Pod assignments (player_name as text — unchanged for Season 1 history)
-      const playersRes = await sql`SELECT * FROM league_players ORDER BY pod_number ASC`;
+      // Pod assignments — JOIN with pods to get pod_number (not stored on league_players)
+      const playersRes = await sql`
+        SELECT lp.id, lp.pod_id, lp.player_name, lpo.pod_number
+        FROM league_players lp
+        JOIN league_pods lpo ON lp.pod_id = lpo.id
+        ORDER BY lpo.pod_number ASC
+      `;
       const players = playersRes.rows;
 
       // All approved games
@@ -103,10 +108,10 @@ export default async function handler(req, res) {
 
       // Add player to pod assignment
       if (type === 'add_to_pod') {
-        const { podId, playerName, podNumber } = req.body;
+        const { podId, playerName } = req.body;
         await sql`
-          INSERT INTO league_players (pod_id, player_name, pod_number)
-          VALUES (${podId}, ${playerName}, ${podNumber})
+          INSERT INTO league_players (pod_id, player_name)
+          VALUES (${podId}, ${playerName})
           ON CONFLICT DO NOTHING
         `;
         return res.status(200).json({ success: true });
@@ -138,8 +143,8 @@ export default async function handler(req, res) {
           const podId = podRes.rows[0].id;
           for (const playerName of pod.players) {
             await sql`
-              INSERT INTO league_players (pod_id, player_name, pod_number)
-              VALUES (${podId}, ${playerName}, ${pod.number})
+              INSERT INTO league_players (pod_id, player_name)
+              VALUES (${podId}, ${playerName})
             `;
           }
         }
