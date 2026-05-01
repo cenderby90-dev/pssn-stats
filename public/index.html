@@ -5038,7 +5038,8 @@ function buildLeagueAdmin() {
           </select>
         </div>
         <div>
-          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px;">Select players <span style="color:var(--faint);font-weight:normal;text-transform:none;">(${(leagueData.allPlayers||[]).filter(p=>p.active).length} active)</span></label>
+          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Select players <span style="color:var(--faint);font-weight:normal;text-transform:none;">(${(leagueData.allPlayers||[]).filter(p=>p.active).length} active)</span></label>
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;">Seeded by Season 1 BP total. 🆕 = no Season 1 history, seeds last and distributes evenly. To add someone not listed, use <strong style="color:var(--text);">Admin → Members</strong> first.</div>
           <div id="ns-player-list" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:300px;overflow-y:auto;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;">
             ${(leagueData.allPlayers||[]).filter(p=>p.active).sort((a,b)=>a.name.localeCompare(b.name)).map(p=>`
               <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text);padding:3px;cursor:pointer;">
@@ -5310,6 +5311,7 @@ function generateSeededPods() {
   });
 
   _generatedPods = pods;
+  window._podBpMap = bpMap; // expose for renderPodPreview to flag new players
   renderPodPreview();
   document.getElementById('ns-create-btn').style.display = 'block';
 }
@@ -5328,7 +5330,7 @@ function renderPodPreview() {
           ${pod.players.map((p, i) => `
             <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--border);gap:4px;">
               <span style="font-size:0.78rem;color:${i===0?'var(--accent)':'var(--text)'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p}">
-                ${i===0?'🌟 ':''}${p}
+                ${i===0?'🌟 ':''}${(window._podBpMap&&window._podBpMap[p]===0)?'🆕 ':''}${p}
               </span>
               <div style="display:flex;gap:2px;flex-shrink:0;">
                 ${pi > 0 ? `<button onclick="movePlayer(${pi},${i},'left')" title="Move to Pod ${pi}" style="font-size:0.65rem;padding:1px 4px;background:transparent;border:1px solid var(--border);border-radius:2px;color:var(--muted);cursor:pointer;">←</button>` : ''}
