@@ -453,6 +453,12 @@
       gap: 8px;
     }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+/* League round-robin grid -- scrollable on mobile */
+.league-pod-grid-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Mobile: stack members grid vertically below 700px */
 @media (max-width: 700px) {
   #tab-members > div:last-child { grid-template-columns: 1fr !important; }
