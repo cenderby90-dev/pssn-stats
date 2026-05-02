@@ -464,3 +464,39 @@
   #tab-members > div:last-child { grid-template-columns: 1fr !important; }
   #members-name-list { max-height: 200px !important; }
 }
+
+/* Mobile: general improvements */
+@media (max-width: 600px) {
+  /* Player panel — full width on phone */
+  .player-panel { width: 100vw; }
+
+  /* Panel stat grid — 2 cols on mobile */
+  .panel-stat-grid { grid-template-columns: 1fr 1fr !important; }
+
+  /* H2H two-col cards — stack on mobile */
+  #panel-h2h > div > div[style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Admin forms — full width inputs */
+  #tab-admin input[type="text"],
+  #tab-admin input[type="number"],
+  #tab-admin select,
+  #tab-submit input[type="text"],
+  #tab-submit select {
+    width: 100% !important;
+  }
+
+  /* Now panel cards — single column */
+  #now-panel .now-grid { grid-template-columns: 1fr !important; }
+
+  /* Faction breakdown — stack W/L and pct */
+  .faction-breakdown-row { flex-direction: column !important; gap: 4px !important; }
+
+  /* Correction form — stack */
+  #correction-form-inner { flex-direction: column !important; }
+
+  /* Welcome nudge — adjust padding */
+  #welcome-nudge { padding: 12px 14px; }
+  #welcome-nudge .btn-row { flex-direction: column; }
+}
