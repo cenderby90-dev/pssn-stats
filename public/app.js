@@ -138,6 +138,11 @@ async function initSite() {
 
   rebuildStats();
   buildNowPanel();
+  // Show first-visit welcome nudge if member hasn't identified themselves
+  if (!localStorage.getItem('pssn_member') && !localStorage.getItem('pssn_nudge_dismissed')) {
+    const nudge = document.getElementById('welcome-nudge');
+    if (nudge) nudge.style.display = 'block';
+  }
   loadLeagueData().then(() => { leagueLoaded = true; });
   if (sessionStorage.getItem('pssn_admin_pin')) updatePendingBadge();
   // Restore My Club unlock state if returning to page in same session
@@ -1261,7 +1266,11 @@ function buildMemberNameList() {
 
 function selectMember(name) {
   localStorage.setItem('pssn_member', name);
+  localStorage.setItem('pssn_nudge_dismissed', '1');
   window._memberName = name;
+  // Dismiss welcome nudge
+  const nudge = document.getElementById('welcome-nudge');
+  if (nudge) nudge.style.display = 'none';
   // Update button styles
   [...D.players].forEach(p => {
     const btn = document.getElementById(`member-btn-${p.name.replace(/\s+/g,'-').toLowerCase()}`);
@@ -1479,6 +1488,9 @@ async function checkPin(val) {
     document.getElementById('pin-gate').style.display = 'none';
     document.getElementById('submit-form').style.display = 'block';
     sessionStorage.setItem('pssn_team_unlocked', '1');
+    // Dismiss welcome nudge when member authenticates
+    const teamNudge = document.getElementById('welcome-nudge');
+    if (teamNudge) teamNudge.style.display = 'none';
     // Load db events first, then render who's going with data available
     await loadDbEvents();
     renderWhosGoing();
@@ -1954,7 +1966,10 @@ function wgToggleCard(idx) {
 }
 
 function wgOnPlayerChange(name) {
-  if (name) sessionStorage.setItem('pssn_wg_player', name);
+  if (name) {
+    sessionStorage.setItem('pssn_wg_player', name);
+    localStorage.setItem('pssn_member', name); // keep in sync across tabs
+  }
   const cardsEl = document.getElementById('wg-cards');
   if (cardsEl && window._wgBuildCards) {
     // Remember which cards were open
@@ -4538,7 +4553,14 @@ function refreshPlayerDropdowns() {
   const playerOpts = `<option value="">Select player...</option>` + playerNames.map(n => `<option value="${n}">${n}</option>`).join('');
   // Wizard player dropdown
   const wizPlayer = document.getElementById('wiz-player');
-  if (wizPlayer) wizPlayer.innerHTML = playerOpts;
+  if (wizPlayer) {
+    wizPlayer.innerHTML = playerOpts;
+    // Pre-select stored member
+    const storedForWiz = localStorage.getItem('pssn_member') || '';
+    if (storedForWiz && [...wizPlayer.options].some(o => o.value === storedForWiz)) {
+      wizPlayer.value = storedForWiz;
+    }
+  }
   // League submit dropdowns
   const lgMe = document.getElementById('lg-sub-me');
   if (lgMe) lgMe.innerHTML = `<option value="">Select pod first...</option>`;
@@ -6280,6 +6302,12 @@ function openPlayerPanel(name) {
   document.getElementById('panel-body').innerHTML = `
     ${leagueContextHtml}
     ${bestResultHtml}
+    <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">
+      ${ACTIVE_EDITION === 10 ? '10th Edition' : '11th Edition'} stats
+      ${ACTIVE_EDITION === 11 && !getActiveEvents().some(ev => ev.results && ev.results.some(r => r.player === name)) 
+        ? '<span style="color:var(--faint);margin-left:6px;text-transform:none;letter-spacing:0;">No results yet</span>' 
+        : ''}
+    </div>
     <div class="panel-stat-grid">
       <div class="panel-stat">
         <div class="panel-stat-label">Overall win rate</div>
