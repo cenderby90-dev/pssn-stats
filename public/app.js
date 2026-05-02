@@ -491,6 +491,7 @@ function renderTeamsLeaderboard() {
 
 
 function rebuildStats() {
+  clearFactionWRCache();
   invalidateEventsCache(); // D.events may have changed
   // clear all stats maps
   Object.keys(allStats).forEach(k => delete allStats[k]);
@@ -912,8 +913,9 @@ function renderLeaderboard(filter) {
             <span class="lb-name player-link" onclick="event.stopPropagation();openPlayerPanel('${safeAttr(s.name)}')">${s.name}</span>
             ${bestResultHtml}
           </div>
-          <div class="lb-faction" style="display:flex;align-items:center;gap:8px;">
+          <div class="lb-faction" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             ${factionDisplay}
+            ${(() => { const fwr = mainFaction ? getFactionWR(mainFaction) : null; return fwr !== null ? `<span style="font-size:0.65rem;padding:1px 5px;border-radius:3px;background:${fwr>=60?'rgba(255,106,0,0.12)':fwr>=50?'var(--win-bg)':'var(--surface2)'};color:${fwr>=60?'#ff6a00':fwr>=50?'var(--win)':'var(--muted)'};">${fwr}% wr</span>` : ''; })()}
             <span style="font-size:0.65rem;color:var(--faint);">${eventsAttended} event${eventsAttended !== 1 ? 's' : ''}</span>
           </div>
           ${formHtml}
@@ -4173,6 +4175,33 @@ function wizardSelectEvent(name, format) {
   wizardEventName = name;
   wizardEventFormat = format;
   wizardIsNewEvent = false;
+
+  // Duplicate detection -- check if this player has already submitted for this event
+  const warnEl = document.getElementById('ev-duplicate-warning');
+  const selectedPlayer = document.getElementById('wiz-player')?.value || '';
+  if (warnEl) warnEl.style.display = 'none';
+
+  if (selectedPlayer) {
+    // Check approved results
+    const alreadyApproved = getActiveEvents().some(ev =>
+      ev.name.toLowerCase() === name.toLowerCase() &&
+      (ev.results || []).some(r => r.player === selectedPlayer)
+    );
+    // Check pending submissions
+    const alreadyPending = (pendingSubmissions || []).some(s =>
+      s.event_name?.toLowerCase() === name.toLowerCase() &&
+      s.player_name === selectedPlayer
+    );
+    if (alreadyApproved || alreadyPending) {
+      if (warnEl) {
+        warnEl.textContent = alreadyApproved
+          ? `${selectedPlayer} already has an approved result for ${name}.`
+          : `${selectedPlayer} already has a pending submission for ${name}.`;
+        warnEl.style.display = 'block';
+      }
+    }
+  }
+
   wizardShowStep2();
 }
 
@@ -5778,6 +5807,32 @@ function mostPlayedFaction(name, formatFilter) {
   const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
   return sorted.length ? sorted[0][0] : null;
 }
+function getFactionWR(factionName) {
+  if (!getFactionWR._cache) {
+    getFactionWR._cache = {};
+    const events = getActiveEvents();
+    const facs = {};
+    events.forEach(ev => {
+      (ev.results || []).forEach(r => {
+        if (r.dropped || !r.faction) return;
+        if (!facs[r.faction]) facs[r.faction] = { w:0, l:0, d:0, games:0 };
+        const s = facs[r.faction];
+        const w = r.w||0, l = r.shadow?0:(r.l||0), d = r.shadow?0:(r.d||0);
+        s.w += w; s.l += l; s.d += d; s.games += w+l+d;
+      });
+    });
+    Object.entries(facs).forEach(([name, s]) => {
+      if (s.games < 5) return;
+      const raw = s.games ? s.w/s.games : 0;
+      const bwr = (s.games/(s.games+10))*raw + (10/(s.games+10))*0.58;
+      getFactionWR._cache[name] = Math.round(bwr*100);
+    });
+  }
+  return getFactionWR._cache[factionName] ?? null;
+}
+
+function clearFactionWRCache() { getFactionWR._cache = null; }
+
 function openPlayerPanel(name) {
   const panel = document.getElementById('player-panel');
   const overlay = document.getElementById('panel-overlay');
@@ -6142,6 +6197,45 @@ function openPlayerPanel(name) {
     ${badgesHtml}
     ${rivalHtml}
     ${fmtBreakdown ? `<div class="p-section-label">By format</div><div class="panel-stat-grid">${fmtBreakdown}</div>` : ''}
+    ${(() => {
+      // Build per-faction stats for this player
+      const playerFacs = {};
+      getActiveEvents().forEach(ev => {
+        const r = ev.results.find(r => r.player === name);
+        if (!r || r.dropped || !r.faction) return;
+        if (!playerFacs[r.faction]) playerFacs[r.faction] = { w:0, l:0, d:0, games:0, events:0, bestPlacing:null, bestTotal:null, bestEvent:'' };
+        const s = playerFacs[r.faction];
+        const total = ev.format === 'Teams' ? ev.totalTeams : ev.totalPlayers;
+        s.w += r.w||0; s.l += r.shadow?0:(r.l||0); s.d += r.shadow?0:(r.d||0);
+        s.games += (r.w||0) + (r.shadow?0:(r.l||0)) + (r.shadow?0:(r.d||0));
+        s.events++;
+        if (r.placing && (!s.bestPlacing || r.placing/total < s.bestPlacing/s.bestTotal)) {
+          s.bestPlacing = r.placing; s.bestTotal = total; s.bestEvent = ev.name;
+        }
+      });
+      const facList = Object.entries(playerFacs).sort((a,b) => b[1].games - a[1].games);
+      if (facList.length < 2) return ''; // only show if player used multiple factions
+      const rows = facList.map(([facName, fs]) => {
+        const facWr = fs.games ? Math.round((fs.w / fs.games) * 100) : 0;
+        const globalWr = getFactionWR(facName);
+        const diff = globalWr !== null ? facWr - globalWr : null;
+        const diffHtml = diff !== null ? `<span style="font-size:0.62rem;color:${diff>0?'var(--win)':diff<0?'var(--loss)':'var(--muted)'};">${diff>0?'+':''}${diff}% vs avg</span>` : '';
+        const wrColor = facWr >= 60 ? '#ff6a00' : facWr >= 50 ? 'var(--win)' : facWr >= 35 ? 'var(--text)' : 'var(--loss)';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--faint);">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:0.82rem;color:var(--text);">${facName}</div>
+            <div style="font-size:0.65rem;color:var(--muted);margin-top:1px;">${fs.games} games · ${fs.events} event${fs.events!==1?'s':''} ${fs.bestPlacing?`· Best: ${fs.bestPlacing}/${fs.bestTotal}`:''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            <span style="font-size:0.68rem;color:var(--muted);">${fs.w}W ${fs.l}L${fs.d>0?' '+fs.d+'D':''}</span>
+            ${diffHtml}
+            <span style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${wrColor};">${facWr}%</span>
+          </div>
+        </div>`;
+      }).join('');
+      return `<div class="p-section-label" style="margin-top:1.25rem;">Faction breakdown</div>
+        <div style="margin-top:8px;">${rows}</div>`;
+    })()}
     ${chartHtml}
     <div class="p-section-label" style="margin-top:1.25rem;cursor:pointer;" onclick="toggleSection('panel-event-history')">
       Event history <span id="panel-event-history-arrow" style="float:right;transition:transform 0.2s;transform:rotate(-90deg);">▼</span>
