@@ -3169,7 +3169,7 @@ function renderPlayoffs(el) {
 
     <!-- Bracket -->
     <div style="overflow-x:auto;">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1rem;min-width:700px;">
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:1rem;width:100%;">
 
         <div>
           <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">Quarter Finals</div>
@@ -6082,28 +6082,117 @@ function openPlayerPanel(name) {
         </div>`).join('')}
     </div>` : '';
 
-  // rival tracker -- teammate attended most events with
-  const coAttendance = {};
+  // -- H2H tracker: infer wins/losses from relative placing at shared events --
+  const h2h = {}; // { opponentName: { w, l, d, shared } }
   getActiveEvents().forEach(ev => {
-    const attendees = ev.results.filter(r => !r.dropped).map(r => r.player);
-    if (!attendees.includes(name)) return;
-    attendees.forEach(other => {
-      if (other === name) return;
-      coAttendance[other] = (coAttendance[other] || 0) + 1;
+    const myResult = (ev.results || []).find(r => r.player === name && !r.dropped);
+    if (!myResult) return;
+    (ev.results || []).forEach(r => {
+      if (r.player === name || r.dropped) return;
+      if (!h2h[r.player]) h2h[r.player] = { w:0, l:0, d:0, shared:0 };
+      h2h[r.player].shared++;
+      // Infer outcome from placing (lower = better)
+      if (myResult.placing < r.placing) h2h[r.player].w++;
+      else if (myResult.placing > r.placing) h2h[r.player].l++;
+      else h2h[r.player].d++;
     });
   });
-  const rival = Object.entries(coAttendance).sort((a,b) => b[1] - a[1])[0];
-  const rivalHtml = rival ? `
-    <div style="background:var(--surface2);border-radius:4px;padding:10px 14px;margin-top:8px;display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;">Most frequent teammate</div>
-        <div style="font-size:0.9rem;color:var(--text);cursor:pointer;" onclick="openPlayerPanel('${rival[0]}')" class="player-link">${rival[0]}</div>
+
+  // Nemesis = player with most wins over this player (min 2 shared events)
+  const nemesis = Object.entries(h2h)
+    .filter(([,s]) => s.shared >= 2)
+    .sort((a,b) => b[1].l - a[1].l || b[1].shared - a[1].shared)[0];
+
+  // Favourite victim = player this player beats most
+  const victim = Object.entries(h2h)
+    .filter(([,s]) => s.shared >= 2 && s.w > s.l)
+    .sort((a,b) => (b[1].w - b[1].l) - (a[1].w - a[1].l))[0];
+
+  // Most shared events (rival at events)
+  const eventRival = Object.entries(h2h)
+    .sort((a,b) => b[1].shared - a[1].shared)[0];
+
+  // Build H2H summary cards
+  const h2hEntries = Object.entries(h2h)
+    .filter(([,s]) => s.shared >= 2)
+    .sort((a,b) => b[1].shared - a[1].shared)
+    .slice(0, 8);
+
+  const h2hRows = h2hEntries.map(([opp, s]) => {
+    const total = s.w + s.l + s.d;
+    const wrPct = total ? Math.round((s.w / total) * 100) : 0;
+    const wrColor = wrPct >= 60 ? 'var(--win)' : wrPct >= 40 ? 'var(--text)' : 'var(--loss)';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--faint);">
+      <div style="flex:1;min-width:0;">
+        <span style="font-size:0.82rem;color:var(--text);cursor:pointer;" onclick="openPlayerPanel('${opp.replace(/'/g,"\'")}')">
+          ${opp}
+        </span>
+        <span style="font-size:0.65rem;color:var(--faint);margin-left:6px;">${s.shared} events</span>
       </div>
-      <div style="text-align:right;">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--text);">${rival[1]}</div>
-        <div style="font-size:0.65rem;color:var(--muted);">shared event${rival[1] !== 1 ? 's' : ''}</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+        <span style="font-size:0.7rem;color:var(--muted);">${s.w}W ${s.l}L${s.d>0?' '+s.d+'D':''}</span>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;color:${wrColor};">${wrPct}%</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const rivalHtml = h2hEntries.length ? `
+    <div class="p-section-label" style="margin-top:1.25rem;cursor:pointer;" onclick="toggleSection('panel-h2h')" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+      Head-to-head <span id="panel-h2h-arrow" style="float:right;transition:transform 0.2s;">▼</span>
+    </div>
+    <div id="panel-h2h" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;">
+        ${nemesis ? `<div style="background:var(--surface2);border-radius:4px;padding:8px 12px;">
+          <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;">Nemesis</div>
+          <div style="font-size:0.85rem;color:var(--loss);cursor:pointer;" onclick="openPlayerPanel('${nemesis[0].replace(/'/g,"\'")}')">
+            ${nemesis[0]}
+          </div>
+          <div style="font-size:0.65rem;color:var(--muted);">${nemesis[1].w}W ${nemesis[1].l}L · ${nemesis[1].shared} events</div>
+        </div>` : ''}
+        ${victim ? `<div style="background:var(--surface2);border-radius:4px;padding:8px 12px;">
+          <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;">Favourite victim</div>
+          <div style="font-size:0.85rem;color:var(--win);cursor:pointer;" onclick="openPlayerPanel('${victim[0].replace(/'/g,"\'")}')">
+            ${victim[0]}
+          </div>
+          <div style="font-size:0.65rem;color:var(--muted);">${victim[1].w}W ${victim[1].l}L · ${victim[1].shared} events</div>
+        </div>` : ''}
+      </div>
+      <div style="margin-top:4px;">
+        ${h2hRows}
+      </div>
+      <div style="font-size:0.65rem;color:var(--faint);margin-top:6px;">
+        Inferred from relative placing at shared events. Min 2 shared events shown.
       </div>
     </div>` : '';
+
+  // -- attendance streak --
+  const allPlayerEvents = getActiveEvents()
+    .filter(ev => (ev.results||[]).some(r => r.player === name && !r.dropped))
+    .sort((a,b) => (a.sortDate||0) - (b.sortDate||0));
+
+  const totalAttended = allPlayerEvents.length;
+
+  // Calculate current streak and longest streak using sortDates
+  // A streak is consecutive events (by sortDate order across all events)
+  const allEventsSorted = getActiveEvents().sort((a,b) => (a.sortDate||0) - (b.sortDate||0));
+  let currentStreak = 0, longestStreak = 0, streak = 0;
+  for (const ev of allEventsSorted) {
+    const attended = (ev.results||[]).some(r => r.player === name && !r.dropped);
+    if (attended) {
+      streak++;
+      if (streak > longestStreak) longestStreak = streak;
+    } else {
+      streak = 0;
+    }
+  }
+  // currentStreak = streak from the end
+  streak = 0;
+  for (let i = allEventsSorted.length - 1; i >= 0; i--) {
+    const attended = (allEventsSorted[i].results||[]).some(r => r.player === name && !r.dropped);
+    if (attended) streak++;
+    else break;
+  }
+  currentStreak = streak;
 
   // -- league context --
   let leagueContextHtml = '';
@@ -6185,13 +6274,18 @@ function openPlayerPanel(name) {
       </div>
       <div class="panel-stat">
         <div class="panel-stat-label">Events attended</div>
-        <div class="panel-stat-value">${playerEvents.length}</div>
+        <div class="panel-stat-value">${totalAttended}</div>
         <div style="font-size:0.65rem;color:var(--muted);margin-top:2px;">${
           ['GT','RTT','Teams'].map(fmt => {
             const n = playerEvents.filter(ev => ev.format === fmt).length;
             return n ? `${n} ${fmt}` : '';
           }).filter(Boolean).join(' · ')
         }</div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-label">Current streak</div>
+        <div class="panel-stat-value" style="color:${currentStreak >= 5 ? '#ff6a00' : currentStreak >= 3 ? 'var(--win)' : 'var(--text)'}">${currentStreak}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:2px;">Best: ${longestStreak} event${longestStreak !== 1 ? 's' : ''}</div>
       </div>
     </div>
     ${badgesHtml}
