@@ -634,9 +634,12 @@ function buildNowPanel() {
     return 0;
   }
 
-  // Last event played -- most recent by date
+  // Last event played -- most recent event WITH results (excludes future events)
   const events = getActiveEvents();
-  const lastEvent = [...events].sort((a,b) => evSortKey(b) - evSortKey(a))[0];
+  const pastEvents = events.filter(ev => ev.results && ev.results.length > 0);
+  const lastEvent = pastEvents.length
+    ? [...pastEvents].sort((a,b) => evSortKey(b) - evSortKey(a))[0]
+    : null;
 
   // Next calendar event
   const todayNum = getTodaySortDate ? getTodaySortDate() : parseInt(new Date().toISOString().slice(0,10).replace(/-/g,''));
