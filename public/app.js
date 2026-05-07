@@ -1457,7 +1457,13 @@ function switchTab(tab) {
       }
     }
   }
-  if (tab === 'admin') { loadDbEvents(); loadAndRenderMembers(); updatePendingBadge(); }
+  if (tab === 'admin') {
+    loadDbEvents();
+    loadAndRenderMembers();
+    updatePendingBadge();
+    // Render season team manager
+    setTimeout(() => renderSeasonTeamManager(), 400);
+  }
 }
 
 // -- PIN gate --
@@ -2697,6 +2703,111 @@ async function saveTeamData(sortDate, teams) {
   }
 }
 
+// -- Season Team Manager: renders all ITT events and their team data --
+async function renderSeasonTeamManager() {
+  const el = document.getElementById('season-team-manager');
+  if (!el) return;
+  el.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;">Loading...</div>';
+
+  if (!dbEvents || !dbEvents.length) await loadDbEvents();
+  await loadAttendance(true);
+
+  const ittEvents = dbEvents
+    .filter(e => e.format === 'Teams')
+    .sort((a, b) => (b.sort_date || 0) - (a.sort_date || 0));
+
+  if (!ittEvents.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;">No Teams events found.</div>';
+    return;
+  }
+
+  el.innerHTML = ittEvents.map(ev => {
+    const sd = ev.sort_date;
+    const rawA = attendanceData[`_teams_${sd}`];
+    const rawB = attendanceData[`_teams_${sd}_${sd}`];
+    let teamsA = null, teamsB = null;
+    try { if (rawA) teamsA = JSON.parse(rawA); } catch(e) {}
+    try { if (rawB) teamsB = JSON.parse(rawB); } catch(e) {}
+
+    const hasBoth = teamsA && teamsB;
+    const teams = getTeamsForEvent(sd); // already merges both keys
+    const totalPlayers = teams.reduce((s, t) => s + t.players.length, 0);
+    const hasData = rawA || rawB;
+
+    const statusDot = !hasData
+      ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);margin-right:6px;"></span>`
+      : hasBoth
+        ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warn);margin-right:6px;" title="Duplicate keys exist"></span>`
+        : `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--win);margin-right:6px;"></span>`;
+
+    const teamRows = hasData ? teams.map(t => `
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid var(--faint);">
+        <div style="font-size:0.78rem;font-weight:500;color:var(--text);min-width:160px;flex-shrink:0;">${t.name}</div>
+        <div style="font-size:0.72rem;color:var(--muted);flex:1;line-height:1.6;">
+          ${t.players.length ? t.players.join(', ') : '<em>No players assigned</em>'}
+        </div>
+        <div style="font-size:0.7rem;color:var(--muted);flex-shrink:0;">${t.players.length}p</div>
+      </div>`).join('') : `<div style="font-size:0.75rem;color:var(--muted);padding:8px 0;font-style:italic;">No team data saved for this event</div>`;
+
+    const mergeBtn = hasBoth ? `
+      <button onclick="adminMergeTeams(${sd})"
+        style="font-size:0.72rem;padding:3px 10px;background:rgba(232,184,60,0.15);color:var(--warn);border:1px solid rgba(232,184,60,0.3);border-radius:3px;cursor:pointer;margin-left:8px;">
+        Merge duplicates
+      </button>` : '';
+
+    return `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;gap:8px;"
+          onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';">
+          <div style="display:flex;align-items:center;gap:4px;min-width:0;">
+            ${statusDot}
+            <span style="font-size:0.85rem;font-weight:500;color:var(--text);">${ev.name}</span>
+            <span style="font-size:0.72rem;color:var(--muted);margin-left:6px;">${ev.event_date}</span>
+            ${mergeBtn}
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+            <span style="font-size:0.72rem;color:var(--muted);">${hasData ? `${teams.length} teams · ${totalPlayers} players` : 'no data'}</span>
+            <span style="font-size:0.75rem;color:var(--muted);">▼</span>
+          </div>
+        </div>
+        <div style="display:none;padding:0 14px 12px;border-top:1px solid var(--faint);">
+          ${teamRows}
+          ${hasBoth ? `<div style="margin-top:8px;font-size:0.7rem;color:var(--warn);">⚠ Duplicate keys detected (_teams_${sd} and _teams_${sd}_${sd}). Click "Merge duplicates" to consolidate.</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// -- Merge duplicate keys for a single event --
+async function adminMergeTeams(sortDate) {
+  const rawA = attendanceData[`_teams_${sortDate}`];
+  const rawB = attendanceData[`_teams_${sortDate}_${sortDate}`];
+
+  let teamsA = null, teamsB = null;
+  try { if (rawA) teamsA = JSON.parse(rawA); } catch(e) {}
+  try { if (rawB) teamsB = JSON.parse(rawB); } catch(e) {}
+
+  if (!teamsA && !teamsB) { alert('No team data found for this event.'); return; }
+
+  // Union merge -- same logic as getTeamsForEvent but writes back
+  const merged = {};
+  [...(teamsA || []), ...(teamsB || [])].forEach(t => {
+    if (!merged[t.name]) merged[t.name] = { name: t.name, players: [] };
+    (t.players || []).forEach(p => {
+      if (!merged[t.name].players.includes(p)) merged[t.name].players.push(p);
+    });
+  });
+  const mergedTeams = Object.values(merged).filter(t => t.players.length > 0 || teamsA?.some(x => x.name === t.name));
+  const totalPlayers = mergedTeams.reduce((s, t) => s + t.players.length, 0);
+  const summary = mergedTeams.map(t => `${t.name} (${t.players.length})`).join(', ');
+
+  if (!confirm(`Merge teams for this event?\n\n${summary}\nTotal: ${totalPlayers} players\n\nThis will consolidate both data records into one.`)) return;
+
+  await saveTeamData(sortDate, mergedTeams);
+  await renderSeasonTeamManager(); // refresh the full season view
+  renderTeamsSignup();
+}
+
 // Registry -- master list of all team names ever used
 const HISTORICAL_TEAM_NAMES = [
   'Pile of Shame Support Network',
@@ -2734,14 +2845,30 @@ async function saveTeamRegistry(names) {
 }
 
 function getTeamsForEvent(sortDate) {
-  // Try clean key first, then legacy doubled key (_teams_SD_SD from old save format)
-  const raw = attendanceData[`_teams_${sortDate}`]
-           || attendanceData[`_teams_${sortDate}_${sortDate}`];
-  if (raw) {
-    try { return JSON.parse(raw); } catch(e) {}
+  // Read both key formats -- merge if both exist to handle duplicate saves
+  const rawA = attendanceData[`_teams_${sortDate}`];
+  const rawB = attendanceData[`_teams_${sortDate}_${sortDate}`];
+
+  let teamsA = null, teamsB = null;
+  try { if (rawA) teamsA = JSON.parse(rawA); } catch(e) {}
+  try { if (rawB) teamsB = JSON.parse(rawB); } catch(e) {}
+
+  // If both keys exist, merge by taking the union of players per team name
+  if (teamsA && teamsB) {
+    const merged = {};
+    [...teamsA, ...teamsB].forEach(t => {
+      if (!merged[t.name]) merged[t.name] = { name: t.name, players: [] };
+      t.players.forEach(p => {
+        if (!merged[t.name].players.includes(p)) merged[t.name].players.push(p);
+      });
+    });
+    return Object.values(merged);
   }
+
+  const teams = teamsA || teamsB;
+  if (teams) return teams;
+
   // No saved state -- return team shells with no players assigned
-  // Use "↩ Load last ITT roster" button to copy the default roster
   return DEFAULT_ITT_TEAMS.map(t => ({ name: t.name, players: [] }));
 }
 
@@ -5068,11 +5195,23 @@ function bcpParsePreview() {
 
     const knownPlayers = new Set(D.players.map(p => p.name));
     const pssnResults = data1.results.filter(r => knownPlayers.has(r.player));
+    const unmatched = data1.results.filter(r => !knownPlayers.has(r.player) && r.player);
     _bcpParsed.merged = pssnResults.map(r => ({
       player_name: r.player, faction: r.faction || '',
       place: r.placing, wins: r.w, losses: r.l, draws: r.d,
       subteam: null, shadow: false, dropped: false
     }));
+
+    // Show unmatched warning if any PSSN members were not found in the DB
+    const warnEl = document.getElementById('bcp-unmatched-warn');
+    if (warnEl) {
+      if (unmatched.length) {
+        warnEl.style.display = 'block';
+        warnEl.innerHTML = `<strong style="color:var(--warn);">⚠ ${unmatched.length} player${unmatched.length>1?'s':''} not in club roster — add via Admin → Members first:</strong><br><span style="font-size:0.75rem;color:var(--muted);">${unmatched.map(r=>r.player).join(', ')}</span>`;
+      } else {
+        warnEl.style.display = 'none';
+      }
+    }
 
     document.getElementById('bcp-result-count').textContent = pssnResults.length + ' of ' + data1.results.length;
     const tbody = document.getElementById('bcp-preview-body');
