@@ -249,6 +249,20 @@
 
 
 
+  <!-- ── SEASON TEAM MANAGER ── -->
+  <div class="section-head" style="margin-top:2rem;">
+    <div class="section-title">Season Team Manager</div>
+    <div class="section-rule"></div>
+  </div>
+  <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">
+    All ITT events across the season. <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--win);margin:0 3px 0 6px;"></span>has data &nbsp;
+    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warn);margin:0 3px 0 6px;"></span>duplicate keys (merge needed) &nbsp;
+    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);margin:0 3px 0 6px;"></span>no data yet
+  </div>
+  <div id="season-team-manager" style="max-width:760px;">
+    <div style="color:var(--muted);font-size:0.82rem;">Loading...</div>
+  </div>
+
 </main>
 </main>
 
@@ -894,6 +908,7 @@
         </div>
 
         <!-- Preview table -->
+        <div id="bcp-unmatched-warn" style="display:none;background:rgba(232,184,60,0.1);border:1px solid rgba(232,184,60,0.3);border-radius:4px;padding:10px 14px;margin-bottom:10px;font-size:0.8rem;line-height:1.6;"></div>
         <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">
           Results preview — <span id="bcp-result-count">0</span> PSSN result rows to import
         </div>
