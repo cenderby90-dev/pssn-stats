@@ -2673,7 +2673,7 @@ const DEFAULT_ITT_TEAMS = [
   },
   {
     name: '[E]verlasting Shame',
-    players: ['Matthew Yeoh', 'Nora Tinfou', 'Harvey R', 'Spencer James', 'Artur Tokarski']
+    players: ['Matthew Yeoh', 'Nora Tinfou', 'Harvey Rudden', 'Spencer James', 'Artur Tokarski']
   }
 ];
 
