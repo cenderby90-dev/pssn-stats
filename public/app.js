@@ -1770,7 +1770,7 @@ function renderCountdown() {
     if (ACTIVE_EDITION === 10) {
       el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">10th Edition season complete. <span style="color:var(--accent);cursor:pointer;" onclick="switchEdition(11)">View 11th Edition →</span></div>`;
     } else {
-      el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">11th Edition results coming soon — first events from June 2026.</div>`;
+      el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">11th Edition results coming soon — first events from July 2026.</div>`;
     }
     return;
   }
