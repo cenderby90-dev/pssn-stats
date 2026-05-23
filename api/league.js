@@ -48,8 +48,6 @@ export default async function handler(req, res) {
       const pendingPlayoffs = pendingPlayoffsRes.rows;
 
       // -- allPlayers: sourced from MASTER players table --
-      // This is the single source of truth -- shared with /api/players
-      // Replaces the old league-specific players table for new seasons
       const allPlayersRes = await sql`SELECT id, name, active FROM players ORDER BY name ASC`;
       const allPlayers = allPlayersRes.rows;
 
@@ -57,16 +55,19 @@ export default async function handler(req, res) {
       const archiveRes = await sql`SELECT * FROM league_seasons WHERE active = false ORDER BY id DESC`;
       const archive = archiveRes.rows;
 
-      // Seedings / bracket (calculated server-side for consistency)
+      // All playoff rows (approved + pending) for bracket building
+      const allPlayoffRows = [...playoffs, ...pendingPlayoffs];
+
+      // Seedings / bracket
       const seedings = calcSeedings(pods, players, games);
-      const bracket = calcBracket(seedings, playoffs);
+      const bracket = calcBracket(seedings, playoffs, allPlayoffRows);
 
       return res.status(200).json({
         season, pods, players, games, pending,
         playoffs, pendingPlayoffs,
         seedings, bracket,
         archive,
-        allPlayers,  // now from master players table
+        allPlayers,
       });
     }
 
@@ -128,14 +129,11 @@ export default async function handler(req, res) {
       // Create new season with pods and player assignments
       if (type === 'new_season') {
         const { name, pods: podDefs } = req.body;
-        // Deactivate current season
         await sql`UPDATE league_seasons SET active = false WHERE active = true`;
-        // Create new season
         const newSeason = await sql`
           INSERT INTO league_seasons (name, active) VALUES (${name}, true) RETURNING id
         `;
         const seasonId = newSeason.rows[0].id;
-        // Create pods and assign players
         for (const pod of podDefs) {
           const podRes = await sql`
             INSERT INTO league_pods (season_id, pod_number, name)
@@ -160,10 +158,8 @@ export default async function handler(req, res) {
       const { pin, gameId, playoffId, playerId, active, bp1, bp2 } = req.body;
       if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
 
-      // Approve/reject a league game
       if (gameId !== undefined) {
         if (bp1 !== undefined && bp2 !== undefined) {
-          // Update scores and approve
           await sql`UPDATE league_games SET bp1 = ${bp1}, bp2 = ${bp2}, approved = true WHERE id = ${gameId}`;
         } else {
           await sql`UPDATE league_games SET approved = ${active !== false} WHERE id = ${gameId}`;
@@ -171,13 +167,11 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true });
       }
 
-      // Approve/reject a playoff game
       if (playoffId !== undefined) {
         await sql`UPDATE league_playoff_matches SET approved = ${active !== false} WHERE id = ${playoffId}`;
         return res.status(200).json({ success: true });
       }
 
-      // Toggle player active -- now targets MASTER players table
       if (playerId !== undefined && active !== undefined) {
         await sql`UPDATE players SET active = ${active} WHERE id = ${playerId}`;
         return res.status(200).json({ success: true });
@@ -212,8 +206,6 @@ function calcSeedings(pods, players, games) {
     standings[pod.id] = podStandings;
   }
 
-  // Seeding logic: top player per pod gets bye, runners-up go to QF
-  const allStandings = Object.values(standings).flat();
   const byeWinners = [];
   const runnersUp = [];
   const qfWinners = [];
@@ -226,15 +218,12 @@ function calcSeedings(pods, players, games) {
     if (sorted[1]) runnersUp.push({ ...sorted[1], pod: pod.name });
   }
 
-  // Sort bye winners and runners up
   byeWinners.sort((a, b) => b.pts - a.pts || b.bp - a.bp);
   runnersUp.sort((a, b) => b.pts - a.pts || b.bp - a.bp);
 
-  // Top 2 bye winners get SF byes; next 2 get QF byes
   const sfByes = byeWinners.slice(0, 4);
   const qfByes = byeWinners.slice(4);
   const qfField = [...qfByes, ...runnersUp].sort((a, b) => b.pts - a.pts || b.bp - a.bp);
-  // QF winners are the top 2 of that field (would be seeded into bracket)
   const qfWinnersSeeded = qfField.slice(0, 2);
 
   return { byeWinners: sfByes, qfWinners: qfWinnersSeeded, runnersUp: runnersUp.slice(0, 6) };
@@ -259,13 +248,34 @@ function calcPodStandings(playerNames, games, podName) {
   return Object.values(stats).sort((a, b) => b.pts - a.pts || b.bp - a.bp);
 }
 
-function calcBracket(seedings, playoffs) {
+function calcBracket(seedings, approvedPlayoffs, allPlayoffRows) {
   const { byeWinners, qfWinners, runnersUp } = seedings;
+
+  // Helper: get approved result for a round/match
   const getResult = (round, num) => {
-    const g = playoffs.find(p => p.round === round && p.match_number === num);
+    const g = approvedPlayoffs.find(p => p.round === round && p.match_number === num);
     if (!g) return null;
-    return g.bp1 > g.bp2 ? g.player1 : g.player1 === g.player2 ? null : g.player2;
+    return g.bp1 > g.bp2 ? g.player1 : g.bp2 > g.bp1 ? g.player2 : null;
   };
+
+  // Helper: get DB row for a round/match (approved or pending)
+  const getRow = (round, num) =>
+    allPlayoffRows.find(p => p.round === round && p.match_number === num) || null;
+
+  // Use DB rows for QF matchups if they exist; otherwise fall back to auto-seeding
+  const qf1Row = getRow('QF', 1);
+  const qf2Row = getRow('QF', 2);
+  const qf3Row = getRow('QF', 3);
+  const qf4Row = getRow('QF', 4);
+
+  const qf1p1 = qf1Row ? { name: qf1Row.player1 } : (runnersUp[0] || null);
+  const qf1p2 = qf1Row ? { name: qf1Row.player2 } : (runnersUp[5] || null);
+  const qf2p1 = qf2Row ? { name: qf2Row.player1 } : (runnersUp[1] || null);
+  const qf2p2 = qf2Row ? { name: qf2Row.player2 } : (runnersUp[4] || null);
+  const qf3p1 = qf3Row ? { name: qf3Row.player1 } : (runnersUp[2] || null);
+  const qf3p2 = qf3Row ? { name: qf3Row.player2 } : (runnersUp[3] || null);
+  const qf4p1 = qf4Row ? { name: qf4Row.player1 } : (qfWinners[0] || null);
+  const qf4p2 = qf4Row ? { name: qf4Row.player2 } : (qfWinners[1] || null);
 
   const qf1Winner = getResult('QF', 1);
   const qf2Winner = getResult('QF', 2);
@@ -273,10 +283,10 @@ function calcBracket(seedings, playoffs) {
   const qf4Winner = getResult('QF', 4);
 
   const bracket = {
-    QF1: { p1: runnersUp[0] || null, p2: runnersUp[5] || null },
-    QF2: { p1: runnersUp[1] || null, p2: runnersUp[4] || null },
-    QF3: { p1: runnersUp[2] || null, p2: runnersUp[3] || null },
-    QF4: { p1: qfWinners[0] || null, p2: qfWinners[1] || null },
+    QF1: { p1: qf1p1, p2: qf1p2 },
+    QF2: { p1: qf2p1, p2: qf2p2 },
+    QF3: { p1: qf3p1, p2: qf3p2 },
+    QF4: { p1: qf4p1, p2: qf4p2 },
     SF1: { p1: byeWinners[0] || null, p2: qf1Winner ? { name: qf1Winner } : null },
     SF2: { p1: byeWinners[1] || null, p2: qf2Winner ? { name: qf2Winner } : null },
     SF3: { p1: byeWinners[2] || null, p2: qf3Winner ? { name: qf3Winner } : null },
@@ -286,7 +296,6 @@ function calcBracket(seedings, playoffs) {
     GF:  { p1: null, p2: null },
   };
 
-  // Propagate SF results
   const sf1Winner = getResult('SF', 1);
   const sf2Winner = getResult('SF', 2);
   const sf3Winner = getResult('SF', 3);
@@ -296,7 +305,6 @@ function calcBracket(seedings, playoffs) {
   bracket.F2.p1 = sf3Winner ? { name: sf3Winner } : null;
   bracket.F2.p2 = sf4Winner ? { name: sf4Winner } : null;
 
-  // Propagate final results
   const f1Winner = getResult('F', 1);
   const f2Winner = getResult('F', 2);
   bracket.GF.p1 = f1Winner ? { name: f1Winner } : null;
