@@ -1570,7 +1570,7 @@ async function scheduleEvent() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         pin: getAdminPin(),
-        event: { name, event_date: date, sort_date: sortDate, format, total_players: players, bcp_url: bcp },
+        event: { name, event_date: date, sort_date: sortDate, format, total_players: players, bcp_url: bcp, edition },
         results: []
       })
     });
