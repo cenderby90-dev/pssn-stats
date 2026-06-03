@@ -1565,6 +1565,50 @@ async function scheduleEvent() {
   msg.textContent = 'Saving...';
 
   try {
+    const edition = parseInt(document.getElementById('sched-ev-edition')?.value) || ACTIVE_EDITION;
+    const res = await fetch(`${API}/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pin: getAdminPin(),
+        event: { name, event_date: date, sort_date: sortDate, format, total_players: players, bcp_url: bcp, edition },
+        results: []
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.style.background = 'var(--win-bg)'; msg.style.color = 'var(--win)';
+      msg.textContent = `✓ "${name}" added to calendar. Members can now sign up in Who's Going.`;
+      // Clear form
+      ['sched-ev-name','sched-ev-date','sched-ev-sortdate','sched-ev-players','sched-ev-bcp']
+        .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      // Reload events so calendar + countdown update immediately
+      await loadDbEvents();
+      await loadApprovedSubmissions();
+      rebuildStats();
+      buildNowPanel();
+      if (document.getElementById('tab-calendar')?.style.display !== 'none') renderCalendar();
+      setTimeout(() => { msg.style.display = 'none'; }, 3000);
+    } else {
+      msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'Unknown');
+    }
+  } catch(e) {
+    msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error -- try again.';
+  }
+}
+
+  // Duplicate check
+  if (dbEvents.some(e => e.name.toLowerCase() === name.toLowerCase())) {
+    msg.style.display = 'block'; msg.style.background = 'var(--draw-bg)'; msg.style.color = 'var(--draw)';
+    msg.textContent = `"${name}" already exists in the database.`; return;
+  }
+
+  msg.style.display = 'block'; msg.style.background = 'var(--surface2)'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Saving...';
+
+  try {
     const res = await fetch(`${API}/events`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
