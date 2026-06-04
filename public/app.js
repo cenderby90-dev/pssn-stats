@@ -1466,6 +1466,13 @@ function switchTab(tab) {
     updatePendingBadge();
     // Render season team manager
     setTimeout(() => renderSeasonTeamManager(), 400);
+    // Set edition dropdown default based on date -- 10th before 20 Jun 2026, 11th from that date
+    const edSel = document.getElementById('sched-ev-edition');
+    if (edSel) {
+      const launchDate = 20260620;
+      const today = getTodaySortDate();
+      edSel.value = today >= launchDate ? '11' : '10';
+    }
   }
 }
 
