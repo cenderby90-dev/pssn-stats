@@ -565,6 +565,9 @@ function rebuildStats() {
   const playerCount = Object.values(allStats).filter(s => s.games > 0).length;
   document.getElementById('header-meta').innerHTML =
     `<span>${D.season}</span><span>${D.game}</span><span>${activeEvs.length} event${activeEvs.length !== 1 ? 's' : ''}</span><span>${playerCount} players with results</span><span style="color:var(--accent);font-weight:500;">${ACTIVE_EDITION}th Edition</span>`;
+  // Keep CoS section label in sync with active edition
+  const cosLabel = document.getElementById('cos-edition-label');
+  if (cosLabel) cosLabel.textContent = ACTIVE_EDITION === 10 ? '10th Edition' : '11th Edition';
   // buildNowPanel called after full init
 }
 // Stats are built above in the leaderboard section using quality-weighted ensurePlayerQ/addResultQ
