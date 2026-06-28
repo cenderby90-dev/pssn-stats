@@ -62,7 +62,11 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const { pin, type } = req.body;
-      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+      const TEAM_PIN = process.env.TEAM_PIN || '1719';
+      const memberTypes = ['playoff', 'submit_playoff'];
+      const isAdminAction = !memberTypes.includes(type);
+      if (isAdminAction && pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+      if (!isAdminAction && pin !== TEAM_PIN && pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
 
       if (type === 'add_player') {
         const { name } = req.body;
@@ -84,13 +88,21 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true });
       }
 
-      if (type === 'submit_playoff') {
-        const { seasonId, round, matchNum, player1, player2, bp1, bp2 } = req.body;
+      if (type === 'playoff' || type === 'submit_playoff') {
+        const season_id = req.body.season_id || req.body.seasonId;
+        const round = req.body.round;
+        const match_number = req.body.match_number || req.body.matchNum;
+        const player1 = req.body.player1;
+        const player2 = req.body.player2;
+        const bp1 = req.body.bp1;
+        const bp2 = req.body.bp2;
+        const winner = req.body.winner || (bp1 > bp2 ? player1 : player2);
+        const isAdmin = pin === ADMIN_PIN;
         await sql`
           INSERT INTO league_playoff_matches (season_id, round, match_number, player1, player2, bp1, bp2, approved)
-          VALUES (${seasonId}, ${round}, ${matchNum}, ${player1}, ${player2}, ${bp1}, ${bp2}, false)
+          VALUES (${season_id}, ${round}, ${match_number}, ${player1}, ${player2}, ${bp1}, ${bp2}, ${isAdmin})
         `;
-        return res.status(200).json({ success: true });
+        return res.status(200).json({ success: true, approved: isAdmin });
       }
 
       if (type === 'add_to_pod') {
