@@ -1,6 +1,6 @@
 const D = JSON.parse(document.getElementById('data').textContent);
 // -- edition state --
-let ACTIVE_EDITION = D.currentEdition || 10;
+let ACTIVE_EDITION = D.currentEdition || 11;
 const API = '/api';
 const TEAM_PIN = '1719';
 
@@ -1471,7 +1471,7 @@ function switchTab(tab) {
     if (edSel) {
       const launchDate = 20260620;
       const today = getTodaySortDate();
-      edSel.value = today >= launchDate ? '11' : '10';
+      edSel.value = '11'; // 11th Edition is now active
     }
   }
 }
