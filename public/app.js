@@ -1,6 +1,6 @@
 const D = JSON.parse(document.getElementById('data').textContent);
 // -- edition state --
-let ACTIVE_EDITION = D.currentEdition || 10;
+let ACTIVE_EDITION = D.currentEdition || 11;
 const API = '/api';
 const TEAM_PIN = '1719';
 
@@ -1471,7 +1471,7 @@ function switchTab(tab) {
     if (edSel) {
       const launchDate = 20260620;
       const today = getTodaySortDate();
-      edSel.value = today >= launchDate ? '11' : '10';
+      edSel.value = '11'; // 11th Edition is now active
     }
   }
 }
@@ -3380,6 +3380,11 @@ function renderPlayoffs(el) {
         <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.06em;color:var(--text);margin-bottom:4px;" id="pm-title">Submit Result</div>
         <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;" id="pm-subtitle"></div>
         <div style="display:grid;gap:10px;">
+          <div id="pm-pin-wrap">
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Team PIN</label>
+            <input id="pm-pin" type="password" maxlength="4" placeholder="••••"
+              style="width:100%;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:1rem;text-align:center;letter-spacing:0.2em;outline:none;"/>
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <div>
               <label id="pm-p1-label" style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;"></label>
@@ -3416,6 +3421,15 @@ function openPlayoffSubmit(key, round, num, p1, p2, seasonId) {
   document.getElementById('pm-bp1').value = '';
   document.getElementById('pm-bp2').value = '';
   document.getElementById('pm-message').style.display = 'none';
+  // Pre-fill PIN if already unlocked this session, otherwise show PIN field
+  const sessionPin = sessionStorage.getItem('pssn_team_unlocked') === '1' ? TEAM_PIN : '';
+  const pinEl = document.getElementById('pm-pin');
+  const pinWrap = document.getElementById('pm-pin-wrap');
+  if (pinEl) {
+    pinEl.value = sessionPin;
+    // Hide PIN field if already authenticated this session
+    if (pinWrap) pinWrap.style.display = sessionPin ? 'none' : 'block';
+  }
   document.getElementById('playoff-modal').style.display = 'flex';
 }
 
@@ -3424,6 +3438,13 @@ async function submitPlayoffResult() {
   const bp1 = parseInt(document.getElementById('pm-bp1').value);
   const bp2 = parseInt(document.getElementById('pm-bp2').value);
   const { round, num, p1, p2, seasonId } = _pmData;
+  // Get PIN from modal field, falling back to session if field is hidden
+  const pinInput = document.getElementById('pm-pin')?.value?.trim();
+  const pinToUse = pinInput || (sessionStorage.getItem('pssn_team_unlocked') === '1' ? TEAM_PIN : '');
+  if (!pinToUse) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Please enter the team PIN.'; return;
+  }
 
   if (isNaN(bp1) || isNaN(bp2)) {
     msg.style.display = 'block'; msg.style.color = 'var(--loss)';
@@ -3446,7 +3467,7 @@ async function submitPlayoffResult() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        pin: TEAM_PIN,
+        pin: pinToUse,
         type: 'playoff',
         season_id: seasonId,
         round, match_number: num,
@@ -4651,10 +4672,10 @@ function checkLeagueAdminPin(val) {
           document.getElementById('league-admin-gate').style.display = 'none';
           const section = document.getElementById('league-admin-section');
           section.style.display = 'block';
-          if (!leagueData) {
-            await loadLeagueData();
-            leagueLoaded = true;
-          }
+          // Always force a fresh reload before building admin so pending items are current
+          leagueLoaded = false;
+          await loadLeagueData();
+          leagueLoaded = true;
           buildLeagueAdmin();
         } else {
           errEl.style.display = 'block';
