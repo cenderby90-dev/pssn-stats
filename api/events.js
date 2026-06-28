@@ -128,7 +128,8 @@ export default async function handler(req, res) {
             sort_date    = COALESCE(${updates.sort_date    ?? null}, sort_date),
             total_players = COALESCE(${updates.total_players ?? null}, total_players),
             total_teams  = COALESCE(${updates.total_teams  ?? null}, total_teams),
-            bcp_url      = COALESCE(${updates.bcp_url      ?? null}, bcp_url)
+            bcp_url      = COALESCE(${updates.bcp_url      ?? null}, bcp_url),
+            edition      = COALESCE(${updates.edition      ?? null}, edition)
           WHERE id = ${eventId}
         `;
         return res.status(200).json({ success: true });
