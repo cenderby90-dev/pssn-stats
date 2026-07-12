@@ -4421,7 +4421,7 @@ async function wizardCreateAndContinue() {
   wizardEventName = name;
   wizardEventFormat = format;
   wizardIsNewEvent = true;
-  wizardNewEventData = { name, event_date: date, sort_date: sortDate, format, total_players: players, bcp_url: bcp };
+  wizardNewEventData = { name, event_date: date, sort_date: sortDate, format, edition: ACTIVE_EDITION, total_players: players, bcp_url: bcp };
   wizardShowStep2();
 }
 
@@ -5559,7 +5559,8 @@ async function bcpImport() {
   msg.style.display = 'block'; msg.style.background = 'var(--surface2)'; msg.style.color = 'var(--muted)';
   msg.textContent = 'Importing ' + _bcpParsed.merged.length + ' results...';
 
-  const event = { name, event_date: date, sort_date: sortDate, format, total_players: players, total_teams: teams, bcp_url: bcpUrl };
+  const edition = parseInt(document.getElementById('bcp-ev-edition')?.value) || ACTIVE_EDITION;
+  const event = { name, event_date: date, sort_date: sortDate, format, edition, total_players: players, total_teams: teams, bcp_url: bcpUrl };
 
   try {
     const res = await fetch(`${API}/events`, {
@@ -5590,7 +5591,7 @@ async function bcpImport() {
 
 function bcpClear() {
   _bcpParsed = null;
-  ['bcp-paste','bcp-paste2','bcp-ev-name','bcp-ev-date','bcp-ev-sortdate','bcp-ev-players','bcp-ev-teams','bcp-ev-url']
+  ['bcp-paste','bcp-paste2','bcp-ev-name','bcp-ev-date','bcp-ev-sortdate','bcp-ev-players','bcp-ev-teams','bcp-ev-url','bcp-ev-edition']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   ['bcp-meta','bcp-paste2-wrap','bcp-mode-bar','bcp-message','bcp-team-assign','bcp-pssn-picker'].forEach(id => {
     const el = document.getElementById(id); if (el) el.style.display = 'none';
