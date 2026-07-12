@@ -13,6 +13,9 @@ let attendanceData = {};
 
 // -- approved submissions merged into events --
 async function loadApprovedSubmissions() {
+  // Reset D.events so it's always rebuilt fresh from DB on each load
+  D.events = [];
+  clearFactionWRCache();
   try {
     // load approved result submissions
     const res = await fetch('/api/submissions');
