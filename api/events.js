@@ -56,7 +56,7 @@ export default async function handler(req, res) {
           ${event.name},
           ${event.event_date || ''},
           ${event.format || 'GT'},
-          ${event.edition || 10},
+          ${event.edition || 11},
           ${event.total_players || 0},
           ${event.total_teams || 0},
           ${event.bcp_url || ''},
