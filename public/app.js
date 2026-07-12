@@ -69,12 +69,22 @@ async function loadApprovedSubmissions() {
       const evData = await evRes.json();
       if (evData.events && evData.events.length) {
         evData.events.forEach(dbEv => {
-          // skip if event already exists -- match on name + format + sortDate so same-named events on different dates both appear
+          // skip if event already exists -- match on name + format; also catches submission stubs (_fromSubmission) which have no sortDate
           const exists = D.events.find(e =>
             e.name.toLowerCase() === dbEv.name.toLowerCase() &&
             e.format === dbEv.format &&
-            (e.sortDate || 0) === (dbEv.sort_date || 0)
+            (e._fromSubmission || (e.sortDate || 0) === (dbEv.sort_date || 0))
           );
+          // If found as a submission stub, upgrade it with the full DB data (date, sortDate, etc.)
+          if (exists && exists._fromSubmission) {
+            exists.date = dbEv.event_date;
+            exists.sortDate = dbEv.sort_date;
+            exists.edition = dbEv.edition || 11;
+            exists.totalPlayers = dbEv.total_players || exists.totalPlayers || 0;
+            exists.bcpUrl = dbEv.bcp_url || exists.bcpUrl || '';
+            exists._fromSubmission = false;
+            exists._fromDb = true;
+          }
           if (!exists) {
             D.events.push({
               name: dbEv.name,
