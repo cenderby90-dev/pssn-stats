@@ -4416,10 +4416,26 @@ async function wizardCreateAndContinue() {
   const players = parseInt(document.getElementById('wiz-ev-players').value) || 0;
   const bcp = document.getElementById('wiz-ev-bcp').value.trim();
 
-  if (!name || !date || !sortDate || !format) {
-    alert('Please fill in event name, date, sort date and format.');
+  // Validate required fields with inline error, not alert (alerts get dismissed on mobile)
+  const wizErrEl = document.getElementById('wiz-new-event-error');
+  if (!name || !format) {
+    if (wizErrEl) { wizErrEl.style.display = 'block'; wizErrEl.textContent = 'Please fill in the event name and format.'; }
     return;
   }
+  if (!date || !sortDate) {
+    if (wizErrEl) { wizErrEl.style.display = 'block'; wizErrEl.textContent = 'Please fill in the event date and sort date — these are required so results appear in the right order.'; }
+    // Highlight the date fields
+    const dateEl = document.getElementById('wiz-ev-date');
+    const sortEl = document.getElementById('wiz-ev-sortdate');
+    if (dateEl && !date) dateEl.style.border = '1px solid var(--loss)';
+    if (sortEl && !sortDate) sortEl.style.border = '1px solid var(--loss)';
+    return;
+  }
+  if (wizErrEl) wizErrEl.style.display = 'none';
+  // Reset border highlights
+  ['wiz-ev-date','wiz-ev-sortdate'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.border = '1px solid var(--border)';
+  });
 
   wizardEventName = name;
   wizardEventFormat = format;
