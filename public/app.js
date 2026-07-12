@@ -69,10 +69,11 @@ async function loadApprovedSubmissions() {
       const evData = await evRes.json();
       if (evData.events && evData.events.length) {
         evData.events.forEach(dbEv => {
-          // skip if event already exists in JSON data
+          // skip if event already exists -- match on name + format + sortDate so same-named events on different dates both appear
           const exists = D.events.find(e =>
             e.name.toLowerCase() === dbEv.name.toLowerCase() &&
-            e.format === dbEv.format
+            e.format === dbEv.format &&
+            (e.sortDate || 0) === (dbEv.sort_date || 0)
           );
           if (!exists) {
             D.events.push({
