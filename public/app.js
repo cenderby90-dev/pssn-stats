@@ -4675,6 +4675,8 @@ function checkAdminPin(val) {
           loadDbEvents();
           loadAndRenderMembers();
           buildAdminTriage();
+          aliasRenderList();
+          playerAliasRenderList();
         } else {
           errEl.style.display = 'block';
           document.getElementById('admin-pin-input').value = '';
@@ -5178,6 +5180,183 @@ async function aliasRepair() {
 }
 
 
+// -- Player Name Aliases --
+const PLAYER_ALIAS_KEY = '_player_aliases_19700101';
+
+function playerAliasGetRegistry() {
+  try {
+    const raw = attendanceData[PLAYER_ALIAS_KEY];
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+
+async function playerAliasSaveRegistry(registry) {
+  await loadAttendance(true);
+  await fetch(`${API}/attendance`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      player_name: PLAYER_ALIAS_KEY,
+      event_sort_date: 19700101,
+      status: JSON.stringify(registry),
+      pin: getAdminPin()
+    })
+  });
+  attendanceData[PLAYER_ALIAS_KEY] = JSON.stringify(registry);
+}
+
+function playerAliasResolve(name) {
+  // Returns canonical name if alias exists, otherwise returns name unchanged
+  const registry = playerAliasGetRegistry();
+  return registry[name] || name;
+}
+
+function playerAliasRenderList() {
+  const el = document.getElementById('player-alias-list');
+  if (!el) return;
+  const registry = playerAliasGetRegistry();
+  const entries = Object.entries(registry);
+  if (!entries.length) {
+    el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:8px 0;">No aliases defined yet.</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:0;border-bottom:1px solid var(--border);padding:8px 14px;">
+        <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;">Variant name</div>
+        <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;">Canonical member</div>
+        <div></div>
+      </div>
+      ${entries.map(([variant, canonical]) => `
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;padding:8px 14px;border-bottom:0.5px solid var(--border);">
+          <div style="font-size:0.82rem;color:var(--muted);">${variant}</div>
+          <div style="font-size:0.82rem;color:var(--text);font-weight:500;">→ ${canonical}</div>
+          <button onclick="playerAliasRemove(${JSON.stringify(variant)})"
+            style="padding:3px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);font-size:0.72rem;cursor:pointer;"
+            onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+            Remove
+          </button>
+        </div>`).join('')}
+    </div>`;
+}
+
+async function playerAliasAdd() {
+  const variant   = document.getElementById('player-alias-variant')?.value.trim();
+  const canonical = document.getElementById('player-alias-canonical')?.value.trim();
+  const msg       = document.getElementById('player-alias-add-msg');
+
+  if (!variant || !canonical) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Both fields are required.'; return;
+  }
+  if (variant === canonical) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Variant and canonical name must differ.'; return;
+  }
+
+  msg.style.display = 'block'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Saving...';
+
+  const registry = playerAliasGetRegistry();
+  registry[variant] = canonical;
+
+  try {
+    await playerAliasSaveRegistry(registry);
+    document.getElementById('player-alias-variant').value = '';
+    document.getElementById('player-alias-canonical').value = '';
+    msg.style.color = 'var(--win)';
+    msg.textContent = `✓ Alias saved: "${variant}" → "${canonical}"`;
+    playerAliasRenderList();
+    setTimeout(() => { msg.style.display = 'none'; }, 3000);
+  } catch(e) {
+    msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error -- try again.';
+  }
+}
+
+async function playerAliasRemove(variant) {
+  if (!confirm(`Remove alias for "${variant}"?`)) return;
+  const registry = playerAliasGetRegistry();
+  delete registry[variant];
+  try {
+    await playerAliasSaveRegistry(registry);
+    playerAliasRenderList();
+  } catch(e) {
+    alert('Network error -- could not remove alias.');
+  }
+}
+
+async function playerAliasRepair() {
+  const msg = document.getElementById('player-alias-repair-msg');
+  const registry = playerAliasGetRegistry();
+  const aliases = Object.keys(registry);
+
+  if (!aliases.length) {
+    msg.style.display = 'block'; msg.style.background = 'var(--surface2)'; msg.style.color = 'var(--muted)';
+    msg.textContent = 'No aliases defined -- nothing to repair.'; return;
+  }
+
+  msg.style.display = 'block'; msg.style.background = 'var(--surface2)'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Scanning events...';
+
+  try {
+    const res = await fetch(`${API}/events`);
+    const data = await res.json();
+    const allEvents = data.events || [];
+
+    const patches = [];
+
+    allEvents.forEach(ev => {
+      (ev.results || []).forEach(r => {
+        if (!r.player_name) return;
+        const canonical = registry[r.player_name];
+        if (canonical && canonical !== r.player_name) {
+          patches.push({ resultId: r.id, player_name: canonical, currentName: r.player_name });
+        }
+      });
+    });
+
+    if (!patches.length) {
+      msg.style.color = 'var(--win)';
+      msg.textContent = '✓ No mismatches found -- all player names are already canonical.';
+      return;
+    }
+
+    msg.textContent = `Found ${patches.length} result${patches.length > 1 ? 's' : ''} to patch -- fixing...`;
+
+    let fixed = 0;
+    for (const p of patches) {
+      try {
+        const patchRes = await fetch(`${API}/events`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pin: getAdminPin(),
+            resultId: p.resultId,
+            updates: { player_name: p.player_name }
+          })
+        });
+        const patchData = await patchRes.json();
+        if (patchData.success) fixed++;
+      } catch(e) { /* continue */ }
+    }
+
+    msg.style.background = fixed === patches.length ? 'var(--win-bg)' : 'var(--draw-bg)';
+    msg.style.color = fixed === patches.length ? 'var(--win)' : 'var(--draw)';
+    msg.textContent = `✓ Patched ${fixed} of ${patches.length} results. Reloading stats...`;
+
+    await loadApprovedSubmissions();
+    rebuildStats();
+    await loadDbEvents();
+
+  } catch(e) {
+    msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error -- try again.';
+  }
+}
+
+
 // -- BCP Bookmarklet Import --
 let _bcpParsed = null;       // { mode: 'individual'|'teams', teamStandings, individualResults, merged }
 
@@ -5194,6 +5373,21 @@ function bcpAutoSortDate(val) {
   if (mMon && MONTHS[mMon[1]] && parseInt(mMon[2]) > 2020) {
     const el = document.getElementById('bcp-ev-sortdate');
     if (el) el.value = parseInt(mMon[2]) * 10000 + MONTHS[mMon[1]] * 100 + 1;
+  }
+}
+
+async function bcpMatchUnmatched(i, bcpName) {
+  const sel = document.getElementById(`bcp-match-${i}`);
+  const canonical = sel?.value;
+  if (!canonical) { alert('Select a member to match to first.'); return; }
+
+  const registry = playerAliasGetRegistry();
+  registry[bcpName] = canonical;
+  try {
+    await playerAliasSaveRegistry(registry);
+    bcpParsePreview(); // re-run against the raw paste, now using the new alias
+  } catch(e) {
+    alert('Network error -- could not save the match.');
   }
 }
 
@@ -5271,20 +5465,39 @@ function bcpParsePreview() {
     document.getElementById('bcp-ev-format').value = 'GT'; // sensible default
 
     const knownPlayers = new Set(D.players.map(p => p.name));
-    const pssnResults = data1.results.filter(r => knownPlayers.has(r.player));
-    const unmatched = data1.results.filter(r => !knownPlayers.has(r.player) && r.player);
+    const playerRegistry = playerAliasGetRegistry();
+    const resolvedResults = data1.results.map(r => ({ ...r, resolved: playerRegistry[r.player] || r.player }));
+
+    const pssnResults = resolvedResults.filter(r => knownPlayers.has(r.resolved));
+    const unmatched = resolvedResults.filter(r => !knownPlayers.has(r.resolved) && r.player);
     _bcpParsed.merged = pssnResults.map(r => ({
-      player_name: r.player, faction: r.faction || '',
+      player_name: r.resolved, faction: r.faction || '',
       place: r.placing, wins: r.w, losses: r.l, draws: r.d,
       subteam: null, shadow: false, dropped: false
     }));
+    _bcpParsed.unmatched = unmatched;
 
-    // Show unmatched warning if any PSSN members were not found in the DB
+    // Show unmatched warning, with an inline matcher to map a BCP name to an existing member
     const warnEl = document.getElementById('bcp-unmatched-warn');
     if (warnEl) {
       if (unmatched.length) {
+        const sortedPlayers = [...D.players].map(p => p.name).sort();
         warnEl.style.display = 'block';
-        warnEl.innerHTML = `<strong style="color:var(--warn);">⚠ ${unmatched.length} player${unmatched.length>1?'s':''} not in club roster — add via Admin → Members first:</strong><br><span style="font-size:0.75rem;color:var(--muted);">${unmatched.map(r=>r.player).join(', ')}</span>`;
+        warnEl.innerHTML = `<strong style="color:var(--warn);">⚠ ${unmatched.length} player${unmatched.length>1?'s':''} not recognised:</strong>` +
+          unmatched.map((r, i) => `
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
+              <span style="min-width:120px;font-weight:500;">${r.player}</span>
+              <span style="color:var(--muted);">is the same person as</span>
+              <select id="bcp-match-${i}" style="flex:1;min-width:160px;padding:4px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.78rem;">
+                <option value="">-- select existing member --</option>
+                ${sortedPlayers.map(n => `<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`).join('')}
+              </select>
+              <button onclick="bcpMatchUnmatched(${i}, ${JSON.stringify(r.player)})"
+                style="padding:4px 10px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-size:0.78rem;cursor:pointer;white-space:nowrap;">
+                Match &amp; remember
+              </button>
+            </div>`).join('') +
+          `<div style="font-size:0.72rem;color:var(--muted);margin-top:10px;">Matching saves it as a player alias, so future imports recognise "${unmatched[0].player}" automatically. If someone has genuinely never played before, <a href="#" onclick="switchTab('members');return false;" style="color:var(--accent);">add them via Members</a> instead.</div>`;
       } else {
         warnEl.style.display = 'none';
       }
@@ -5292,11 +5505,12 @@ function bcpParsePreview() {
 
     document.getElementById('bcp-result-count').textContent = pssnResults.length + ' of ' + data1.results.length;
     const tbody = document.getElementById('bcp-preview-body');
-    tbody.innerHTML = data1.results.map(r => {
-      const isPssn = knownPlayers.has(r.player);
+    tbody.innerHTML = resolvedResults.map(r => {
+      const isPssn = knownPlayers.has(r.resolved);
+      const renamed = isPssn && r.resolved !== r.player;
       return `<tr style="border-bottom:0.5px solid var(--border);${isPssn?'':'opacity:0.4;'}">
         <td style="padding:5px 8px;color:var(--muted);">${r.placing}</td>
-        <td style="padding:5px 8px;color:var(--text);font-weight:${isPssn?'500':'400'};">${r.player}${isPssn?'':' <span style="font-size:0.68rem;color:var(--faint);">(not PSSN)</span>'}</td>
+        <td style="padding:5px 8px;color:var(--text);font-weight:${isPssn?'500':'400'};">${r.resolved}${isPssn?'':' <span style="font-size:0.68rem;color:var(--faint);">(not PSSN)</span>'}${renamed?` <span style="font-size:0.68rem;color:var(--muted);">(as "${r.player}")</span>`:''}</td>
         <td style="padding:5px 8px;color:var(--muted);font-size:0.72rem;">${r.faction||'--'}</td>
         <td style="padding:5px 8px;color:var(--muted);font-size:0.72rem;">--</td>
         <td style="padding:5px 8px;text-align:center;color:var(--win);">${r.w}</td>
