@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       const {
         player_name, event_name, event_format, faction,
         place, total_players, wins, losses, draws,
-        subteam, shadow, dropped
+        subteam, shadow, dropped, edition, sort_date
       } = req.body;
 
       if (!player_name || !event_name || !event_format || !faction) {
@@ -37,13 +37,14 @@ export default async function handler(req, res) {
         INSERT INTO submissions (
           player_name, event_name, event_format, faction,
           place, total_players, wins, losses, draws,
-          subteam, shadow, dropped
+          subteam, shadow, dropped, edition, sort_date
         )
         VALUES (
           ${player_name}, ${event_name}, ${event_format}, ${faction},
           ${place || 0}, ${total_players || 0},
           ${wins || 0}, ${losses || 0}, ${draws || 0},
-          ${subteam || null}, ${shadow || false}, ${dropped || false}
+          ${subteam || null}, ${shadow || false}, ${dropped || false},
+          ${edition || null}, ${sort_date || null}
         )
       `;
       return res.status(200).json({ success: true });
@@ -79,16 +80,18 @@ export default async function handler(req, res) {
           }
         } else {
           // Create a stub event -- admin can fill in full details via Admin -> Events later
-          // Use sort_date = 0 as a clear signal it needs updating (not 0 which breaks calendar)
-          // Use a far-future sort_date so it doesn't corrupt calendar ordering
+          // Falls back to the currently-active edition and today's date if the client
+          // didn't supply one (e.g. an older cached page) -- previously this was hardcoded
+          // to edition 10 / sort_date 0, which silently hid the event from the default view.
+          const fallbackSortDate = parseInt(new Date().toISOString().slice(0,10).replace(/-/g,''), 10);
           const { rows: newEv } = await sql`
             INSERT INTO events (name, event_date, sort_date, format, edition, total_players, bcp_url, approved)
             VALUES (
               ${sub.event_name},
               'Date unknown',
-              0,
+              ${sub.sort_date || fallbackSortDate},
               ${sub.event_format},
-              10,
+              ${sub.edition || 11},
               ${sub.total_players || 0},
               '',
               true
