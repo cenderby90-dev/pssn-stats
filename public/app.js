@@ -490,7 +490,7 @@ function renderTeamsLeaderboard() {
         <div class="lb-inner" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
           <div class="lb-rank">${i + 1}</div>
           <div>
-            <div class="lb-name">${st.name}</div>
+            <div class="lb-name">${st.name}${isMixedTeam(st.name) ? ' <span style="font-size:0.65rem;font-weight:500;padding:2px 7px;border-radius:10px;background:var(--surface2);color:var(--muted);vertical-align:middle;">🤝 Mixed squad</span>' : ''}</div>
             <div class="lb-faction">${st.events.length} event${st.events.length !== 1 ? 's' : ''}</div>
           </div>
           <div class="lb-record">
@@ -4688,6 +4688,7 @@ function checkAdminPin(val) {
           buildAdminTriage();
           aliasRenderList();
           playerAliasRenderList();
+          mixedTeamsRenderList();
         } else {
           errEl.style.display = 'block';
           document.getElementById('admin-pin-input').value = '';
@@ -5117,6 +5118,99 @@ async function aliasRemove(variant) {
     aliasRenderList();
   } catch(e) {
     alert('Network error -- could not remove alias.');
+  }
+}
+
+// -- Mixed Teams (joint squads with another club) --
+const MIXED_TEAMS_KEY = '_mixed_teams_19700101';
+
+function mixedTeamsGet() {
+  try {
+    const raw = attendanceData[MIXED_TEAMS_KEY];
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+}
+
+async function mixedTeamsSave(list) {
+  await loadAttendance(true);
+  await fetch(`${API}/attendance`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      player_name: MIXED_TEAMS_KEY,
+      event_sort_date: 19700101,
+      status: JSON.stringify(list),
+      pin: getAdminPin()
+    })
+  });
+  attendanceData[MIXED_TEAMS_KEY] = JSON.stringify(list);
+}
+
+function isMixedTeam(name) {
+  return mixedTeamsGet().includes(name);
+}
+
+function mixedTeamsRenderList() {
+  const el = document.getElementById('mixed-teams-list');
+  if (!el) return;
+  const list = mixedTeamsGet();
+  if (!list.length) {
+    el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);padding:8px 0;">No mixed teams flagged.</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+      ${list.map(name => `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;border-bottom:0.5px solid var(--border);">
+          <span style="font-size:0.82rem;color:var(--text);">🤝 ${name}</span>
+          <button onclick="mixedTeamsRemove(${JSON.stringify(name)})"
+            style="padding:3px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);font-size:0.72rem;cursor:pointer;"
+            onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+            Remove
+          </button>
+        </div>`).join('')}
+    </div>`;
+}
+
+async function mixedTeamsAdd() {
+  const input = document.getElementById('mixed-team-name');
+  const msg = document.getElementById('mixed-team-add-msg');
+  const name = input?.value.trim();
+  if (!name) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Enter a team name.'; return;
+  }
+  const list = mixedTeamsGet();
+  if (list.includes(name)) {
+    msg.style.display = 'block'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Already flagged as mixed.'; return;
+  }
+  msg.style.display = 'block'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Saving...';
+  list.push(name);
+  try {
+    await mixedTeamsSave(list);
+    input.value = '';
+    msg.style.color = 'var(--win)';
+    msg.textContent = `✓ "${name}" flagged as a mixed team.`;
+    mixedTeamsRenderList();
+    renderLeaderboard(activeFilter);
+    setTimeout(() => { msg.style.display = 'none'; }, 3000);
+  } catch(e) {
+    msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error -- try again.';
+  }
+}
+
+async function mixedTeamsRemove(name) {
+  const list = mixedTeamsGet().filter(n => n !== name);
+  try {
+    await mixedTeamsSave(list);
+    mixedTeamsRenderList();
+    renderLeaderboard(activeFilter);
+  } catch(e) {
+    alert('Network error -- could not remove.');
   }
 }
 
