@@ -4612,6 +4612,8 @@ async function wizardSubmitResult() {
           faction,
           place: placing,
           total_players: wizardNewEventData.total_players || 0,
+          edition: wizardNewEventData.edition,
+          sort_date: wizardNewEventData.sort_date,
           wins, losses, draws, subteam, shadow, dropped
         })
       });
