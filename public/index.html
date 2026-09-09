@@ -1007,6 +1007,50 @@
     </div>
 
     <div class="section-head" style="margin-top:2rem;">
+      <div class="section-title">Player Name Aliases</div>
+      <div class="section-rule"></div>
+    </div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">
+      Map name variants (e.g. a BCP display name or nickname) to a canonical member profile. Used during BCP import to stop the same person creating duplicate entries.
+    </div>
+    <div style="max-width:680px;">
+      <div id="player-alias-list" style="margin-bottom:12px;"></div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px;">
+        <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Add alias</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;">
+          <div>
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Variant name</label>
+            <input id="player-alias-variant" type="text" placeholder="e.g. Fintan Ryan"
+              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;"/>
+          </div>
+          <div>
+            <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Canonical member</label>
+            <input id="player-alias-canonical" type="text" placeholder="e.g. Fintan PSSN"
+              style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;"/>
+          </div>
+          <button onclick="playerAliasAdd()"
+            style="padding:7px 16px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;white-space:nowrap;">
+            + Add
+          </button>
+        </div>
+        <div id="player-alias-add-msg" style="font-size:0.78rem;margin-top:8px;display:none;"></div>
+      </div>
+      <div style="margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Repair historical data</div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;">
+          Scan all events in DB and patch any player_name values that match a known alias to their canonical member name.
+        </div>
+        <button onclick="playerAliasRepair()"
+          style="padding:7px 16px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;cursor:pointer;">
+          Run repair scan
+        </button>
+        <div id="player-alias-repair-msg" style="font-size:0.78rem;margin-top:8px;display:none;padding:8px 12px;border-radius:4px;"></div>
+      </div>
+    </div>
+
+    <div class="section-head" style="margin-top:2rem;">
       <div class="section-title">Events in Database</div>
       <div class="section-rule"></div>
     </div>
