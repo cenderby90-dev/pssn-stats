@@ -51,6 +51,7 @@ async function loadApprovedSubmissions() {
               l: sub.losses || 0,
               d: sub.draws || 0,
               subteam: sub.subteam || null,
+              createdAt: sub.submitted_at || null,
               _fromSubmission: true
             });
           }
@@ -105,6 +106,7 @@ async function loadApprovedSubmissions() {
                 subteam: r.subteam || null,
                 shadow: r.shadow || false,
                 dropped: r.dropped || false,
+                createdAt: r.created_at || null,
                 _fromDb: true
               })),
               _fromDb: true
@@ -677,30 +679,37 @@ function buildNowPanel() {
     </div>`;
   }).join('');
 
-  // League pod leaders -- requires leagueData
-  let leagueHtml = '';
-  const ld = leagueData;
-  if (ld?.pods?.length) {
-    const podLeaders = ld.pods.map(pod => {
-      const { sorted, podGames, podPlayers: pp } = calcPodStandings(pod.id, ld.players, ld.games);
-      const leader = sorted[0];
-      const maxPossible = pp.length * (pp.length-1) / 2;
-      const pct = maxPossible ? Math.round((podGames.length/maxPossible)*100) : 0;
-      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);gap:8px;">
-        <span style="font-size:0.72rem;color:var(--muted);min-width:38px;">${pod.name}</span>
-        <span style="font-size:0.82rem;color:var(--text);flex:1;">${leader?.name||'TBD'}</span>
-        <span style="font-size:0.72rem;color:${leader?.pts>0?'var(--win)':'var(--muted)'};">${leader?.pts||0}pts</span>
-        <div style="width:40px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;">
-          <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:2px;"></div>
-        </div>
-      </div>`;
-    }).join('');
-    leagueHtml = `
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
-        <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">League Leaders</div>
-        ${podLeaders}
-        <div style="margin-top:8px;font-size:0.68rem;color:var(--faint);">Progress bar = games played</div>
-      </div>`;
+  // Recent activity -- last N results added to the site, most recent first
+  let activityHtml = '';
+  {
+    const items = [];
+    getActiveEvents().forEach(ev => {
+      (ev.results || []).forEach(r => {
+        if (r.dropped || !r.createdAt) return;
+        items.push({
+          player: r.player,
+          eventName: ev.name,
+          placing: r.placing,
+          total: ev.format === 'Teams' ? (ev.totalTeams || 0) : (ev.totalPlayers || 0),
+          createdAt: r.createdAt
+        });
+      });
+    });
+    items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const recent = items.slice(0, 6);
+    if (recent.length) {
+      const rows = recent.map(a => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);gap:8px;">
+          <span style="font-size:0.82rem;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.player}</span>
+          <span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;">${a.placing}${a.total ? '/' + a.total : ''}</span>
+          <span style="font-size:0.68rem;color:var(--faint);white-space:nowrap;">${timeAgo(a.createdAt)}</span>
+        </div>`).join('');
+      activityHtml = `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
+          <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Recent Activity</div>
+          ${rows}
+        </div>`;
+    }
   }
 
   // Most recent result
@@ -755,7 +764,7 @@ function buildNowPanel() {
       ${recentHtml}
       ${nextEvHtml}
       ${champHtml}
-      ${leagueHtml}
+      ${activityHtml}
     </div>`;
 }
 
