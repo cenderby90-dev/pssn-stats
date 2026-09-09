@@ -101,6 +101,7 @@ export default async function handler(req, res) {
       try {
         await sql`
           UPDATE event_results SET
+            player_name = COALESCE(${updates.player_name ?? null}, player_name),
             faction   = COALESCE(${updates.faction   ?? null}, faction),
             wins      = COALESCE(${updates.wins      ?? null}, wins),
             losses    = COALESCE(${updates.losses    ?? null}, losses),
