@@ -673,6 +673,27 @@ function getTodaySortDate() {
 
 
 // -- now panel --
+function startLeagueStatusRotator() {
+  if (window._leagueStatusInterval) clearInterval(window._leagueStatusInterval);
+  const slides = window._leagueStatusSlides || [];
+  if (slides.length < 2) return; // nothing to rotate
+
+  let idx = 0;
+  window._leagueStatusInterval = setInterval(() => {
+    const el = document.getElementById('league-status-rotator');
+    if (!el) { clearInterval(window._leagueStatusInterval); return; } // box no longer on screen
+    idx = (idx + 1) % slides.length;
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.innerHTML = slides[idx];
+      el.style.opacity = '1';
+    }, 200);
+    document.querySelectorAll('#league-status-dots [data-dot]').forEach((dot, i) => {
+      dot.style.background = i === idx ? 'var(--accent)' : 'var(--surface2)';
+    });
+  }, 4500);
+}
+
 function buildNowPanel() {
   const el = document.getElementById('now-panel');
   if (!el) return;
@@ -692,11 +713,6 @@ function buildNowPanel() {
   const lastEvent = pastEvents.length
     ? [...pastEvents].sort((a,b) => evSortKey(b) - evSortKey(a))[0]
     : null;
-
-  // Next calendar event
-  const todayNum = getTodaySortDate ? getTodaySortDate() : parseInt(new Date().toISOString().slice(0,10).replace(/-/g,''));
-  const nextCalEv = getCalendarEvents().filter(e => (e.sortDate||0) > todayNum)
-    .sort((a,b) => a.sortDate - b.sortDate)[0];
 
   // Top 3 champions -- opted-in players only
   const ranked = getRanked('Singles');
@@ -745,6 +761,85 @@ function buildNowPanel() {
     }
   }
 
+  // League status -- rolling slides built from live league data
+  let leagueStatusHtml = '';
+  let leagueStatusSlides = [];
+  if (leagueData?.season && leagueData?.pods?.length) {
+    const pods = leagueData.pods;
+    const players = leagueData.players || [];
+    const games = leagueData.games || [];
+
+    // Slide 1: pod stage progress
+    let played = 0, possible = 0;
+    const podSummaries = pods.map(pod => {
+      const { sorted, podGames, podPlayers } = calcPodStandings(pod.id, players, games);
+      const n = podPlayers.length;
+      const maxGames = n * (n - 1) / 2;
+      played += podGames.length; possible += maxGames;
+      return { pod, sorted, podGames, podPlayers, maxGames };
+    });
+    const pct = possible ? Math.round((played / possible) * 100) : 0;
+    leagueStatusSlides.push(`
+      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">Pod stage progress</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--accent);line-height:1;">${played} <span style="font-size:1rem;color:var(--muted);">of ${possible} games played</span></div>
+      <div style="width:100%;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:10px;">
+        <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:3px;"></div>
+      </div>`);
+
+    // Slide 2: days remaining in pod stage (27 Jul - 29 Nov)
+    const podStageEnd = new Date('2026-11-29T23:59:59');
+    const daysLeft = Math.max(0, Math.ceil((podStageEnd - new Date()) / 86400000));
+    leagueStatusSlides.push(`
+      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">Pod stage deadline</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:${daysLeft<=14?'var(--loss)':'var(--accent)'};line-height:1;">${daysLeft} <span style="font-size:1rem;color:var(--muted);">day${daysLeft!==1?'s':''} left</span></div>
+      <div style="font-size:0.72rem;color:var(--faint);margin-top:8px;">Games must be in by 29 November</div>`);
+
+    // Slide 3: tightest race -- smallest points+bp gap between 2nd and 3rd (the qualification bubble)
+    let tightest = null;
+    podSummaries.forEach(({ pod, sorted }) => {
+      if (sorted.length < 3) return;
+      const gap = sorted[1].pts - sorted[2].pts;
+      if (gap <= 2 && (!tightest || gap < tightest.gap)) {
+        tightest = { pod, a: sorted[1], b: sorted[2], gap };
+      }
+    });
+    if (tightest) {
+      leagueStatusSlides.push(`
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">🔥 Tightest race -- ${tightest.pod.name}</div>
+        <div style="font-size:0.9rem;color:var(--text);">${tightest.a.name} <span style="color:var(--muted);font-size:0.78rem;">(${tightest.a.pts}pts)</span></div>
+        <div style="font-size:0.75rem;color:var(--faint);margin:2px 0;">vs</div>
+        <div style="font-size:0.9rem;color:var(--text);">${tightest.b.name} <span style="color:var(--muted);font-size:0.78rem;">(${tightest.b.pts}pts)</span></div>
+        <div style="font-size:0.7rem;color:var(--faint);margin-top:6px;">fighting for the last qualifying spot</div>`);
+    }
+
+    // Slide 4: current pod leaders, compact
+    const leaders = podSummaries.filter(p => p.sorted[0] && p.sorted[0].played > 0);
+    if (leaders.length) {
+      leagueStatusSlides.push(`
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">Current pod leaders</div>
+        ${leaders.map(({pod, sorted}) => `
+          <div style="display:flex;justify-content:space-between;font-size:0.78rem;padding:2px 0;">
+            <span style="color:var(--faint);">${pod.name}</span>
+            <span style="color:var(--text);">${sorted[0].name}</span>
+          </div>`).join('')}`);
+    }
+
+    if (leagueStatusSlides.length) {
+      leagueStatusHtml = `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;position:relative;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+            <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">League Status -- ${leagueData.season.name}</div>
+          </div>
+          <div id="league-status-rotator" style="min-height:88px;transition:opacity 0.2s;">${leagueStatusSlides[0]}</div>
+          <div id="league-status-dots" style="display:flex;gap:4px;margin-top:10px;">
+            ${leagueStatusSlides.map((_,i) => `<span data-dot="${i}" style="height:4px;flex:1;border-radius:2px;background:${i===0?'var(--accent)':'var(--surface2)'};transition:background 0.3s;"></span>`).join('')}
+          </div>
+        </div>`;
+    }
+  }
+  window._leagueStatusSlides = leagueStatusSlides;
+  startLeagueStatusRotator();
+
   // Most recent result
   const recentHtml = lastEvent ? `
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
@@ -763,15 +858,6 @@ function buildNowPanel() {
           See full results ↓
         </button>
       </div>
-    </div>` : '';
-
-  // Next event
-  const nextEvHtml = nextCalEv ? `
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
-      <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Next Event</div>
-      <div style="font-size:0.88rem;color:var(--text);margin-bottom:4px;">${nextCalEv.name}</div>
-      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:4px;">${nextCalEv.dates}</div>
-      <span style="font-size:0.65rem;padding:2px 6px;border-radius:3px;background:var(--surface2);color:var(--muted);">${nextCalEv.type}</span>
     </div>` : '';
 
   // Champions top 3
@@ -795,7 +881,7 @@ function buildNowPanel() {
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;">
       ${recentHtml}
-      ${nextEvHtml}
+      ${leagueStatusHtml}
       ${champHtml}
       ${activityHtml}
     </div>`;
