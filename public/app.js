@@ -3423,26 +3423,103 @@ function renderPod() {
   el.innerHTML = html;
 }
 
+// Projected QF pairings from the current live seeding, for slots the admin hasn't
+// officially drawn yet. Standard seeded pairing (5th-overall vs 12th, 6th vs 11th, etc.)
+// with a same-pod swap where possible -- this is a fun projection, not the binding draw,
+// since the actual rule (pod-mates kept on opposite bracket halves) needs a human's judgement.
+function computeProjectedQF(seedings) {
+  const field = seedings.qfField || [];
+  if (field.length < 8) return null;
+  const pairs = [
+    [field[0], field[7]],
+    [field[1], field[6]],
+    [field[2], field[5]],
+    [field[3], field[4]],
+  ];
+  for (let i = 0; i < pairs.length; i++) {
+    if (pairs[i][0] && pairs[i][1] && pairs[i][0].pod === pairs[i][1].pod) {
+      const j = (i + 1) % pairs.length;
+      const tmp = pairs[i][1]; pairs[i][1] = pairs[j][1]; pairs[j][1] = tmp;
+    }
+  }
+  return pairs;
+}
+
+// Draws right-angle connector lines between bracket cards by measuring their actual
+// rendered positions -- robust to variable card heights, unlike fixed CSS bracket math,
+// since this topology (byes joining directly at the semifinal) isn't a clean power-of-2 tree.
+function drawBracketConnectors() {
+  const container = document.getElementById('bracket-tree-container');
+  const svg = document.getElementById('bracket-lines');
+  if (!container || !svg) return;
+  const cRect = container.getBoundingClientRect();
+  svg.setAttribute('width', cRect.width);
+  svg.setAttribute('height', cRect.height);
+  svg.setAttribute('viewBox', `0 0 ${cRect.width} ${cRect.height}`);
+  svg.innerHTML = '';
+
+  const rectOf = (key) => {
+    const card = document.getElementById(`bracket-card-${key}`);
+    if (!card) return null;
+    const r = card.getBoundingClientRect();
+    return { top: r.top - cRect.top, bottom: r.bottom - cRect.top, left: r.left - cRect.left, right: r.right - cRect.left, midY: (r.top + r.bottom) / 2 - cRect.top };
+  };
+
+  const connect = (fromKey, toKey, toSlot) => {
+    const a = rectOf(fromKey), b = rectOf(toKey);
+    if (!a || !b) return;
+    const x1 = a.right, y1 = a.midY;
+    const y2 = toSlot === 'top' ? b.top + (b.bottom - b.top) * 0.28 : toSlot === 'bottom' ? b.top + (b.bottom - b.top) * 0.72 : b.midY;
+    const x2 = b.left;
+    const midX = x1 + (x2 - x1) / 2;
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', `M ${x1} ${y1} H ${midX} V ${y2} H ${x2}`);
+    path.setAttribute('stroke', 'var(--border)');
+    path.setAttribute('stroke-width', '1.5');
+    path.setAttribute('fill', 'none');
+    svg.appendChild(path);
+  };
+
+  connect('QF1', 'SF1', 'bottom'); connect('QF2', 'SF2', 'bottom');
+  connect('QF3', 'SF3', 'bottom'); connect('QF4', 'SF4', 'bottom');
+  connect('SF1', 'F1', 'top');     connect('SF2', 'F1', 'bottom');
+  connect('SF3', 'F2', 'top');     connect('SF4', 'F2', 'bottom');
+  connect('F1', 'GF', 'top');      connect('F2', 'GF', 'bottom');
+}
+
 function renderPlayoffs(el) {
   const bracket = leagueData.bracket || {};
   const seedings = leagueData.seedings || {};
   const season_id = leagueData.season?.id;
+  const projectedQF = computeProjectedQF(seedings);
 
-  const playerBox = (slot, label, isBye) => {
+  // Last updated -- the most recent approved game or playoff result actually in the DB
+  const allTimestamps = [
+    ...(leagueData.games || []).map(g => g.created_at),
+    ...(leagueData.playoffs || []).map(p => p.created_at),
+  ].filter(Boolean);
+  const lastUpdate = allTimestamps.length ? new Date(Math.max(...allTimestamps.map(t => new Date(t)))) : null;
+
+  const playerBox = (slot, label, isBye, isProjected) => {
     if (!slot) return `<div style="font-size:0.78rem;color:var(--faint);padding:4px 0;">TBD</div>`;
     const name = slot.name || 'TBD';
-    const bp = slot.bp ? ` · ${slot.bp}bp` : '';
+    const bp = slot.bp !== undefined ? ` · ${slot.bp}bp` : '';
     const pod = slot.pod ? ` <span style="font-size:0.65rem;color:var(--muted);">(${slot.pod})</span>` : '';
     const byeBadge = isBye ? `<span style="font-size:0.6rem;padding:1px 4px;background:var(--accent-bg);color:var(--accent);border-radius:3px;margin-left:4px;">BYE</span>` : '';
-    return `<div style="font-size:0.82rem;color:var(--text);">${name}${pod}${byeBadge}<span style="font-size:0.7rem;color:var(--muted);">${bp}</span></div>`;
+    return `<div style="font-size:0.82rem;color:${isProjected?'var(--muted)':'var(--text)'};${isProjected?'font-style:italic;':''}">${name}${pod}${byeBadge}<span style="font-size:0.7rem;color:var(--muted);">${bp}</span></div>`;
   };
 
-  const matchCard = (key, round, num, byeSlots, label) => {
+  const matchCard = (key, round, num, byeSlots, label, projectedPair) => {
     const m = bracket[key] || {};
     const hasResult = m.winner;
     const pending = (leagueData.pendingPlayoffs || []).find(p => p.round === round && p.match_number === num);
     const isBye1 = byeSlots && byeSlots[0];
     const isBye2 = byeSlots && byeSlots[1];
+
+    // If this slot has no official entrants yet, fall back to the live projection (QF only)
+    const isProjected = !m.p1 && !m.p2 && projectedPair;
+    const p1 = m.p1 || (isProjected ? projectedPair[0] : null);
+    const p2 = m.p2 || (isProjected ? projectedPair[1] : null);
 
     let scoreHtml = '';
     if (hasResult) {
@@ -3451,6 +3528,8 @@ function renderPlayoffs(el) {
       </div>`;
     } else if (pending) {
       scoreHtml = `<div style="font-size:0.7rem;color:#f0c040;margin-top:6px;">⏳ Pending approval</div>`;
+    } else if (isProjected) {
+      scoreHtml = `<div style="font-size:0.65rem;color:var(--faint);margin-top:6px;font-style:italic;">Projected from current standings -- not yet officially drawn</div>`;
     }
 
     const canSubmit = m.p1 && m.p2 && !hasResult && !pending;
@@ -3459,18 +3538,23 @@ function renderPlayoffs(el) {
       onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
       onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">+ Submit result</button>` : '';
 
-    return `<div style="background:${hasResult?'var(--surface2)':'var(--surface)'};border:1px solid ${hasResult?'var(--border)':'var(--border)'};border-radius:4px;padding:8px 10px;margin-bottom:6px;">
-      <div style="font-size:0.6rem;color:var(--muted);margin-bottom:4px;letter-spacing:0.08em;">${label}</div>
-      <div style="border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:4px;">${playerBox(m.p1, 'p1', isBye1)}</div>
-      ${playerBox(m.p2, 'p2', isBye2)}
+    return `<div id="bracket-card-${key}" style="background:${hasResult?'var(--surface2)':'var(--surface)'};border:1px ${isProjected?'dashed':'solid'} var(--border);border-radius:4px;padding:8px 10px;margin-bottom:6px;position:relative;">
+      <div style="font-size:0.6rem;color:var(--muted);margin-bottom:4px;letter-spacing:0.08em;">${label}${isProjected?' <span style="color:var(--faint);">(projected)</span>':''}</div>
+      <div style="border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:4px;">${playerBox(p1, 'p1', isBye1, isProjected)}</div>
+      ${playerBox(p2, 'p2', isBye2, isProjected)}
       ${scoreHtml}
       ${submitBtn}
     </div>`;
   };
 
   el.innerHTML = `
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">
-      Byes go to the top 4 of all 12 knockout qualifiers (top 2 from each pod), ranked by <strong>wins</strong>, then battle points. The rest enter at the Quarter Finals.
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
+      <div style="font-size:0.82rem;color:var(--muted);">
+        Byes go to the top 4 of all 12 knockout qualifiers (top 2 from each pod), ranked by <strong>wins</strong>, then battle points. The rest enter at the Quarter Finals.
+      </div>
+      <div style="font-size:0.68rem;color:var(--faint);white-space:nowrap;">
+        🟢 Live from the database${lastUpdate ? ` · last result ${timeAgo(lastUpdate.toISOString())}` : ''}
+      </div>
     </div>
     ${seedings.byeCutTied ? `
       <div style="margin-bottom:1.5rem;padding:8px 12px;background:#2a1500;border:1px solid #f0c040;border-radius:4px;font-size:0.78rem;color:#f0c040;">
@@ -3487,16 +3571,17 @@ function renderPlayoffs(el) {
         </div>`).join('')}
     </div>
 
-    <!-- Bracket -->
-    <div style="overflow-x:auto;">
-      <div style="display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:1rem;width:100%;">
+    <!-- Bracket tree -->
+    <div id="bracket-tree-container" style="position:relative;overflow-x:auto;">
+      <svg id="bracket-lines" style="position:absolute;top:0;left:0;pointer-events:none;z-index:0;"></svg>
+      <div style="position:relative;z-index:1;display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:1rem;width:100%;min-width:700px;">
 
         <div>
           <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">Quarter Finals</div>
-          ${matchCard('QF1','QF',1,null,'QF 1')}
-          ${matchCard('QF2','QF',2,null,'QF 2')}
-          ${matchCard('QF3','QF',3,null,'QF 3')}
-          ${matchCard('QF4','QF',4,null,'QF 4')}
+          ${matchCard('QF1','QF',1,null,'QF 1',projectedQF?.[0])}
+          ${matchCard('QF2','QF',2,null,'QF 2',projectedQF?.[1])}
+          ${matchCard('QF3','QF',3,null,'QF 3',projectedQF?.[2])}
+          ${matchCard('QF4','QF',4,null,'QF 4',projectedQF?.[3])}
         </div>
 
         <div>
@@ -3523,6 +3608,7 @@ function renderPlayoffs(el) {
 
       </div>
     </div>
+    ${projectedQF ? `<div style="font-size:0.68rem;color:var(--faint);margin-top:10px;font-style:italic;">Dashed cards are a live projection from current pod standings, not the official draw -- the real Quarter Final pairings are drawn by hand to satisfy the pod-conflict rule.</div>` : ''}
 
     <!-- Playoff result submission modal -->
     <div id="playoff-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
@@ -3559,6 +3645,10 @@ function renderPlayoffs(el) {
         </div>
       </div>
     </div>`;
+
+  requestAnimationFrame(() => requestAnimationFrame(drawBracketConnectors));
+  window.removeEventListener('resize', drawBracketConnectors);
+  window.addEventListener('resize', drawBracketConnectors);
 }
 
 let _pmData = {};
