@@ -3283,6 +3283,7 @@ async function loadLeagueData() {
     leagueData = await res.json();
     if (leagueData.season) document.getElementById('league-title').textContent = `PSSN League -- ${leagueData.season.name}`;
     buildPodTabBar();
+    buildPodWinnersBanner();
     buildNowPanel(); // refresh now panel with league leaders
     } catch(e) {
     console.warn('League load error:', e);
@@ -3325,6 +3326,67 @@ function switchPod(idx) {
   const btn = document.getElementById(idx === 'playoffs' ? 'pod-btn-playoffs' : idx === 'archive' ? 'pod-btn-archive' : `pod-btn-${idx}`);
   if (btn) btn.classList.add('active');
   renderPod();
+}
+
+function buildPodWinnersBanner() {
+  const el = document.getElementById('pod-winners-banner');
+  if (!el) return;
+  if (window._podWinnersInterval) clearInterval(window._podWinnersInterval);
+
+  const pods = leagueData.pods || [];
+  if (!pods.length) { el.innerHTML = ''; return; }
+
+  const leaders = pods.map(pod => {
+    const { sorted } = calcPodStandings(pod.id, leagueData.players || [], leagueData.games || []);
+    return sorted[0] && sorted[0].played > 0 ? { ...sorted[0], podName: pod.name } : null;
+  }).filter(Boolean);
+
+  if (leaders.length < 2) {
+    el.innerHTML = ''; // not enough leaders yet to meaningfully compare
+    return;
+  }
+
+  const barSlide = (title, valueFn, fmt, unit) => {
+    const ranked = [...leaders].sort((a, b) => valueFn(b) - valueFn(a));
+    const max = valueFn(ranked[0]) || 1;
+    return `
+      <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">${title}</div>
+      ${ranked.map((p,i) => `
+        <div style="display:flex;align-items:center;gap:10px;padding:3px 0;">
+          <span style="font-size:0.72rem;color:${i===0?'var(--accent)':'var(--muted)'};min-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name} <span style="color:var(--faint);">(${p.podName})</span></span>
+          <div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;">
+            <div style="width:${Math.max(4,(valueFn(p)/max)*100)}%;height:100%;background:${i===0?'var(--accent)':'var(--border)'};border-radius:4px;"></div>
+          </div>
+          <span style="font-size:0.72rem;color:var(--text);min-width:44px;text-align:right;">${fmt(p)}${unit}</span>
+        </div>`).join('')}`;
+  };
+
+  const slides = [
+    barSlide('Pod Leaders -- by Wins', p => p.wins, p => p.wins, 'W'),
+    barSlide('Pod Leaders -- by Avg Battle Points', p => p.played ? p.bp / p.played : 0, p => p.played ? Math.round(p.bp / p.played) : 0, ' bp/game'),
+    barSlide('Pod Leaders -- by League Points', p => p.pts, p => p.pts, 'pts'),
+  ];
+
+  el.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
+      <div id="pod-winners-rotator" style="min-height:${leaders.length*24+30}px;transition:opacity 0.2s;">${slides[0]}</div>
+      <div id="pod-winners-dots" style="display:flex;gap:4px;margin-top:10px;">
+        ${slides.map((_,i) => `<span data-dot="${i}" style="height:4px;flex:1;border-radius:2px;background:${i===0?'var(--accent)':'var(--surface2)'};transition:background 0.3s;"></span>`).join('')}
+      </div>
+    </div>`;
+
+  if (slides.length < 2) return;
+  let idx = 0;
+  window._podWinnersInterval = setInterval(() => {
+    const rot = document.getElementById('pod-winners-rotator');
+    if (!rot) { clearInterval(window._podWinnersInterval); return; }
+    idx = (idx + 1) % slides.length;
+    rot.style.opacity = '0';
+    setTimeout(() => { rot.innerHTML = slides[idx]; rot.style.opacity = '1'; }, 200);
+    document.querySelectorAll('#pod-winners-dots [data-dot]').forEach((dot, i) => {
+      dot.style.background = i === idx ? 'var(--accent)' : 'var(--surface2)';
+    });
+  }, 4500);
 }
 
 function renderPod() {
