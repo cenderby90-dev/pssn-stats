@@ -3284,6 +3284,7 @@ async function loadLeagueData() {
     if (leagueData.season) document.getElementById('league-title').textContent = `PSSN League -- ${leagueData.season.name}`;
     buildPodTabBar();
     buildPodWinnersBanner();
+    buildPreviousWinnersNote();
     buildNowPanel(); // refresh now panel with league leaders
     } catch(e) {
     console.warn('League load error:', e);
@@ -3326,6 +3327,31 @@ function switchPod(idx) {
   const btn = document.getElementById(idx === 'playoffs' ? 'pod-btn-playoffs' : idx === 'archive' ? 'pod-btn-archive' : `pod-btn-${idx}`);
   if (btn) btn.classList.add('active');
   renderPod();
+}
+
+function buildPreviousWinnersNote() {
+  const el = document.getElementById('previous-winners-note');
+  if (!el) return;
+
+  const archive = leagueData.archive || [];
+  const champions = archive.map(a => {
+    const gf = (a.data?.playoffs || []).find(p => p.round === 'GF');
+    if (!gf) return null;
+    const winner = gf.bp1 > gf.bp2 ? gf.player1 : gf.bp2 > gf.bp1 ? gf.player2 : null;
+    if (!winner) return null;
+    return { season: a.name, winner, bp: `${gf.bp1}-${gf.bp2}` };
+  }).filter(Boolean);
+
+  if (!champions.length) { el.innerHTML = ''; return; }
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--accent-bg);border:1px solid var(--accent-muted);border-radius:6px;">
+      <span style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);white-space:nowrap;">Past Champions</span>
+      ${champions.map(c => `
+        <span style="font-size:0.82rem;color:var(--text);white-space:nowrap;">
+          🏆 <strong>${c.winner}</strong> <span style="color:var(--muted);font-size:0.72rem;">(${c.season})</span>
+        </span>`).join('<span style="color:var(--border);">·</span>')}
+    </div>`;
 }
 
 function buildPodWinnersBanner() {
@@ -3878,11 +3904,13 @@ function renderArchive(el) {
             const labels = { QF:'Quarter Finals', SF:'Semi Finals', F:'Finals', GF:'Grand Final' };
             return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:8px;">
               <div style="font-size:0.65rem;font-weight:500;color:var(--accent);margin-bottom:6px;">${labels[round]}</div>
-              ${roundGames.map(g => `
-                <div style="font-size:0.78rem;padding:3px 0;border-bottom:1px solid var(--border);">
-                  <span style="color:var(--win);font-weight:500;">${g.winner}</span>
+              ${roundGames.map(g => {
+                const winner = g.bp1 > g.bp2 ? g.player1 : g.bp2 > g.bp1 ? g.player2 : null;
+                return `<div style="font-size:0.78rem;padding:3px 0;border-bottom:1px solid var(--border);">
+                  <span style="color:var(--win);font-weight:500;">${winner || (g.player1 + ' vs ' + g.player2)}</span>
                   <span style="color:var(--muted);font-size:0.7rem;"> ${g.bp1}-${g.bp2}</span>
-                </div>`).join('')}
+                </div>`;
+              }).join('')}
             </div>`;
           }).join('')}
         </div>
@@ -3890,7 +3918,7 @@ function renderArchive(el) {
 
     return `
       <div style="margin-bottom:2rem;">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.06em;color:var(--text);margin-bottom:4px;">${a.label}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.06em;color:var(--text);margin-bottom:4px;">${a.name}</div>
         <div style="font-size:0.72rem;color:var(--muted);margin-bottom:1rem;">Archived ${new Date(a.created_at).toLocaleDateString('en-GB',{month:'short',year:'numeric'})}</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;">
           ${pods.map(pod => `
@@ -3999,18 +4027,20 @@ function buildLeagueAdmin() {
         <div class="section-title">Pending Playoff Results</div>
         <div class="section-rule"></div>
       </div>
-      ${pendingPlayoffs.map(g=>`
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      ${pendingPlayoffs.map(g=>{
+        const gWinner = g.bp1 > g.bp2 ? g.player1 : g.bp2 > g.bp1 ? g.player2 : null;
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div>
             <div style="font-size:0.72rem;color:var(--accent);margin-bottom:2px;">${g.round}${g.match_number}</div>
             <div style="font-size:0.88rem;color:var(--text);">${g.player1} vs ${g.player2}</div>
-            <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">BP: ${g.bp1}-${g.bp2} · Winner: <strong>${g.winner}</strong></div>
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">BP: ${g.bp1}-${g.bp2} · Winner: <strong>${gWinner || '?'}</strong></div>
           </div>
           <div style="display:flex;gap:6px;">
             <button onclick="approvePlayoffGame(${g.id},true)" style="font-size:0.72rem;padding:4px 10px;background:var(--win-bg);border:1px solid var(--win);border-radius:3px;color:var(--win);cursor:pointer;">✓ Approve</button>
             <button onclick="approvePlayoffGame(${g.id},false)" style="font-size:0.72rem;padding:4px 10px;background:var(--loss-bg);border:1px solid var(--loss);border-radius:3px;color:var(--loss);cursor:pointer;">✗ Reject</button>
           </div>
-        </div>`).join('')}`;
+        </div>`;
+      }).join('')}`;
   }
 
   // Approved games -- per pod, with edit buttons
