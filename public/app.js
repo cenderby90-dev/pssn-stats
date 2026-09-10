@@ -3486,25 +3486,45 @@ function renderPod() {
 }
 
 // Projected QF pairings from the current live seeding, for slots the admin hasn't
-// officially drawn yet. Standard seeded pairing (5th-overall vs 12th, 6th vs 11th, etc.)
-// with a same-pod swap where possible -- this is a fun projection, not the binding draw,
-// since the actual rule (pod-mates kept on opposite bracket halves) needs a human's judgement.
+// Projected QF pairings from the current live seeding, for slots not yet officially drawn.
+// Implements the actual rule: each runner-up is placed opposite their own pod's winner
+// (the other bracket half, SF1+SF2 vs SF3+SF4), never mixed/ranked against other pods'
+// winners. Byes and the non-bye winners fix each pod's "home half"; every runner-up then
+// goes to the opposite half from their own pod. Within a half, entrants are seeded by
+// wins/battle points and paired strongest-with-weakest -- a reasonable default, not a rule.
 function computeProjectedQF(seedings) {
-  const field = seedings.qfField || [];
-  if (field.length < 8) return null;
-  const pairs = [
-    [field[0], field[7]],
-    [field[1], field[6]],
-    [field[2], field[5]],
-    [field[3], field[4]],
-  ];
-  for (let i = 0; i < pairs.length; i++) {
-    if (pairs[i][0] && pairs[i][1] && pairs[i][0].pod === pairs[i][1].pod) {
-      const j = (i + 1) % pairs.length;
-      const tmp = pairs[i][1]; pairs[i][1] = pairs[j][1]; pairs[j][1] = tmp;
-    }
-  }
-  return pairs;
+  const { byeWinners = [], qfWinners = [], runnersUp = [], numPods = 6, totalByes = 4 } = seedings;
+  const halfByes = Math.min(2, Math.floor(totalByes / 2));
+  const qfPerHalf = Math.max(0, numPods - 4);
+  const totalQF = qfPerHalf * 2;
+  if (!totalQF) return null;
+
+  // Each pod's home half: fixed for bye pods, split as evenly as possible (alternating)
+  // for the remaining non-bye winners.
+  const homeHalf = {};
+  byeWinners.slice(0, halfByes).forEach(w => { if (w) homeHalf[w.pod] = 'A'; });
+  byeWinners.slice(halfByes, halfByes * 2).forEach(w => { if (w) homeHalf[w.pod] = 'B'; });
+  qfWinners.forEach((w, i) => { homeHalf[w.pod] = (i % 2 === 0) ? 'A' : 'B'; });
+
+  const half = { A: [], B: [] };
+  qfWinners.forEach(w => { if (homeHalf[w.pod]) half[homeHalf[w.pod]].push(w); });
+  runnersUp.forEach(r => {
+    const winnerHalf = homeHalf[r.pod];
+    if (!winnerHalf) return; // no recorded winner for this pod yet
+    half[winnerHalf === 'A' ? 'B' : 'A'].push(r);
+  });
+
+  // Bail rather than guess if it doesn't balance -- e.g. a pod missing a recorded finisher
+  if (half.A.length !== qfPerHalf * 2 || half.B.length !== qfPerHalf * 2) return null;
+
+  const pairHalf = (list) => {
+    const ranked = [...list].sort((a, b) => b.wins - a.wins || b.bp - a.bp);
+    const pairs = [];
+    for (let i = 0; i < ranked.length / 2; i++) pairs.push([ranked[i], ranked[ranked.length - 1 - i]]);
+    return pairs;
+  };
+
+  return [...pairHalf(half.A), ...pairHalf(half.B)]; // index i -> QF(i+1)
 }
 
 // Draws right-angle connector lines between bracket cards by measuring their actual
@@ -3542,8 +3562,26 @@ function drawBracketConnectors() {
     svg.appendChild(path);
   };
 
-  connect('QF1', 'SF1', 'bottom'); connect('QF2', 'SF2', 'bottom');
-  connect('QF3', 'SF3', 'bottom'); connect('QF4', 'SF4', 'bottom');
+  const meta = window._bracketMeta || { halfByes: 2, qfPerHalf: 2, totalQF: 4 };
+  const { halfByes, qfPerHalf } = meta;
+  const halfAQF = []; const halfBQF = [];
+  for (let i = 1; i <= qfPerHalf * 2; i++) (i <= qfPerHalf ? halfAQF : halfBQF).push(i);
+
+  const connectHalf = (qfNums, sfKeys) => {
+    let qfPointer = 0;
+    sfKeys.forEach((sfKey, idx) => {
+      if (idx < halfByes) {
+        const qfNum = qfNums[qfPointer++];
+        if (qfNum) connect(`QF${qfNum}`, sfKey, 'bottom');
+      } else {
+        const qfA = qfNums[qfPointer++], qfB = qfNums[qfPointer++];
+        if (qfA) connect(`QF${qfA}`, sfKey, 'top');
+        if (qfB) connect(`QF${qfB}`, sfKey, 'bottom');
+      }
+    });
+  };
+  connectHalf(halfAQF, ['SF1', 'SF2']);
+  connectHalf(halfBQF, ['SF3', 'SF4']);
   connect('SF1', 'F1', 'top');     connect('SF2', 'F1', 'bottom');
   connect('SF3', 'F2', 'top');     connect('SF4', 'F2', 'bottom');
   connect('F1', 'GF', 'top');      connect('F2', 'GF', 'bottom');
@@ -3609,10 +3647,27 @@ function renderPlayoffs(el) {
     </div>`;
   };
 
+  const meta = bracket._meta || { totalQF: 4, halfByes: 2, qfPerHalf: 2, totalByes: 4 };
+  window._bracketMeta = meta;
+  const halfAQF = []; const halfBQF = [];
+  for (let i = 1; i <= meta.totalQF; i++) (i <= meta.qfPerHalf ? halfAQF : halfBQF).push(i);
+  const sfSlotInfo = (qfNumsInHalf, sfNums) => {
+    let qfPointer = 0;
+    return sfNums.map(sfNum => {
+      if (qfPointer < meta.halfByes) {
+        const qfNum = qfNumsInHalf[qfPointer++];
+        return { sfNum, byeSlots: [true, false], label: `SF ${sfNum} · bye vs QF${qfNum || '?'}` };
+      }
+      const qfA = qfNumsInHalf[qfPointer++], qfB = qfNumsInHalf[qfPointer++];
+      return { sfNum, byeSlots: null, label: `SF ${sfNum} · QF${qfA || '?'} vs QF${qfB || '?'}` };
+    });
+  };
+  const sfInfo = [...sfSlotInfo(halfAQF, [1, 2]), ...sfSlotInfo(halfBQF, [3, 4])];
+
   el.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
       <div style="font-size:0.82rem;color:var(--muted);">
-        Byes go to the top 4 of all 12 knockout qualifiers (top 2 from each pod), ranked by <strong>wins</strong>, then battle points. The rest enter at the Quarter Finals.
+        Byes go to the top ${meta.totalByes} pod winners, ranked by <strong>wins</strong>, then battle points. Each runner-up is placed opposite their own pod's winner on the bracket.
       </div>
       <div style="font-size:0.68rem;color:var(--faint);white-space:nowrap;">
         🟢 Live from the database${lastUpdate ? ` · last result ${timeAgo(lastUpdate.toISOString())}` : ''}
@@ -3620,17 +3675,29 @@ function renderPlayoffs(el) {
     </div>
     ${seedings.byeCutTied ? `
       <div style="margin-bottom:1.5rem;padding:8px 12px;background:#2a1500;border:1px solid #f0c040;border-radius:4px;font-size:0.78rem;color:#f0c040;">
-        ⚠️ The 4th and 5th seeds are exactly tied on wins and battle points -- the rules call for this to be settled randomly. Resolve it before drawing the bracket.
+        ⚠️ The last bye spot is exactly tied on wins and battle points -- the rules call for this to be settled randomly. Resolve it before drawing the bracket.
       </div>` : ''}
 
     <!-- Seedings summary -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;margin-bottom:2rem;max-width:480px;">
-      <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Knockout Seeding</div>
-      ${(seedings.allQualifiers||[]).map((w,i) => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:0.8rem;">
-          <span style="color:${i<4?'var(--text)':'var(--muted)'};">${i+1}. ${w.name} <span style="font-size:0.65rem;color:var(--faint);">(${w.pod}${w.podFinish==='winner'?' winner':' runner-up'})</span></span>
-          <span style="font-size:0.7rem;color:var(--muted);">${w.wins}W · ${w.bp}bp ${i<4?'<span style="color:var(--accent);">BYE</span>':''}</span>
-        </div>`).join('')}
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;">
+      <div style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
+        <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Pod Winners</div>
+        ${[...(seedings.byeWinners||[]), ...(seedings.qfWinners||[])].map((w,i) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:0.8rem;">
+            <span style="color:${i<meta.totalByes?'var(--text)':'var(--muted)'};">${i+1}. ${w.name} <span style="font-size:0.65rem;color:var(--faint);">(${w.pod})</span></span>
+            <span style="font-size:0.7rem;color:var(--muted);">${w.wins}W · ${w.bp}bp ${i<meta.totalByes?'<span style="color:var(--accent);">BYE</span>':'→ QF'}</span>
+          </div>`).join('')}
+      </div>
+      <div style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
+        <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Runners-Up</div>
+        ${(seedings.runnersUp||[]).map(r => {
+          const podWinner = [...(seedings.byeWinners||[]), ...(seedings.qfWinners||[])].find(w => w.pod === r.pod);
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:0.8rem;">
+            <span style="color:var(--text);">${r.name} <span style="font-size:0.65rem;color:var(--faint);">(${r.pod})</span></span>
+            <span style="font-size:0.65rem;color:var(--faint);">opposite ${podWinner ? podWinner.name : 'their pod winner'}</span>
+          </div>`;
+        }).join('')}
+      </div>
     </div>
 
     <!-- Bracket tree -->
@@ -3640,18 +3707,12 @@ function renderPlayoffs(el) {
 
         <div>
           <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">Quarter Finals</div>
-          ${matchCard('QF1','QF',1,null,'QF 1',projectedQF?.[0])}
-          ${matchCard('QF2','QF',2,null,'QF 2',projectedQF?.[1])}
-          ${matchCard('QF3','QF',3,null,'QF 3',projectedQF?.[2])}
-          ${matchCard('QF4','QF',4,null,'QF 4',projectedQF?.[3])}
+          ${Array.from({length: meta.totalQF}, (_, i) => matchCard(`QF${i+1}`,'QF',i+1,null,`QF ${i+1}`,projectedQF?.[i])).join('')}
         </div>
 
         <div>
           <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">Semi Finals</div>
-          ${matchCard('SF1','SF',1,[true,false],'SF 1 · 1st seed (bye) vs QF1')}
-          ${matchCard('SF2','SF',2,[true,false],'SF 2 · 2nd seed (bye) vs QF2')}
-          ${matchCard('SF3','SF',3,[true,false],'SF 3 · 3rd seed (bye) vs QF3')}
-          ${matchCard('SF4','SF',4,[true,false],'SF 4 · 4th seed (bye) vs QF4')}
+          ${sfInfo.map(s => matchCard(`SF${s.sfNum}`,'SF',s.sfNum,s.byeSlots,s.label)).join('')}
         </div>
 
         <div>
@@ -3670,7 +3731,7 @@ function renderPlayoffs(el) {
 
       </div>
     </div>
-    ${projectedQF ? `<div style="font-size:0.68rem;color:var(--faint);margin-top:10px;font-style:italic;">Dashed cards are a live projection from current pod standings, not the official draw -- the real Quarter Final pairings are drawn by hand to satisfy the pod-conflict rule.</div>` : ''}
+    ${projectedQF ? `<div style="font-size:0.68rem;color:var(--faint);margin-top:10px;font-style:italic;">Dashed cards are a live projection from current pod standings, not the official draw -- the real Quarter Final pairings are drawn by hand.</div>` : ''}
 
     <!-- Playoff result submission modal -->
     <div id="playoff-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
