@@ -812,16 +812,17 @@ function buildNowPanel() {
         <div style="font-size:0.7rem;color:var(--faint);margin-top:6px;">fighting for the last qualifying spot</div>`);
     }
 
-    // Slide 4: current pod leaders, compact
-    const leaders = podSummaries.filter(p => p.sorted[0] && p.sorted[0].played > 0);
-    if (leaders.length) {
+    // Slide 4: current pod leaders -- every pod shown, ones with no games yet marked as such
+    if (podSummaries.length) {
       leagueStatusSlides.push(`
         <div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">Current pod leaders</div>
-        ${leaders.map(({pod, sorted}) => `
-          <div style="display:flex;justify-content:space-between;font-size:0.78rem;padding:2px 0;">
+        ${podSummaries.map(({pod, sorted}) => {
+          const hasGames = sorted[0] && sorted[0].played > 0;
+          return `<div style="display:flex;justify-content:space-between;font-size:0.78rem;padding:2px 0;">
             <span style="color:var(--faint);">${pod.name}</span>
-            <span style="color:var(--text);">${sorted[0].name}</span>
-          </div>`).join('')}`);
+            <span style="color:${hasGames?'var(--text)':'var(--faint)'};${hasGames?'':'font-style:italic;'}">${hasGames ? sorted[0].name : 'No games yet'}</span>
+          </div>`;
+        }).join('')}`);
     }
 
     if (leagueStatusSlides.length) {
