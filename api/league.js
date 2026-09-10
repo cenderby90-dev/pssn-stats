@@ -24,6 +24,7 @@ export default async function handler(req, res) {
         SELECT lpp.id, lpp.pod_id, lpp.player_name, lpo.pod_number
         FROM league_pod_players lpp
         JOIN league_pods lpo ON lpp.pod_id = lpo.id
+        WHERE lpo.season_id = ${season.id}
         ORDER BY lpo.pod_number ASC
       `;
       const players = playersRes.rows;
@@ -43,8 +44,36 @@ export default async function handler(req, res) {
       const allPlayersRes = await sql`SELECT id, name, active FROM players ORDER BY name ASC`;
       const allPlayers = allPlayersRes.rows;
 
-      const archiveRes = await sql`SELECT * FROM league_seasons WHERE active = false ORDER BY id DESC`;
-      const archive = archiveRes.rows;
+      // Archived seasons -- previously this only selected the bare league_seasons row
+      // (no `data`/`label` columns exist, and the client expected both), so the Archive
+      // tab always rendered blank. Build each archived season's real pod standings and
+      // playoff results from the actual tables instead.
+      const archiveSeasonsRes = await sql`SELECT * FROM league_seasons WHERE active = false ORDER BY id DESC`;
+      const archive = [];
+      for (const archSeason of archiveSeasonsRes.rows) {
+        const archPodsRes = await sql`SELECT * FROM league_pods WHERE season_id = ${archSeason.id} ORDER BY pod_number ASC`;
+        const archPlayersRes = await sql`
+          SELECT lpp.pod_id, lpp.player_name
+          FROM league_pod_players lpp
+          JOIN league_pods lpo ON lpp.pod_id = lpo.id
+          WHERE lpo.season_id = ${archSeason.id}
+        `;
+        const archGamesRes = await sql`SELECT * FROM league_games WHERE season_id = ${archSeason.id} AND approved = true`;
+        const archPlayoffsRes = await sql`SELECT * FROM league_playoff_matches WHERE season_id = ${archSeason.id} AND approved = true ORDER BY created_at ASC`;
+
+        const podsData = archPodsRes.rows.map(pod => {
+          const podPlayerNames = archPlayersRes.rows.filter(p => p.pod_id === pod.id).map(p => p.player_name);
+          const podGames = archGamesRes.rows.filter(g => g.pod_id === pod.id);
+          return { pod: pod.name, standings: calcPodStandings(podPlayerNames, podGames, pod.name) };
+        });
+
+        archive.push({
+          id: archSeason.id,
+          name: archSeason.name,
+          created_at: archSeason.created_at,
+          data: { pods: podsData, playoffs: archPlayoffsRes.rows },
+        });
+      }
 
       const allPlayoffRows = [...playoffs, ...pendingPlayoffs];
 
