@@ -204,22 +204,55 @@ function calcPodStandings(podId, players, games) {
   const podPlayers = players.filter(p => p.pod_id === podId).map(p => p.player_name);
   const podGames = games.filter(g => g.pod_id === podId);
   const standings = {};
-  podPlayers.forEach(n => { standings[n] = { name: n, pts: 0, bp: 0, played: 0 }; });
+  podPlayers.forEach(n => { standings[n] = { name: n, pts: 0, wins: 0, draws: 0, losses: 0, bp: 0, played: 0, tieResolvedBy: null }; });
   podGames.forEach(g => {
-    if (!standings[g.player1]) standings[g.player1] = { name: g.player1, pts: 0, bp: 0, played: 0 };
-    if (!standings[g.player2]) standings[g.player2] = { name: g.player2, pts: 0, bp: 0, played: 0 };
+    if (!standings[g.player1]) standings[g.player1] = { name: g.player1, pts: 0, wins: 0, draws: 0, losses: 0, bp: 0, played: 0, tieResolvedBy: null };
+    if (!standings[g.player2]) standings[g.player2] = { name: g.player2, pts: 0, wins: 0, draws: 0, losses: 0, bp: 0, played: 0, tieResolvedBy: null };
     standings[g.player1].bp += g.bp1; standings[g.player2].bp += g.bp2;
     standings[g.player1].played++; standings[g.player2].played++;
-    if (g.bp1 > g.bp2) standings[g.player1].pts += 2;
-    else if (g.bp2 > g.bp1) standings[g.player2].pts += 2;
-    else { standings[g.player1].pts++; standings[g.player2].pts++; }
+    if (g.bp1 > g.bp2) { standings[g.player1].pts += 2; standings[g.player1].wins++; standings[g.player2].losses++; }
+    else if (g.bp2 > g.bp1) { standings[g.player2].pts += 2; standings[g.player2].wins++; standings[g.player1].losses++; }
+    else { standings[g.player1].pts++; standings[g.player2].pts++; standings[g.player1].draws++; standings[g.player2].draws++; }
   });
-  return {
-    sorted: Object.values(standings).sort((a,b) => b.pts - a.pts || b.bp - a.bp),
-    standings,
-    podGames,
-    podPlayers
+
+  // Head-to-head: -1 if a ranks above b, 1 if b ranks above a, 0 if drawn/unplayed
+  const h2h = (a, b) => {
+    const g = podGames.find(g => (g.player1 === a && g.player2 === b) || (g.player1 === b && g.player2 === a));
+    if (!g) return 0;
+    const aBp = g.player1 === a ? g.bp1 : g.bp2;
+    const bBp = g.player1 === a ? g.bp2 : g.bp1;
+    return aBp > bBp ? -1 : aBp < bBp ? 1 : 0;
   };
+
+  // Same tiebreak as the server: 2-way tie -> head-to-head, else/fallback -> battle points,
+  // still tied -> left tied and flagged (the rules call for a physical roll at that point).
+  const byPts = {};
+  Object.values(standings).forEach(p => { (byPts[p.pts] = byPts[p.pts] || []).push(p); });
+
+  const sorted = [];
+  Object.keys(byPts).map(Number).sort((a, b) => b - a).forEach(pts => {
+    const group = byPts[pts];
+    if (group.length === 1) { sorted.push(group[0]); return; }
+    if (group.length === 2) {
+      const [a, b] = group;
+      const r = h2h(a.name, b.name);
+      if (r !== 0) {
+        a.tieResolvedBy = 'head-to-head'; b.tieResolvedBy = 'head-to-head';
+        sorted.push(...(r < 0 ? [a, b] : [b, a]));
+        return;
+      }
+    }
+    const byBp = [...group].sort((x, y) => y.bp - x.bp);
+    for (let i = 0; i < byBp.length - 1; i++) {
+      if (byBp[i].bp === byBp[i + 1].bp) {
+        byBp[i].tieResolvedBy = 'unresolved'; byBp[i + 1].tieResolvedBy = 'unresolved';
+      } else if (!byBp[i].tieResolvedBy) byBp[i].tieResolvedBy = 'battle-points';
+    }
+    if (byBp.length && !byBp[byBp.length - 1].tieResolvedBy) byBp[byBp.length - 1].tieResolvedBy = 'battle-points';
+    sorted.push(...byBp);
+  });
+
+  return { sorted, standings, podGames, podPlayers };
 }
 
 // -- leaderboard --
@@ -3221,12 +3254,12 @@ function renderPod() {
     pod.id, leagueData.players || [], leagueData.games || []
   );
 
-  // Detect tiebreakers -- players equal on both pts AND bp in qualification positions
+  // Detect tiebreakers -- only flag pairs the standings calculator couldn't resolve
+  // (head-to-head and battle points both tied), not ones already settled by head-to-head.
   const tieWarnings = [];
-  // Check positions 1-2 (qualification spots) and position 2-3 (bubble)
   for (let i = 0; i < sorted.length - 1; i++) {
     const a = sorted[i], b = sorted[i+1];
-    if (a.pts === b.pts && a.bp === b.bp) {
+    if (a.tieResolvedBy === 'unresolved' && b.tieResolvedBy === 'unresolved') {
       const isQualBoundary = i === 1; // tied on the qualification cut line
       tieWarnings.push({ names: [a.name, b.name], pos: i+1, isQualBoundary });
     }
@@ -3246,10 +3279,11 @@ function renderPod() {
   let html = `
     <div style="margin-bottom:2rem;">
       <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">${pod.name} Standings</div>
-      <table class="event-table league-table" style="width:100%;max-width:560px;">
+      <table class="event-table league-table" style="width:100%;max-width:620px;">
         <thead><tr>
           <th style="padding-left:1rem;">Pos</th><th>Player</th>
-          <th style="text-align:center;">Played</th><th style="text-align:center;">Points</th>
+          <th style="text-align:center;">Played</th><th style="text-align:center;">Wins</th>
+          <th style="text-align:center;">Points</th>
           <th style="text-align:right;padding-right:1rem;">Battle Pts</th>
         </tr></thead>
         <tbody>
@@ -3260,6 +3294,7 @@ function renderPod() {
               <td style="padding-left:1rem;font-family:'Bebas Neue',sans-serif;font-size:1rem;color:${q?'var(--accent)':'var(--muted)'};">${i+1}</td>
               <td style="font-size:0.88rem;color:var(--text);">${p.name}${badge}</td>
               <td style="text-align:center;font-size:0.85rem;color:var(--muted);">${p.played}</td>
+              <td style="text-align:center;font-size:0.85rem;color:var(--muted);">${p.wins}</td>
               <td style="text-align:center;"><span style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:${p.pts>0?'var(--win)':'var(--muted)'};">${p.pts}</span></td>
               <td style="text-align:right;padding-right:1rem;font-size:0.85rem;color:var(--muted);">${p.bp}</td>
             </tr>`;
@@ -3347,28 +3382,22 @@ function renderPlayoffs(el) {
   };
 
   el.innerHTML = `
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;">
-      Seeded by battle points. Pod winners 1-4 receive byes to the Semi Finals. Pod winners 5-6 enter at Quarter Finals alongside all 6 runners-up.
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">
+      Byes go to the top 4 of all 12 knockout qualifiers (top 2 from each pod), ranked by <strong>wins</strong>, then battle points. The rest enter at the Quarter Finals.
     </div>
+    ${seedings.byeCutTied ? `
+      <div style="margin-bottom:1.5rem;padding:8px 12px;background:#2a1500;border:1px solid #f0c040;border-radius:4px;font-size:0.78rem;color:#f0c040;">
+        ⚠️ The 4th and 5th seeds are exactly tied on wins and battle points -- the rules call for this to be settled randomly. Resolve it before drawing the bracket.
+      </div>` : ''}
 
     <!-- Seedings summary -->
-    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;">
-      <div style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
-        <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Pod Winners</div>
-        ${(seedings.byeWinners||[]).concat(seedings.qfWinners||[]).map((w,i) => `
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:0.8rem;">
-            <span style="color:${i<4?'var(--text)':'var(--muted)'};">${i+1}. ${w.name}</span>
-            <span style="font-size:0.7rem;color:var(--muted);">${w.bp}bp ${i<4?'<span style="color:var(--accent);">BYE</span>':'→ QF'}</span>
-          </div>`).join('')}
-      </div>
-      <div style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">
-        <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Runners-Up</div>
-        ${(seedings.runnersUp||[]).map((r,i) => `
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:0.8rem;">
-            <span style="color:var(--text);">${i+1}. ${r.name}</span>
-            <span style="font-size:0.7rem;color:var(--muted);">${r.bp}bp → QF${[1,2,2,3,3,1][i]||''}</span>
-          </div>`).join('')}
-      </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;margin-bottom:2rem;max-width:480px;">
+      <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Knockout Seeding</div>
+      ${(seedings.allQualifiers||[]).map((w,i) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:0.8rem;">
+          <span style="color:${i<4?'var(--text)':'var(--muted)'};">${i+1}. ${w.name} <span style="font-size:0.65rem;color:var(--faint);">(${w.pod}${w.podFinish==='winner'?' winner':' runner-up'})</span></span>
+          <span style="font-size:0.7rem;color:var(--muted);">${w.wins}W · ${w.bp}bp ${i<4?'<span style="color:var(--accent);">BYE</span>':''}</span>
+        </div>`).join('')}
     </div>
 
     <!-- Bracket -->
@@ -3377,18 +3406,18 @@ function renderPlayoffs(el) {
 
         <div>
           <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">Quarter Finals</div>
-          ${matchCard('QF1','QF',1,null,'QF 1 · 1st vs 6th Runner-up')}
-          ${matchCard('QF2','QF',2,null,'QF 2 · 2nd vs 5th Runner-up')}
-          ${matchCard('QF3','QF',3,null,'QF 3 · 3rd vs 4th Runner-up')}
-          ${matchCard('QF4','QF',4,null,'QF 4 · 5th vs 6th Pod Winner')}
+          ${matchCard('QF1','QF',1,null,'QF 1')}
+          ${matchCard('QF2','QF',2,null,'QF 2')}
+          ${matchCard('QF3','QF',3,null,'QF 3')}
+          ${matchCard('QF4','QF',4,null,'QF 4')}
         </div>
 
         <div>
           <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">Semi Finals</div>
-          ${matchCard('SF1','SF',1,[true,false],'SF 1 · 1st Winner (bye) vs QF1')}
-          ${matchCard('SF2','SF',2,[true,false],'SF 2 · 2nd Winner (bye) vs QF2')}
-          ${matchCard('SF3','SF',3,[true,false],'SF 3 · 3rd Winner (bye) vs QF3')}
-          ${matchCard('SF4','SF',4,[true,false],'SF 4 · 4th Winner (bye) vs QF4')}
+          ${matchCard('SF1','SF',1,[true,false],'SF 1 · 1st seed (bye) vs QF1')}
+          ${matchCard('SF2','SF',2,[true,false],'SF 2 · 2nd seed (bye) vs QF2')}
+          ${matchCard('SF3','SF',3,[true,false],'SF 3 · 3rd seed (bye) vs QF3')}
+          ${matchCard('SF4','SF',4,[true,false],'SF 4 · 4th seed (bye) vs QF4')}
         </div>
 
         <div>
@@ -4110,9 +4139,9 @@ async function createNewSeason() {
 
   try {
     const res = await fetch(`${API}/league`, {
-      method: 'PUT',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: adminPin, name, pods: _generatedPods })
+      body: JSON.stringify({ pin: adminPin, type: 'new_season', name, pods: _generatedPods })
     });
     const data = await res.json();
     if (data.success) {
