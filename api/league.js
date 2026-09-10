@@ -196,26 +196,38 @@ function calcSeedings(pods, players, games) {
     standings[pod.id] = calcPodStandings(podPlayers, podGames, pod.name);
   }
 
-  // The 12 knockout qualifiers: top 2 from each pod (already correctly ordered by the
+  // Winners and runners-up, one of each per pod (already correctly ordered by the
   // points-based pod-advancement rule, including its own tiebreak).
-  const qualifiers = [];
+  const winners = [];
+  const runnersUp = [];
   for (const pod of pods) {
     const podStandings = standings[pod.id] || [];
-    podStandings.slice(0, 2).forEach((p, i) => {
-      qualifiers.push({ ...p, podFinish: i === 0 ? 'winner' : 'runner-up' });
-    });
+    if (podStandings[0]) winners.push({ ...podStandings[0], podFinish: 'winner' });
+    if (podStandings[1]) runnersUp.push({ ...podStandings[1], podFinish: 'runner-up' });
   }
 
-  // Byes: top 4 of all 12, by wins then battle points -- per the rules pack, not restricted
-  // to pod winners. Ties at the 4th/5th cut are flagged rather than auto-resolved, since the
-  // rules call for a random decision (a physical roll) at that point.
-  const ranked = [...qualifiers].sort((a, b) => b.wins - a.wins || b.bp - a.bp);
-  const byeCutTied = ranked.length > 4 && ranked[3].wins === ranked[4].wins && ranked[3].bp === ranked[4].bp;
+  // Bye count is dynamic, not fixed at 4: with N pods there are 2N knockout qualifiers,
+  // and byes = 16 - 2N is the number that keeps the Semi Final stage (which feeds the
+  // existing Finals/Grand Final shape) landing on a clean 8 participants. This is exactly
+  // how "4 byes" was derived for the original 6-pod design (16 - 12 = 4); for 7 pods it
+  // gives 2 (16 - 14 = 2), etc. Only valid for 6-8 pods, where this stays >= 0 and <= 2
+  // per bracket half -- outside that range the whole bracket shape would need rethinking,
+  // not just the bye count.
+  const numPods = pods.length;
+  const totalByes = Math.max(0, Math.min(winners.length, 16 - 2 * numPods));
 
-  const byeWinners = ranked.slice(0, 4);
-  const qfField = ranked.slice(4);
+  // Byes: top pod WINNERS ONLY, ranked by wins then battle points. Runners-up are never
+  // ranked against winners for seeding -- each runner-up instead goes opposite their own
+  // pod's winner on the bracket (handled client-side, where the projected QF draw lives).
+  const rankedWinners = [...winners].sort((a, b) => b.wins - a.wins || b.bp - a.bp);
+  const byeCutTied = totalByes > 0 && totalByes < rankedWinners.length &&
+    rankedWinners[totalByes - 1].wins === rankedWinners[totalByes].wins &&
+    rankedWinners[totalByes - 1].bp === rankedWinners[totalByes].bp;
 
-  return { byeWinners, qfField, allQualifiers: ranked, byeCutTied };
+  const byeWinners = rankedWinners.slice(0, totalByes);
+  const qfWinners = rankedWinners.slice(totalByes); // winners without a bye, entering at QF
+
+  return { byeWinners, qfWinners, runnersUp, byeCutTied, numPods, totalByes };
 }
 
 function calcPodStandings(playerNames, games, podName) {
@@ -285,70 +297,80 @@ function calcPodStandings(playerNames, games, podName) {
 }
 
 function calcBracket(seedings, approvedPlayoffs, allPlayoffRows) {
-  // SF byes go to the top 4 seeds (pod winners, ranked by points then battle points),
-  // calculated fresh from this season's actual standings via calcSeedings().
-  const SF_BYES = (seedings?.byeWinners || []).slice(0, 4).map(p => p ? { name: p.name } : null);
-  while (SF_BYES.length < 4) SF_BYES.push(null);
+  const numPods = seedings?.numPods || 6;
+  const totalByes = seedings?.totalByes ?? Math.max(0, 16 - 2 * numPods);
+  // Per bracket half (SF1+SF2 feed F1; SF3+SF4 feed F2): each half always holds exactly
+  // 4 participants at the Semi Final stage (byes + QF winners), split evenly between halves.
+  const halfByes = Math.min(2, Math.floor(totalByes / 2));
+  const qfPerHalf = Math.max(0, numPods - 4);
+  const totalQF = qfPerHalf * 2;
 
-  // Helper: get approved result for a round/match
-  const getResult = (round, num) => {
+  const SF_BYES = (seedings?.byeWinners || []).map(p => p ? { name: p.name } : null);
+  while (SF_BYES.length < totalByes) SF_BYES.push(null);
+
+  const getRow = (round, num) => allPlayoffRows.find(p => p.round === round && p.match_number === num) || null;
+
+  // Attaches winner/bp1/bp2 to a bracket entry when that match has an approved result --
+  // previously this was never set for any round, so completed matches never displayed as such.
+  const attachResult = (entry, round, num) => {
+    const g = approvedPlayoffs.find(p => p.round === round && p.match_number === num);
+    if (g) {
+      entry.winner = g.bp1 > g.bp2 ? g.player1 : g.bp2 > g.bp1 ? g.player2 : null;
+      entry.bp1 = g.bp1; entry.bp2 = g.bp2;
+    }
+    return entry;
+  };
+  const winnerOf = (round, num) => {
     const g = approvedPlayoffs.find(p => p.round === round && p.match_number === num);
     if (!g) return null;
     return g.bp1 > g.bp2 ? g.player1 : g.bp2 > g.bp1 ? g.player2 : null;
   };
 
-  // Helper: get DB row (approved or pending)
-  const getRow = (round, num) =>
-    allPlayoffRows.find(p => p.round === round && p.match_number === num) || null;
+  const bracket = {};
 
-  // QF matchups from DB rows
-  const qf1Row = getRow('QF', 1);
-  const qf2Row = getRow('QF', 2);
-  const qf3Row = getRow('QF', 3);
-  const qf4Row = getRow('QF', 4);
+  // Quarter Finals -- however many this pod count needs
+  for (let i = 1; i <= totalQF; i++) {
+    const row = getRow('QF', i);
+    bracket[`QF${i}`] = attachResult(
+      { p1: row ? { name: row.player1 } : null, p2: row ? { name: row.player2 } : null },
+      'QF', i
+    );
+  }
 
-  const qf1p1 = qf1Row ? { name: qf1Row.player1 } : null;
-  const qf1p2 = qf1Row ? { name: qf1Row.player2 } : null;
-  const qf2p1 = qf2Row ? { name: qf2Row.player1 } : null;
-  const qf2p2 = qf2Row ? { name: qf2Row.player2 } : null;
-  const qf3p1 = qf3Row ? { name: qf3Row.player1 } : null;
-  const qf3p2 = qf3Row ? { name: qf3Row.player2 } : null;
-  const qf4p1 = qf4Row ? { name: qf4Row.player1 } : null;
-  const qf4p2 = qf4Row ? { name: qf4Row.player2 } : null;
-
-  const qf1Winner = getResult('QF', 1);
-  const qf2Winner = getResult('QF', 2);
-  const qf3Winner = getResult('QF', 3);
-  const qf4Winner = getResult('QF', 4);
-
-  const bracket = {
-    QF1: { p1: qf1p1, p2: qf1p2 },
-    QF2: { p1: qf2p1, p2: qf2p2 },
-    QF3: { p1: qf3p1, p2: qf3p2 },
-    QF4: { p1: qf4p1, p2: qf4p2 },
-    // SF byes are fixed from the actual bracket — not auto-seeded
-    SF1: { p1: SF_BYES[0], p2: qf1Winner ? { name: qf1Winner } : null },
-    SF2: { p1: SF_BYES[1], p2: qf2Winner ? { name: qf2Winner } : null },
-    SF3: { p1: SF_BYES[2], p2: qf3Winner ? { name: qf3Winner } : null },
-    SF4: { p1: SF_BYES[3], p2: qf4Winner ? { name: qf4Winner } : null },
-    F1:  { p1: null, p2: null },
-    F2:  { p1: null, p2: null },
-    GF:  { p1: null, p2: null },
+  // Semi Finals: for each half, the first `halfByes` SF slots pair a bye with the next
+  // unused QF winner in that half; any remaining SF slots pair two QF winners together.
+  const buildHalfSF = (qfNumsInHalf, byesInHalf, sfKeys) => {
+    let qfPointer = 0;
+    sfKeys.forEach((sfKey, idx) => {
+      let p1, p2;
+      if (idx < byesInHalf.length) {
+        const qfNum = qfNumsInHalf[qfPointer++];
+        const w = qfNum ? winnerOf('QF', qfNum) : null;
+        p1 = byesInHalf[idx];
+        p2 = w ? { name: w } : null;
+      } else {
+        const qfA = qfNumsInHalf[qfPointer++], qfB = qfNumsInHalf[qfPointer++];
+        const wA = qfA ? winnerOf('QF', qfA) : null, wB = qfB ? winnerOf('QF', qfB) : null;
+        p1 = wA ? { name: wA } : null;
+        p2 = wB ? { name: wB } : null;
+      }
+      const sfNum = parseInt(sfKey.replace('SF', ''), 10);
+      bracket[sfKey] = attachResult({ p1, p2 }, 'SF', sfNum);
+    });
   };
+  const halfAQF = []; const halfBQF = [];
+  for (let i = 1; i <= totalQF; i++) (i <= qfPerHalf ? halfAQF : halfBQF).push(i);
+  buildHalfSF(halfAQF, SF_BYES.slice(0, halfByes), ['SF1', 'SF2']);
+  buildHalfSF(halfBQF, SF_BYES.slice(halfByes, halfByes * 2), ['SF3', 'SF4']);
 
-  const sf1Winner = getResult('SF', 1);
-  const sf2Winner = getResult('SF', 2);
-  const sf3Winner = getResult('SF', 3);
-  const sf4Winner = getResult('SF', 4);
-  bracket.F1.p1 = sf1Winner ? { name: sf1Winner } : null;
-  bracket.F1.p2 = sf2Winner ? { name: sf2Winner } : null;
-  bracket.F2.p1 = sf3Winner ? { name: sf3Winner } : null;
-  bracket.F2.p2 = sf4Winner ? { name: sf4Winner } : null;
+  // Finals and Grand Final -- unchanged shape, now with results attached too
+  const sf1W = winnerOf('SF', 1), sf2W = winnerOf('SF', 2), sf3W = winnerOf('SF', 3), sf4W = winnerOf('SF', 4);
+  bracket.F1 = attachResult({ p1: sf1W ? { name: sf1W } : null, p2: sf2W ? { name: sf2W } : null }, 'F', 1);
+  bracket.F2 = attachResult({ p1: sf3W ? { name: sf3W } : null, p2: sf4W ? { name: sf4W } : null }, 'F', 2);
 
-  const f1Winner = getResult('F', 1);
-  const f2Winner = getResult('F', 2);
-  bracket.GF.p1 = f1Winner ? { name: f1Winner } : null;
-  bracket.GF.p2 = f2Winner ? { name: f2Winner } : null;
+  const f1W = winnerOf('F', 1), f2W = winnerOf('F', 2);
+  bracket.GF = attachResult({ p1: f1W ? { name: f1W } : null, p2: f2W ? { name: f2W } : null }, 'GF', 1);
 
+  bracket._meta = { totalQF, halfByes, qfPerHalf, totalByes };
   return bracket;
 }
