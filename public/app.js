@@ -2490,6 +2490,7 @@ async function approveCorrection(key) {
 
     // 1. Write correction to event_results in Neon
     // Find the event_id by fetching events API
+    let dbWriteOk = false;
     try {
       const evRes = await fetch(`${API}/events`);
       const evData = await evRes.json();
@@ -2499,7 +2500,7 @@ async function approveCorrection(key) {
       if (dbEv) {
         const dbResult = (dbEv.results || []).find(r => r.player_name === player);
         if (dbResult) {
-          await fetch(`${API}/events`, {
+          const patchRes = await fetch(`${API}/events`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -2514,10 +2515,17 @@ async function approveCorrection(key) {
               }
             })
           });
+          const patchData = await patchRes.json();
+          dbWriteOk = !!patchData.success;
         }
       }
     } catch(dbErr) {
       console.warn('Could not write correction to DB:', dbErr);
+    }
+
+    if (!dbWriteOk) {
+      alert(`Could not apply this correction -- no matching result found in the database for "${player}" at "${evName}". Nothing was changed; the correction is still pending. Check the player/event names match exactly, or fix the record manually.`);
+      return;
     }
 
     // 2. Apply change to D.events in memory for immediate UI update
@@ -4687,6 +4695,7 @@ function checkAdminPin(val) {
           loadAndRenderMembers();
           buildAdminTriage();
           aliasRenderList();
+          aliasCanonicalPopulate();
           playerAliasRenderList();
           mixedTeamsRenderList();
         } else {
@@ -5045,6 +5054,29 @@ function aliasResolve(name) {
   return registry[name] || name;
 }
 
+function aliasCanonicalPopulate() {
+  const sel = document.getElementById('alias-canonical');
+  if (!sel) return;
+
+  // First-recorded date per team name, from actual event results -- not the alias
+  // registry's variant list, since a variant shouldn't be offered as a new canonical target.
+  const registry = aliasGetRegistry();
+  const firstSeen = {};
+  getActiveEvents().concat(D.events || []).forEach(ev => {
+    (ev.results || []).forEach(r => {
+      if (!r.subteam || registry[r.subteam]) return; // skip known variants
+      const sd = ev.sortDate || 0;
+      if (!firstSeen[r.subteam] || sd < firstSeen[r.subteam]) firstSeen[r.subteam] = sd;
+    });
+  });
+
+  const names = Object.keys(firstSeen).sort((a, b) => firstSeen[a] - firstSeen[b]);
+  const current = sel.value;
+  sel.innerHTML = `<option value="">-- select existing team --</option>` +
+    names.map(n => `<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`).join('');
+  if (names.includes(current)) sel.value = current;
+}
+
 function aliasRenderList() {
   const el = document.getElementById('alias-list');
   if (!el) return;
@@ -5102,6 +5134,7 @@ async function aliasAdd() {
     msg.style.color = 'var(--win)';
     msg.textContent = `✓ Alias saved: "${variant}" → "${canonical}"`;
     aliasRenderList();
+    aliasCanonicalPopulate();
     setTimeout(() => { msg.style.display = 'none'; }, 3000);
   } catch(e) {
     msg.style.color = 'var(--loss)';
@@ -5116,6 +5149,7 @@ async function aliasRemove(variant) {
   try {
     await aliasSaveRegistry(registry);
     aliasRenderList();
+    aliasCanonicalPopulate();
   } catch(e) {
     alert('Network error -- could not remove alias.');
   }
