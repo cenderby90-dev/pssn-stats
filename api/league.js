@@ -193,63 +193,102 @@ function calcSeedings(pods, players, games) {
   for (const pod of pods) {
     const podPlayers = players.filter(p => p.pod_id === pod.id).map(p => p.player_name);
     const podGames = games.filter(g => g.pod_id === pod.id);
-    const podStandings = calcPodStandings(podPlayers, podGames, pod.name);
-    standings[pod.id] = podStandings;
+    standings[pod.id] = calcPodStandings(podPlayers, podGames, pod.name);
   }
 
-  const byeWinners = [];
-  const runnersUp = [];
-
+  // The 12 knockout qualifiers: top 2 from each pod (already correctly ordered by the
+  // points-based pod-advancement rule, including its own tiebreak).
+  const qualifiers = [];
   for (const pod of pods) {
     const podStandings = standings[pod.id] || [];
-    if (podStandings.length === 0) continue;
-    const sorted = [...podStandings].sort((a, b) => b.pts - a.pts || b.bp - a.bp);
-    if (sorted[0]) byeWinners.push({ ...sorted[0], pod: pod.name });
-    if (sorted[1]) runnersUp.push({ ...sorted[1], pod: pod.name });
+    podStandings.slice(0, 2).forEach((p, i) => {
+      qualifiers.push({ ...p, podFinish: i === 0 ? 'winner' : 'runner-up' });
+    });
   }
 
-  byeWinners.sort((a, b) => b.pts - a.pts || b.bp - a.bp);
-  runnersUp.sort((a, b) => b.pts - a.pts || b.bp - a.bp);
+  // Byes: top 4 of all 12, by wins then battle points -- per the rules pack, not restricted
+  // to pod winners. Ties at the 4th/5th cut are flagged rather than auto-resolved, since the
+  // rules call for a random decision (a physical roll) at that point.
+  const ranked = [...qualifiers].sort((a, b) => b.wins - a.wins || b.bp - a.bp);
+  const byeCutTied = ranked.length > 4 && ranked[3].wins === ranked[4].wins && ranked[3].bp === ranked[4].bp;
 
-  const sfByes = byeWinners.slice(0, 4);
-  const qfByes = byeWinners.slice(4);
-  const qfField = [...qfByes, ...runnersUp].sort((a, b) => b.pts - a.pts || b.bp - a.bp);
-  const qfWinnersSeeded = qfField.slice(0, 2);
+  const byeWinners = ranked.slice(0, 4);
+  const qfField = ranked.slice(4);
 
-  return { byeWinners: sfByes, qfWinners: qfWinnersSeeded, runnersUp: runnersUp.slice(0, 6) };
+  return { byeWinners, qfField, allQualifiers: ranked, byeCutTied };
 }
 
 function calcPodStandings(playerNames, games, podName) {
   const stats = {};
   for (const name of playerNames) {
-    stats[name] = { name, pts: 0, bp: 0, played: 0, pod: podName };
+    stats[name] = { name, pts: 0, wins: 0, draws: 0, losses: 0, bp: 0, played: 0, pod: podName, tieResolvedBy: null };
   }
   for (const g of games) {
-    if (!stats[g.player1]) stats[g.player1] = { name: g.player1, pts: 0, bp: 0, played: 0, pod: podName };
-    if (!stats[g.player2]) stats[g.player2] = { name: g.player2, pts: 0, bp: 0, played: 0, pod: podName };
+    if (!stats[g.player1]) stats[g.player1] = { name: g.player1, pts: 0, wins: 0, draws: 0, losses: 0, bp: 0, played: 0, pod: podName, tieResolvedBy: null };
+    if (!stats[g.player2]) stats[g.player2] = { name: g.player2, pts: 0, wins: 0, draws: 0, losses: 0, bp: 0, played: 0, pod: podName, tieResolvedBy: null };
     const s1 = stats[g.player1];
     const s2 = stats[g.player2];
     s1.played++; s2.played++;
     s1.bp += g.bp1; s2.bp += g.bp2;
-    if (g.bp1 > g.bp2) { s1.pts += 2; }
-    else if (g.bp2 > g.bp1) { s2.pts += 2; }
-    else { s1.pts += 1; s2.pts += 1; }
+    if (g.bp1 > g.bp2) { s1.pts += 2; s1.wins++; s2.losses++; }
+    else if (g.bp2 > g.bp1) { s2.pts += 2; s2.wins++; s1.losses++; }
+    else { s1.pts += 1; s2.pts += 1; s1.draws++; s2.draws++; }
   }
-  return Object.values(stats).sort((a, b) => b.pts - a.pts || b.bp - a.bp);
+
+  // Head-to-head: returns -1 if a ranks above b, 1 if b ranks above a, 0 if drawn/unplayed
+  const h2h = (a, b) => {
+    const g = games.find(g => (g.player1 === a && g.player2 === b) || (g.player1 === b && g.player2 === a));
+    if (!g) return 0;
+    const aBp = g.player1 === a ? g.bp1 : g.bp2;
+    const bBp = g.player1 === a ? g.bp2 : g.bp1;
+    return aBp > bBp ? -1 : aBp < bBp ? 1 : 0;
+  };
+
+  // Group by points, then apply the pod-stage tiebreak rule within each group:
+  // exactly 2 tied -> head-to-head decides; 3+ tied (or a drawn head-to-head) -> most
+  // battle points; still tied after that -> left tied and flagged, since the rules call
+  // for a physical d3 roll at that point, not something to auto-resolve.
+  const byPts = {};
+  Object.values(stats).forEach(p => { (byPts[p.pts] = byPts[p.pts] || []).push(p); });
+
+  const sorted = [];
+  Object.keys(byPts).map(Number).sort((a, b) => b - a).forEach(pts => {
+    const group = byPts[pts];
+    if (group.length === 1) { sorted.push(group[0]); return; }
+
+    if (group.length === 2) {
+      const [a, b] = group;
+      const r = h2h(a.name, b.name);
+      if (r !== 0) {
+        a.tieResolvedBy = 'head-to-head'; b.tieResolvedBy = 'head-to-head';
+        sorted.push(...(r < 0 ? [a, b] : [b, a]));
+        return;
+      }
+      // Drawn or unplayed head-to-head -> fall through to battle points below.
+    }
+
+    // 3+ tied on points, or a 2-way tie with a drawn head-to-head: most battle points.
+    const byBp = [...group].sort((x, y) => y.bp - x.bp);
+    for (let i = 0; i < byBp.length - 1; i++) {
+      if (byBp[i].bp === byBp[i + 1].bp) {
+        byBp[i].tieResolvedBy = 'unresolved';
+        byBp[i + 1].tieResolvedBy = 'unresolved';
+      } else if (!byBp[i].tieResolvedBy) {
+        byBp[i].tieResolvedBy = 'battle-points';
+      }
+    }
+    if (byBp.length && !byBp[byBp.length - 1].tieResolvedBy) byBp[byBp.length - 1].tieResolvedBy = 'battle-points';
+    sorted.push(...byBp);
+  });
+
+  return sorted;
 }
 
 function calcBracket(seedings, approvedPlayoffs, allPlayoffRows) {
-  // Fixed SF bye pairings from the actual bracket sheet:
-  // SF1 bye: Matthew Yeoh  vs QF1 winner (Tim/Henry)
-  // SF2 bye: Tom Durrands  vs QF2 winner (Joe/Spencer)
-  // SF3 bye: Gabriel Evans vs QF3 winner (James/Cayleb)
-  // SF4 bye: Oscar Luckin  vs QF4 winner (Guy/Alex H)
-  const SF_BYES = [
-    { name: 'Matthew Yeoh' },
-    { name: 'Tom Durrands' },
-    { name: 'Gabriel Evans' },
-    { name: 'Oscar Luckin' },
-  ];
+  // SF byes go to the top 4 seeds (pod winners, ranked by points then battle points),
+  // calculated fresh from this season's actual standings via calcSeedings().
+  const SF_BYES = (seedings?.byeWinners || []).slice(0, 4).map(p => p ? { name: p.name } : null);
+  while (SF_BYES.length < 4) SF_BYES.push(null);
 
   // Helper: get approved result for a round/match
   const getResult = (round, num) => {
