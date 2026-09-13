@@ -97,8 +97,8 @@ export default async function handler(req, res) {
       const TEAM_PIN = process.env.TEAM_PIN || '1719';
       const memberTypes = ['playoff', 'submit_playoff'];
       const isAdminAction = !memberTypes.includes(type);
-      if (isAdminAction && pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
-      if (!isAdminAction && pin !== TEAM_PIN && pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+      const auth = await checkPin(req, pin, isAdminAction ? [ADMIN_PIN] : [TEAM_PIN, ADMIN_PIN]);
+      if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
 
       if (type === 'add_player') {
         const { name } = req.body;
@@ -181,7 +181,8 @@ export default async function handler(req, res) {
 
     if (req.method === 'PATCH') {
       const { pin, gameId, playoffId, playerId, active, bp1, bp2 } = req.body;
-      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+      const auth = await checkPin(req, pin, [ADMIN_PIN]);
+      if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
 
       if (gameId !== undefined) {
         if (bp1 !== undefined && bp2 !== undefined) {
@@ -207,7 +208,8 @@ export default async function handler(req, res) {
 
     if (req.method === 'DELETE') {
       const { pin, gameId } = req.body;
-      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+      const auth = await checkPin(req, pin, [ADMIN_PIN]);
+      if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
       await sql`DELETE FROM league_games WHERE id = ${gameId}`;
       return res.status(200).json({ success: true });
     }
