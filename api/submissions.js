@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+import { checkPin } from './_pinAuth.js';
 
 const ADMIN_PIN = process.env.ADMIN_PIN;
 
@@ -18,10 +19,17 @@ export default async function handler(req, res) {
 
   try {
 
-    // GET -- admin sees all pending, public sees approved only
+    // GET -- admin sees all pending, public sees approved only. A pin is optional here
+    // (plain public reads pass none at all) -- only rate-limit actual guesses, and fall
+    // back to the public view on a wrong one rather than erroring the whole request.
     if (req.method === 'GET') {
       const { pin } = req.query;
-      const isAdmin = pin === ADMIN_PIN;
+      let isAdmin = false;
+      if (pin) {
+        const auth = await checkPin(req, pin, [ADMIN_PIN]);
+        if (auth.ok) isAdmin = true;
+        else if (auth.status === 429) return res.status(429).json({ error: auth.error });
+      }
       const { rows } = isAdmin
         ? await sql`SELECT * FROM submissions ORDER BY submitted_at DESC`
         : await sql`SELECT * FROM submissions WHERE approved = true ORDER BY submitted_at DESC`;
@@ -62,7 +70,8 @@ export default async function handler(req, res) {
     // PATCH -- admin approves or rejects a submission
     if (req.method === 'PATCH') {
       const { pin, id, approved } = req.body;
-      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+      const auth = await checkPin(req, pin, [ADMIN_PIN]);
+      if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
 
       if (approved) {
         // Fetch the submission
