@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+import { checkPin } from './_pinAuth.js';
 
 const ADMIN_PIN = process.env.ADMIN_PIN;
 const TEAM_PIN  = process.env.TEAM_PIN;   // add TEAM_PIN=1719 to Vercel env vars
@@ -27,29 +28,12 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
-    // POST — write attendance, corrections, team data
-    // Requires either team PIN or admin PIN
+    // POST — write attendance, corrections, team data. Requires either team PIN or admin PIN.
     if (req.method === 'POST') {
       const { player_name, event_sort_date, status, pin } = req.body;
 
-      // PIN check — accept team PIN or admin PIN
-      // Metadata keys (corrections, pending events, team data, CoS optins) require valid PIN
-      // Regular attendance (player_SORTDATE keys) also require valid PIN
-      const validPin = (TEAM_PIN && pin === TEAM_PIN) || (ADMIN_PIN && pin === ADMIN_PIN);
-
-      // For metadata keys, always require a valid PIN
-      const isMetaKey = typeof player_name === 'string' && (
-        player_name.startsWith('_corr_') ||
-        player_name.startsWith('_pending_event_') ||
-        player_name.startsWith('_teams_') ||
-        player_name.startsWith('_team_registry_') ||
-        player_name === player_name.match(/^[A-Za-z0-9 '-]+$/) ? null : player_name
-      );
-
-      // Simple rule: all writes require a valid PIN
-      if (!validPin) {
-        return res.status(401).json({ error: 'Unauthorised — valid PIN required to write attendance data' });
-      }
+      const auth = await checkPin(req, pin, [TEAM_PIN, ADMIN_PIN]);
+      if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
 
       if (!player_name || event_sort_date === undefined || !status) {
         return res.status(400).json({ error: 'Missing required fields' });
@@ -68,10 +52,8 @@ export default async function handler(req, res) {
     if (req.method === 'DELETE') {
       const { player_name, event_sort_date, pin } = req.body;
 
-      const validPin = (TEAM_PIN && pin === TEAM_PIN) || (ADMIN_PIN && pin === ADMIN_PIN);
-      if (!validPin) {
-        return res.status(401).json({ error: 'Unauthorised — valid PIN required' });
-      }
+      const auth = await checkPin(req, pin, [TEAM_PIN, ADMIN_PIN]);
+      if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
 
       await sql`
         DELETE FROM attendance
