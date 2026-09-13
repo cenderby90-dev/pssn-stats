@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+import { checkPin } from './_pinAuth.js';
 
 const ADMIN_PIN = process.env.ADMIN_PIN;
 
@@ -52,7 +53,8 @@ export default async function handler(req, res) {
   // ── POST — create event with results ──
   if (req.method === 'POST') {
     const { pin, event, results = [] } = req.body;
-    if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorized' });
+    const auth = await checkPin(req, pin, [ADMIN_PIN]);
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
 
     try {
       const evRes = await sql`
@@ -99,7 +101,8 @@ export default async function handler(req, res) {
   // ── PATCH — update a result row or event metadata ──
   if (req.method === 'PATCH') {
     const { pin, resultId, eventId, updates } = req.body;
-    if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorized' });
+    const auth = await checkPin(req, pin, [ADMIN_PIN]);
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
 
     // Patch a result row
     if (resultId) {
@@ -150,7 +153,8 @@ export default async function handler(req, res) {
   // ── DELETE — remove a single result, or an event and all its results ──
   if (req.method === 'DELETE') {
     const { pin, eventId, resultId } = req.body;
-    if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorized' });
+    const auth = await checkPin(req, pin, [ADMIN_PIN]);
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
 
     try {
       if (resultId) {
