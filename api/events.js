@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     try {
       const eventsRes = await sql`
         SELECT id, name, event_date, format, edition, total_players, total_teams,
-               bcp_url, approved, created_at, sort_date
+               bcp_url, approved, created_at, sort_date, end_sort_date
         FROM events
         WHERE approved = true
         ORDER BY sort_date DESC
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
 
     try {
       const evRes = await sql`
-        INSERT INTO events (name, event_date, format, edition, total_players, total_teams, bcp_url, approved, sort_date)
+        INSERT INTO events (name, event_date, format, edition, total_players, total_teams, bcp_url, approved, sort_date, end_sort_date)
         VALUES (
           ${stripTags(event.name)},
           ${stripTags(event.event_date) || ''},
@@ -68,7 +68,8 @@ export default async function handler(req, res) {
           ${event.total_teams || 0},
           ${stripTags(event.bcp_url) || ''},
           true,
-          ${event.sort_date}
+          ${event.sort_date},
+          ${event.end_sort_date || event.sort_date}
         )
         RETURNING id
       `;
@@ -135,6 +136,7 @@ export default async function handler(req, res) {
             event_date   = COALESCE(${stripTags(updates.event_date) ?? null}, event_date),
             format       = COALESCE(${updates.format       ?? null}, format),
             sort_date    = COALESCE(${updates.sort_date    ?? null}, sort_date),
+            end_sort_date = COALESCE(${updates.end_sort_date ?? null}, end_sort_date),
             total_players = COALESCE(${updates.total_players ?? null}, total_players),
             total_teams  = COALESCE(${updates.total_teams  ?? null}, total_teams),
             bcp_url      = COALESCE(${stripTags(updates.bcp_url) ?? null}, bcp_url),
