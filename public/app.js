@@ -1629,12 +1629,25 @@ async function checkPin(val) {
 
 
 // -- calendar --
-let calView = 'upcoming';
+let calMonthOffset = 0;   // 0 = current month, +1 = next month, -1 = previous, etc.
+let calFormatFilter = 'all';
 
-function switchCalView(view) {
-  calView = view;
-  document.getElementById('cal-btn-upcoming').classList.toggle('active', view === 'upcoming');
-  document.getElementById('cal-btn-past').classList.toggle('active', view === 'past');
+function changeCalMonth(delta) {
+  calMonthOffset += delta;
+  renderCalendar();
+}
+
+function jumpToCalToday() {
+  calMonthOffset = 0;
+  renderCalendar();
+}
+
+function setCalFormatFilter(fmt) {
+  calFormatFilter = fmt;
+  ['all','GT','RTT','Teams'].forEach(f => {
+    const btn = document.getElementById(`cal-fmt-${f.toLowerCase()}`);
+    if (btn) btn.classList.toggle('active', f === fmt);
+  });
   renderCalendar();
 }
 
@@ -1734,134 +1747,172 @@ function getCalendarEvents() {
 }
 
 
+// Builds the visual month grid: a 7-column week layout with a small coloured dot per
+// event on days that have one (colour matches format), and today highlighted.
+function buildCalendarMonthGrid(year, month, monthEvents, todaySortDate) {
+  const typeColor = { GT: 'var(--accent)', Teams: 'var(--draw)', RTT: 'var(--win)' };
+  const firstDay = new Date(year, month, 1);
+  const startWeekday = (firstDay.getDay() + 6) % 7; // Monday = 0
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const eventsByDay = {};
+  monthEvents.forEach(ev => {
+    const day = ev.sortDate % 100;
+    (eventsByDay[day] = eventsByDay[day] || []).push(ev);
+  });
+
+  const todayYear = Math.floor(todaySortDate / 10000);
+  const todayMonth = Math.floor((todaySortDate % 10000) / 100) - 1;
+  const todayDay = todaySortDate % 100;
+
+  let cells = '';
+  for (let i = 0; i < startWeekday; i++) cells += `<div></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = year === todayYear && month === todayMonth && d === todayDay;
+    const dayEvents = eventsByDay[d] || [];
+    const dots = dayEvents.map(ev => `<span title="${ev.name.replace(/"/g,'&quot;')}" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${typeColor[ev.type]||'var(--muted)'};margin:0 1px;"></span>`).join('');
+    cells += `<div style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:4px;background:${isToday?'var(--accent-bg)':'transparent'};border:1px solid ${isToday?'var(--accent)':'transparent'};">
+      <span style="font-size:0.78rem;color:${isToday?'var(--accent)':dayEvents.length?'var(--text)':'var(--muted)'};">${d}</span>
+      <div style="height:8px;line-height:8px;">${dots}</div>
+    </div>`;
+  }
+
+  return `
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;">
+      ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `<div style="text-align:center;font-size:0.62rem;color:var(--faint);letter-spacing:0.06em;">${d}</div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;">${cells}</div>`;
+}
+
 async function renderCalendar() {
-  const el = document.getElementById('calendar-grid');
-  el.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);">Loading...</div>`;
+  const gridEl = document.getElementById('calendar-month-grid');
+  const listEl = document.getElementById('calendar-grid');
+  listEl.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);">Loading...</div>`;
   // Ensure DB events are loaded -- needed for getCalendarEvents()
   if (!dbEvents || !dbEvents.length) await loadDbEvents();
   // Load fresh attendance data so calendar shows who's going
   await loadAttendance();
-  el.innerHTML = '';
   const TODAY = getTodaySortDate();
+
+  const viewDate = new Date();
+  viewDate.setDate(1);
+  viewDate.setMonth(viewDate.getMonth() + calMonthOffset);
+  const viewYear = viewDate.getFullYear();
+  const viewMonth = viewDate.getMonth(); // 0-indexed
+
+  const labelEl = document.getElementById('cal-month-label');
+  if (labelEl) labelEl.textContent = viewDate.toLocaleString('en-GB', { month: 'long', year: 'numeric' });
 
   const typeColor = { GT: 'var(--accent)', Teams: 'var(--draw)', RTT: 'var(--win)' };
   const typeBg    = { GT: 'var(--accent-bg)', Teams: 'var(--draw-bg)', RTT: 'var(--win-bg)' };
 
-  // split and sort
   const calEvs = getCalendarEvents();
-  let events = calView === 'upcoming'
-    ? calEvs.filter(ev => ev.sortDate >= TODAY).sort((a,b) => a.sortDate - b.sortDate)
-    : calEvs.filter(ev => ev.sortDate < TODAY).sort((a,b) => b.sortDate - a.sortDate);
+  const monthEvents = calEvs.filter(ev => {
+    const y = Math.floor(ev.sortDate / 10000);
+    const m = Math.floor((ev.sortDate % 10000) / 100) - 1;
+    return y === viewYear && m === viewMonth;
+  });
+
+  if (gridEl) gridEl.innerHTML = buildCalendarMonthGrid(viewYear, viewMonth, monthEvents, TODAY);
+
+  const events = monthEvents
+    .filter(ev => calFormatFilter === 'all' || ev.type === calFormatFilter)
+    .sort((a, b) => a.sortDate - b.sortDate);
 
   if (!events.length) {
-    if (calView === 'upcoming') {
-      el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No upcoming events yet. Use <strong style="color:var(--text);">Admin → Schedule an Event</strong> to add the next event to the calendar.</div>`;
-    } else {
-      el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No past events found.</div>`;
-    }
+    listEl.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No${calFormatFilter !== 'all' ? ' ' + calFormatFilter : ''} events this month.</div>`;
     return;
   }
 
-  // group by month
-  const groups = {};
+  let html = `<div style="display:flex;flex-direction:column;gap:6px;">`;
+
   events.forEach(ev => {
-    const yr = Math.floor(ev.sortDate / 10000);
-    const mo = Math.floor((ev.sortDate % 10000) / 100);
-    const key = `${yr}-${String(mo).padStart(2,'0')}`;
-    if (!groups[key]) groups[key] = { label: new Date(yr, mo-1, 1).toLocaleString('en-GB', {month:'long', year:'numeric'}), events: [] };
-    groups[key].events.push(ev);
-  });
+    const isPast = ev.sortDate < TODAY;
+    const attended = ev.attended;
+    const borderCol = attended ? 'var(--accent)' : 'var(--border)';
+    const borderW   = attended ? '2px' : '1px';
+    const opacity   = isPast && !attended ? '0.45' : '1';
 
-  let html = '';
-  Object.values(groups).forEach(g => {
-    html += `<div style="margin-bottom:1.5rem;">
-      <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);">${g.label}</div>
-      <div style="display:flex;flex-direction:column;gap:6px;">`;
+    // Who's going for this event
+    const going = D.players.map(p => p.name).filter(n =>
+      attendanceData[`${n}_${ev.sortDate}`] === 'yes'
+    );
+    const maybe = D.players.map(p => p.name).filter(n =>
+      attendanceData[`${n}_${ev.sortDate}`] === 'maybe'
+    );
+    const notgoing = D.players.map(p => p.name).filter(n =>
+      attendanceData[`${n}_${ev.sortDate}`] === 'no'
+    );
+    const total = going.length + maybe.length;
 
-    g.events.forEach(ev => {
-      const isPast = ev.sortDate < TODAY;
-      const attended = ev.attended;
-      const borderCol = attended ? 'var(--accent)' : 'var(--border)';
-      const borderW   = attended ? '2px' : '1px';
-      const opacity   = isPast && !attended ? '0.45' : '1';
-
-      // Who's going for this event
-      const going = D.players.map(p => p.name).filter(n =>
-        attendanceData[`${n}_${ev.sortDate}`] === 'yes'
-      );
-      const maybe = D.players.map(p => p.name).filter(n =>
-        attendanceData[`${n}_${ev.sortDate}`] === 'maybe'
-      );
-      const notgoing = D.players.map(p => p.name).filter(n =>
-        attendanceData[`${n}_${ev.sortDate}`] === 'no'
-      );
-      const total = going.length + maybe.length;
-
-      const whoId = `who-${ev.sortDate}`;
-      const whoHtml = (total > 0 || notgoing.length > 0) ? `
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);" id="${whoId}">
-          ${going.length ? `
-            <div style="margin-bottom:4px;">
-              <span style="font-size:0.62rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--win);">Going (${going.length})</span>
-              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;">
-                ${going.map(n => `<span style="font-size:0.72rem;padding:2px 7px;background:var(--win-bg);border:1px solid var(--win);border-radius:3px;color:var(--win);">${n}</span>`).join('')}
-              </div>
-            </div>` : ''}
-          ${maybe.length ? `
-            <div style="margin-bottom:4px;">
-              <span style="font-size:0.62rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#c9a227;">Maybe (${maybe.length})</span>
-              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;">
-                ${maybe.map(n => `<span style="font-size:0.72rem;padding:2px 7px;background:#2a2000;border:1px solid #c9a227;border-radius:3px;color:#c9a227;">${n}</span>`).join('')}
-              </div>
-            </div>` : ''}
-          ${notgoing.length ? `
-            <div>
-              <span style="font-size:0.62rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--loss);">Not going (${notgoing.length})</span>
-              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;">
-                ${notgoing.map(n => `<span style="font-size:0.72rem;padding:2px 7px;background:var(--loss-bg);border:1px solid var(--loss);border-radius:3px;color:var(--loss);">${n}</span>`).join('')}
-              </div>
-            </div>` : ''}
-        </div>` : '';
-
-      // Attendance pill shown even if nobody signed up yet (for upcoming events)
-      const attendanceSummary = !isPast ? `
-        <div onclick="toggleCalWho('${whoId}')" style="display:flex;align-items:center;gap:5px;cursor:${total > 0 ? 'pointer' : 'default'};">
-          ${going.length ? `<span style="font-size:0.7rem;padding:2px 8px;border-radius:3px;background:var(--win-bg);color:var(--win);">✓ ${going.length} going</span>` : ''}
-          ${maybe.length ? `<span style="font-size:0.7rem;padding:2px 8px;border-radius:3px;background:#2a2000;color:#c9a227;">? ${maybe.length} maybe</span>` : ''}
-          ${total === 0 ? `<span style="font-size:0.7rem;color:var(--faint);">No sign-ups yet</span>` : ''}
-          ${total > 0 ? `<span id="${whoId}-arrow" style="font-size:0.65rem;color:var(--muted);transition:transform 0.2s;display:inline-block;">▼</span>` : ''}
-        </div>` : '';
-
-      const statusTag = attended
-        ? `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--accent-bg);color:var(--accent);letter-spacing:0.04em;">PSSN attended</span>`
-        : isPast
-          ? `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--surface2);color:var(--muted);letter-spacing:0.04em;">Past</span>`
-          : `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--surface2);color:var(--muted);letter-spacing:0.04em;">Upcoming</span>`;
-
-      const typeTag = `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:${typeBg[ev.type] || 'var(--surface2)'};color:${typeColor[ev.type] || 'var(--muted)'};">${ev.type}</span>`;
-
-      html += `
-        <div style="background:var(--surface);border:${borderW} solid ${borderCol};border-radius:4px;opacity:${opacity};padding:10px 14px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-            <div>
-              <div style="font-size:0.9rem;font-weight:400;color:var(--text);">${ev.name}</div>
-              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">${ev.dates}</div>
+    const whoId = `who-${ev.sortDate}`;
+    const whoHtml = (total > 0 || notgoing.length > 0) ? `
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);" id="${whoId}">
+        ${going.length ? `
+          <div style="margin-bottom:4px;">
+            <span style="font-size:0.62rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--win);">Going (${going.length})</span>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;">
+              ${going.map(n => `<span style="font-size:0.72rem;padding:2px 7px;background:var(--win-bg);border:1px solid var(--win);border-radius:3px;color:var(--win);">${n}</span>`).join('')}
             </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
-              <div style="display:flex;gap:6px;align-items:center;">
-                ${typeTag}
-                ${statusTag}
-              </div>
-              ${attendanceSummary}
+          </div>` : ''}
+        ${maybe.length ? `
+          <div style="margin-bottom:4px;">
+            <span style="font-size:0.62rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#c9a227;">Maybe (${maybe.length})</span>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;">
+              ${maybe.map(n => `<span style="font-size:0.72rem;padding:2px 7px;background:#2a2000;border:1px solid #c9a227;border-radius:3px;color:#c9a227;">${n}</span>`).join('')}
             </div>
+          </div>` : ''}
+        ${notgoing.length ? `
+          <div>
+            <span style="font-size:0.62rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--loss);">Not going (${notgoing.length})</span>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;">
+              ${notgoing.map(n => `<span style="font-size:0.72rem;padding:2px 7px;background:var(--loss-bg);border:1px solid var(--loss);border-radius:3px;color:var(--loss);">${n}</span>`).join('')}
+            </div>
+          </div>` : ''}
+      </div>` : '';
+
+    // Attendance pill shown even if nobody signed up yet (for upcoming events)
+    const attendanceSummary = !isPast ? `
+      <div onclick="toggleCalWho('${whoId}')" style="display:flex;align-items:center;gap:5px;cursor:${total > 0 ? 'pointer' : 'default'};">
+        ${going.length ? `<span style="font-size:0.7rem;padding:2px 8px;border-radius:3px;background:var(--win-bg);color:var(--win);">✓ ${going.length} going</span>` : ''}
+        ${maybe.length ? `<span style="font-size:0.7rem;padding:2px 8px;border-radius:3px;background:#2a2000;color:#c9a227;">? ${maybe.length} maybe</span>` : ''}
+        ${total === 0 ? `<span style="font-size:0.7rem;color:var(--faint);">No sign-ups yet</span>` : ''}
+        ${total > 0 ? `<span id="${whoId}-arrow" style="font-size:0.65rem;color:var(--muted);transition:transform 0.2s;display:inline-block;">▼</span>` : ''}
+      </div>` : '';
+
+    const statusTag = attended
+      ? `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--accent-bg);color:var(--accent);letter-spacing:0.04em;">PSSN attended</span>`
+      : isPast
+        ? `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--surface2);color:var(--muted);letter-spacing:0.04em;">Past</span>`
+        : `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:var(--surface2);color:var(--muted);letter-spacing:0.04em;">Upcoming</span>`;
+
+    const typeTag = `<span style="font-size:0.62rem;font-weight:500;padding:2px 7px;border-radius:3px;background:${typeBg[ev.type] || 'var(--surface2)'};color:${typeColor[ev.type] || 'var(--muted)'};">${ev.type}</span>`;
+
+    const bcpLink = ev.bcp
+      ? `<a href="${ev.bcp}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:0.7rem;color:var(--accent);text-decoration:none;margin-left:8px;">BCP ↗</a>`
+      : '';
+
+    html += `
+      <div style="background:var(--surface);border:${borderW} solid ${borderCol};border-radius:4px;opacity:${opacity};padding:10px 14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <div style="font-size:0.9rem;font-weight:400;color:var(--text);">${ev.name}</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">${ev.dates}${bcpLink}</div>
           </div>
-          ${whoHtml}
-        </div>`;
-    });
-    html += `</div></div>`;
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
+            <div style="display:flex;gap:6px;align-items:center;">
+              ${typeTag}
+              ${statusTag}
+            </div>
+            ${attendanceSummary}
+          </div>
+        </div>
+        ${whoHtml}
+      </div>`;
   });
 
-  el.innerHTML = html;
+  html += `</div>`;
+  listEl.innerHTML = html;
 }
 
 // -- club tab --
