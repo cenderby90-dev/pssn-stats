@@ -273,10 +273,26 @@
     <div class="section-rule"></div>
   </div>
   <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.25rem;">Full UKTC calendar. Events your team attended are highlighted.</div>
-  <div style="display:flex;gap:2px;margin-bottom:1.5rem;border-bottom:1px solid var(--border);">
-    <button id="cal-btn-upcoming" class="tab-btn active" onclick="switchCalView('upcoming')">Upcoming</button>
-    <button id="cal-btn-past" class="tab-btn" onclick="switchCalView('past')">Past</button>
+
+  <!-- Month navigation -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button onclick="changeCalMonth(-1)" style="background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);width:32px;height:32px;cursor:pointer;font-size:0.9rem;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">‹</button>
+      <div id="cal-month-label" style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.04em;color:var(--text);min-width:170px;text-align:center;"></div>
+      <button onclick="changeCalMonth(1)" style="background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);width:32px;height:32px;cursor:pointer;font-size:0.9rem;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">›</button>
+    </div>
+    <button onclick="jumpToCalToday()" style="font-size:0.72rem;padding:5px 12px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Today</button>
   </div>
+
+  <!-- Format filter -->
+  <div style="display:flex;gap:2px;margin-bottom:1.25rem;border-bottom:1px solid var(--border);">
+    <button id="cal-fmt-all"   class="tab-btn active" onclick="setCalFormatFilter('all')">All</button>
+    <button id="cal-fmt-gt"    class="tab-btn"        onclick="setCalFormatFilter('GT')">GT</button>
+    <button id="cal-fmt-rtt"   class="tab-btn"        onclick="setCalFormatFilter('RTT')">RTT</button>
+    <button id="cal-fmt-teams" class="tab-btn"        onclick="setCalFormatFilter('Teams')">Teams</button>
+  </div>
+
+  <div id="calendar-month-grid" style="margin-bottom:1.5rem;"></div>
   <div id="calendar-grid"></div>
 </main>
 
