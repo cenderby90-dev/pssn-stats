@@ -3,6 +3,9 @@ import { sql } from '@vercel/postgres';
 
 const ADMIN_PIN = process.env.ADMIN_PIN;
 
+// See api/submissions.js for why this exists.
+const stripTags = (s) => typeof s === 'string' ? s.replace(/[<>]/g, '').slice(0, 200) : s;
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
@@ -154,13 +157,13 @@ export default async function handler(req, res) {
         const { name, pods: podDefs } = req.body;
         await sql`UPDATE league_seasons SET active = false WHERE active = true`;
         const newSeason = await sql`
-          INSERT INTO league_seasons (name, active) VALUES (${name}, true) RETURNING id
+          INSERT INTO league_seasons (name, active) VALUES (${stripTags(name)}, true) RETURNING id
         `;
         const seasonId = newSeason.rows[0].id;
         for (const pod of podDefs) {
           const podRes = await sql`
             INSERT INTO league_pods (season_id, pod_number, name)
-            VALUES (${seasonId}, ${pod.number}, ${pod.name}) RETURNING id
+            VALUES (${seasonId}, ${pod.number}, ${stripTags(pod.name)}) RETURNING id
           `;
           const podId = podRes.rows[0].id;
           for (const playerName of pod.players) {
