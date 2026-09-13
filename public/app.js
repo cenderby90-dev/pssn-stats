@@ -1784,27 +1784,24 @@ function buildCalendarMonthGrid(year, month, monthEvents, todaySortDate, selecte
     const isToday = year === todayYear && month === todayMonth && d === todayDay;
     const isSelected = sortDate === selectedSortDate;
     const dayEvents = eventsByDay[d] || [];
-    const primary = dayEvents[0];
     const hasEvents = dayEvents.length > 0;
-    const isMultiDay = primary && primary.endSortDate > primary.sortDate;
 
-    const bg = hasEvents ? (typeSolid[primary.type] || 'var(--accent)') : 'var(--surface)';
-    const textCol = hasEvents ? (typeText[primary.type] || '#fff') : (isToday ? 'var(--accent)' : 'var(--muted)');
     const ring = isSelected ? '2px solid #fff' : isToday ? '2px solid var(--accent)' : '1px solid var(--border)';
+    const dayNumCol = isToday ? 'var(--accent)' : hasEvents ? 'var(--text)' : 'var(--muted)';
 
-    const label = hasEvents
-      ? `<div style="font-size:0.62rem;line-height:1.15;font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:2px;">${primary.name}</div>`
-      : '';
-    const moreTag = dayEvents.length > 1 ? `<div style="font-size:0.58rem;opacity:0.85;margin-top:1px;">+${dayEvents.length - 1} more</div>` : '';
-    const spanTag = isMultiDay
-      ? `<div style="font-size:0.56rem;opacity:0.75;margin-top:1px;">${sortDate === primary.sortDate ? 'starts' : sortDate === primary.endSortDate ? 'ends' : '···'}</div>`
-      : '';
+    // One pill per event, each its own solid format colour, so a busy day shows
+    // everything instead of hiding events behind a '+N more' tag.
+    const pills = dayEvents.map(ev => {
+      const isMultiDay = ev.endSortDate > ev.sortDate;
+      const spanMark = isMultiDay
+        ? (sortDate === ev.sortDate ? ' ▸' : sortDate === ev.endSortDate ? ' ◂' : ' ·')
+        : '';
+      return `<div style="background:${typeSolid[ev.type] || 'var(--accent)'};color:${typeText[ev.type] || '#fff'};border-radius:3px;padding:2px 5px;margin-top:3px;font-size:0.6rem;font-weight:500;line-height:1.25;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${ev.name}${spanMark}</div>`;
+    }).join('');
 
-    cells += `<div onclick="${hasEvents ? `selectCalDay(${sortDate})` : ''}" style="min-height:78px;padding:6px;border-radius:6px;background:${bg};border:${ring};color:${textCol};cursor:${hasEvents ? 'pointer' : 'default'};transition:transform 0.1s;" ${hasEvents ? `onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'"` : ''}>
-      <div style="font-size:0.85rem;font-weight:${isToday || hasEvents ? '600' : '400'};">${d}</div>
-      ${label}
-      ${moreTag}
-      ${spanTag}
+    cells += `<div onclick="${hasEvents ? `selectCalDay(${sortDate})` : ''}" style="min-height:78px;padding:6px;border-radius:6px;background:var(--surface);border:${ring};cursor:${hasEvents ? 'pointer' : 'default'};transition:transform 0.1s;" ${hasEvents ? `onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'"` : ''}>
+      <div style="font-size:0.85rem;font-weight:${isToday || hasEvents ? '600' : '400'};color:${dayNumCol};">${d}</div>
+      ${pills}
     </div>`;
   }
 
