@@ -1747,10 +1747,14 @@ function getCalendarEvents() {
 }
 
 
-// Builds the visual month grid: a 7-column week layout with a small coloured dot per
-// event on days that have one (colour matches format), and today highlighted.
-function buildCalendarMonthGrid(year, month, monthEvents, todaySortDate) {
-  const typeColor = { GT: 'var(--accent)', Teams: 'var(--draw)', RTT: 'var(--win)' };
+let calSelectedDay = null; // sortDate (YYYYMMDD) of the currently selected grid day
+
+// Builds the visual month grid: bold, solid-coloured cells on days with an event
+// (colour = format), clickable to show that day's details below. Today gets a bright
+// ring regardless of whether it has an event.
+function buildCalendarMonthGrid(year, month, monthEvents, todaySortDate, selectedSortDate) {
+  const typeSolid = { GT: 'var(--accent)', Teams: 'var(--draw)', RTT: 'var(--win)' };
+  const typeText  = { GT: '#1a1400', Teams: '#ffffff', RTT: '#0d1f10' };
   const firstDay = new Date(year, month, 1);
   const startWeekday = (firstDay.getDay() + 6) % 7; // Monday = 0
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -1768,84 +1772,69 @@ function buildCalendarMonthGrid(year, month, monthEvents, todaySortDate) {
   let cells = '';
   for (let i = 0; i < startWeekday; i++) cells += `<div></div>`;
   for (let d = 1; d <= daysInMonth; d++) {
+    const sortDate = year * 10000 + (month + 1) * 100 + d;
     const isToday = year === todayYear && month === todayMonth && d === todayDay;
+    const isSelected = sortDate === selectedSortDate;
     const dayEvents = eventsByDay[d] || [];
-    const dots = dayEvents.map(ev => `<span title="${ev.name.replace(/"/g,'&quot;')}" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${typeColor[ev.type]||'var(--muted)'};margin:0 1px;"></span>`).join('');
-    cells += `<div style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:4px;background:${isToday?'var(--accent-bg)':'transparent'};border:1px solid ${isToday?'var(--accent)':'transparent'};">
-      <span style="font-size:0.78rem;color:${isToday?'var(--accent)':dayEvents.length?'var(--text)':'var(--muted)'};">${d}</span>
-      <div style="height:8px;line-height:8px;">${dots}</div>
+    const primary = dayEvents[0];
+    const hasEvents = dayEvents.length > 0;
+
+    const bg = hasEvents ? (typeSolid[primary.type] || 'var(--accent)') : 'var(--surface)';
+    const textCol = hasEvents ? (typeText[primary.type] || '#fff') : (isToday ? 'var(--accent)' : 'var(--muted)');
+    const ring = isSelected ? '2px solid #fff' : isToday ? '2px solid var(--accent)' : '1px solid var(--border)';
+
+    const label = hasEvents
+      ? `<div style="font-size:0.62rem;line-height:1.15;font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:2px;">${primary.name}</div>`
+      : '';
+    const moreTag = dayEvents.length > 1 ? `<div style="font-size:0.58rem;opacity:0.85;margin-top:1px;">+${dayEvents.length - 1} more</div>` : '';
+
+    cells += `<div onclick="${hasEvents ? `selectCalDay(${sortDate})` : ''}" style="min-height:78px;padding:6px;border-radius:6px;background:${bg};border:${ring};color:${textCol};cursor:${hasEvents ? 'pointer' : 'default'};transition:transform 0.1s;" ${hasEvents ? `onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'"` : ''}>
+      <div style="font-size:0.85rem;font-weight:${isToday || hasEvents ? '600' : '400'};">${d}</div>
+      ${label}
+      ${moreTag}
     </div>`;
   }
 
   return `
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;">
-      ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `<div style="text-align:center;font-size:0.62rem;color:var(--faint);letter-spacing:0.06em;">${d}</div>`).join('')}
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px;">
+      ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `<div style="text-align:center;font-size:0.68rem;font-weight:500;letter-spacing:0.08em;color:var(--muted);text-transform:uppercase;">${d}</div>`).join('')}
     </div>
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;">${cells}</div>`;
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">${cells}</div>`;
 }
 
-async function renderCalendar() {
-  const gridEl = document.getElementById('calendar-month-grid');
-  const listEl = document.getElementById('calendar-grid');
-  listEl.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);">Loading...</div>`;
-  // Ensure DB events are loaded -- needed for getCalendarEvents()
-  if (!dbEvents || !dbEvents.length) await loadDbEvents();
-  // Load fresh attendance data so calendar shows who's going
-  await loadAttendance();
+// Renders the full detail card for whichever day is currently selected, into the panel
+// below the grid. Clicking a grid day calls this instead of always showing every event
+// in the month as one long list.
+function renderCalDayDetail(dayEvents, sortDate) {
+  const el = document.getElementById('calendar-grid');
   const TODAY = getTodaySortDate();
-
-  const viewDate = new Date();
-  viewDate.setDate(1);
-  viewDate.setMonth(viewDate.getMonth() + calMonthOffset);
-  const viewYear = viewDate.getFullYear();
-  const viewMonth = viewDate.getMonth(); // 0-indexed
-
-  const labelEl = document.getElementById('cal-month-label');
-  if (labelEl) labelEl.textContent = viewDate.toLocaleString('en-GB', { month: 'long', year: 'numeric' });
-
   const typeColor = { GT: 'var(--accent)', Teams: 'var(--draw)', RTT: 'var(--win)' };
   const typeBg    = { GT: 'var(--accent-bg)', Teams: 'var(--draw-bg)', RTT: 'var(--win-bg)' };
 
-  const calEvs = getCalendarEvents();
-  const monthEvents = calEvs.filter(ev => {
-    const y = Math.floor(ev.sortDate / 10000);
-    const m = Math.floor((ev.sortDate % 10000) / 100) - 1;
-    return y === viewYear && m === viewMonth;
-  });
-
-  if (gridEl) gridEl.innerHTML = buildCalendarMonthGrid(viewYear, viewMonth, monthEvents, TODAY);
-
-  const events = monthEvents
-    .filter(ev => calFormatFilter === 'all' || ev.type === calFormatFilter)
-    .sort((a, b) => a.sortDate - b.sortDate);
-
-  if (!events.length) {
-    listEl.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1rem 0;">No${calFormatFilter !== 'all' ? ' ' + calFormatFilter : ''} events this month.</div>`;
+  if (!dayEvents || !dayEvents.length) {
+    el.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);padding:1.5rem 0;text-align:center;">Select a highlighted day above to see event details.</div>`;
     return;
   }
 
-  let html = `<div style="display:flex;flex-direction:column;gap:6px;">`;
+  const dateLabel = new Date(
+    Math.floor(sortDate / 10000), Math.floor((sortDate % 10000) / 100) - 1, sortDate % 100
+  ).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
-  events.forEach(ev => {
+  let html = `<div style="font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">${dateLabel}</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">`;
+
+  dayEvents.forEach(ev => {
     const isPast = ev.sortDate < TODAY;
     const attended = ev.attended;
     const borderCol = attended ? 'var(--accent)' : 'var(--border)';
     const borderW   = attended ? '2px' : '1px';
-    const opacity   = isPast && !attended ? '0.45' : '1';
 
-    // Who's going for this event
-    const going = D.players.map(p => p.name).filter(n =>
-      attendanceData[`${n}_${ev.sortDate}`] === 'yes'
-    );
-    const maybe = D.players.map(p => p.name).filter(n =>
-      attendanceData[`${n}_${ev.sortDate}`] === 'maybe'
-    );
-    const notgoing = D.players.map(p => p.name).filter(n =>
-      attendanceData[`${n}_${ev.sortDate}`] === 'no'
-    );
+    const going = D.players.map(p => p.name).filter(n => attendanceData[`${n}_${ev.sortDate}`] === 'yes');
+    const maybe = D.players.map(p => p.name).filter(n => attendanceData[`${n}_${ev.sortDate}`] === 'maybe');
+    const notgoing = D.players.map(p => p.name).filter(n => attendanceData[`${n}_${ev.sortDate}`] === 'no');
     const total = going.length + maybe.length;
 
-    const whoId = `who-${ev.sortDate}`;
+    const whoId = `who-${ev.sortDate}-${ev.id}`;
     const whoHtml = (total > 0 || notgoing.length > 0) ? `
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);" id="${whoId}">
         ${going.length ? `
@@ -1871,7 +1860,6 @@ async function renderCalendar() {
           </div>` : ''}
       </div>` : '';
 
-    // Attendance pill shown even if nobody signed up yet (for upcoming events)
     const attendanceSummary = !isPast ? `
       <div onclick="toggleCalWho('${whoId}')" style="display:flex;align-items:center;gap:5px;cursor:${total > 0 ? 'pointer' : 'default'};">
         ${going.length ? `<span style="font-size:0.7rem;padding:2px 8px;border-radius:3px;background:var(--win-bg);color:var(--win);">✓ ${going.length} going</span>` : ''}
@@ -1893,7 +1881,7 @@ async function renderCalendar() {
       : '';
 
     html += `
-      <div style="background:var(--surface);border:${borderW} solid ${borderCol};border-radius:4px;opacity:${opacity};padding:10px 14px;">
+      <div style="background:var(--surface);border:${borderW} solid ${borderCol};border-radius:4px;padding:10px 14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div>
             <div style="font-size:0.9rem;font-weight:400;color:var(--text);">${ev.name}</div>
@@ -1912,7 +1900,72 @@ async function renderCalendar() {
   });
 
   html += `</div>`;
-  listEl.innerHTML = html;
+  el.innerHTML = html;
+}
+
+// Selects a day in the grid and shows its event(s) in the detail panel. Re-renders the
+// grid too so the selection ring moves to the clicked day.
+function selectCalDay(sortDate) {
+  calSelectedDay = sortDate;
+  const calEvs = getCalendarEvents();
+  const dayEvents = calEvs.filter(ev => ev.sortDate === sortDate && (calFormatFilter === 'all' || ev.type === calFormatFilter));
+  renderCalDayDetail(dayEvents, sortDate);
+
+  // Refresh grid selection ring without a full reload
+  const viewDate = new Date();
+  viewDate.setDate(1);
+  viewDate.setMonth(viewDate.getMonth() + calMonthOffset);
+  const monthEvents = calEvs.filter(ev => {
+    const y = Math.floor(ev.sortDate / 10000);
+    const m = Math.floor((ev.sortDate % 10000) / 100) - 1;
+    return y === viewDate.getFullYear() && m === viewDate.getMonth() &&
+      (calFormatFilter === 'all' || ev.type === calFormatFilter);
+  });
+  const gridEl = document.getElementById('calendar-month-grid');
+  if (gridEl) gridEl.innerHTML = buildCalendarMonthGrid(viewDate.getFullYear(), viewDate.getMonth(), monthEvents, getTodaySortDate(), calSelectedDay);
+}
+
+async function renderCalendar() {
+  const gridEl = document.getElementById('calendar-month-grid');
+  const detailEl = document.getElementById('calendar-grid');
+  detailEl.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);">Loading...</div>`;
+  // Ensure DB events are loaded -- needed for getCalendarEvents()
+  if (!dbEvents || !dbEvents.length) await loadDbEvents();
+  // Load fresh attendance data so calendar shows who's going
+  await loadAttendance();
+  const TODAY = getTodaySortDate();
+
+  const viewDate = new Date();
+  viewDate.setDate(1);
+  viewDate.setMonth(viewDate.getMonth() + calMonthOffset);
+  const viewYear = viewDate.getFullYear();
+  const viewMonth = viewDate.getMonth(); // 0-indexed
+
+  const labelEl = document.getElementById('cal-month-label');
+  if (labelEl) labelEl.textContent = viewDate.toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+
+  const calEvs = getCalendarEvents();
+  const monthEvents = calEvs.filter(ev => {
+    const y = Math.floor(ev.sortDate / 10000);
+    const m = Math.floor((ev.sortDate % 10000) / 100) - 1;
+    return y === viewYear && m === viewMonth && (calFormatFilter === 'all' || ev.type === calFormatFilter);
+  });
+
+  // Default selection: today if it's in view and has an event, else the nearest
+  // upcoming event this month, else the most recent past event this month, else none.
+  let defaultDay = null;
+  if (monthEvents.some(ev => ev.sortDate === TODAY)) defaultDay = TODAY;
+  else {
+    const upcoming = monthEvents.filter(ev => ev.sortDate >= TODAY).sort((a, b) => a.sortDate - b.sortDate)[0];
+    const past = monthEvents.filter(ev => ev.sortDate < TODAY).sort((a, b) => b.sortDate - a.sortDate)[0];
+    defaultDay = (upcoming || past)?.sortDate ?? null;
+  }
+  calSelectedDay = defaultDay;
+
+  if (gridEl) gridEl.innerHTML = buildCalendarMonthGrid(viewYear, viewMonth, monthEvents, TODAY, calSelectedDay);
+
+  const dayEvents = calSelectedDay ? monthEvents.filter(ev => ev.sortDate === calSelectedDay) : [];
+  renderCalDayDetail(dayEvents, calSelectedDay);
 }
 
 // -- club tab --
