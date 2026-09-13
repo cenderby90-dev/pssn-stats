@@ -2,6 +2,13 @@ import { sql } from '@vercel/postgres';
 
 const ADMIN_PIN = process.env.ADMIN_PIN;
 
+// Strips characters needed to form an HTML tag. This endpoint requires no PIN at all --
+// it's the only fully public, unauthenticated write path on the site -- so any free-text
+// field here (event_name, subteam) must never be stored capable of injecting markup.
+// Stripped rather than entity-encoded so it stays simple plain text everywhere it's later
+// rendered, without needing to touch every render site across the codebase.
+const stripTags = (s) => typeof s === 'string' ? s.replace(/[<>]/g, '').slice(0, 200) : s;
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
@@ -24,10 +31,12 @@ export default async function handler(req, res) {
     // POST -- player submits a result for admin approval
     if (req.method === 'POST') {
       const {
-        player_name, event_name, event_format, faction,
+        player_name, event_format, faction,
         place, total_players, wins, losses, draws,
-        subteam, shadow, dropped, edition, sort_date
+        shadow, dropped, edition, sort_date
       } = req.body;
+      const event_name = stripTags(req.body.event_name);
+      const subteam = stripTags(req.body.subteam);
 
       if (!player_name || !event_name || !event_format || !faction) {
         return res.status(400).json({ error: 'Missing required fields' });
