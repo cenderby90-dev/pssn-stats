@@ -5225,6 +5225,10 @@ async function loadAndRenderMembers() {
               style="font-size:0.72rem;padding:4px 10px;background:transparent;border:1px solid ${p.active ? 'var(--loss)' : 'var(--win)'};border-radius:3px;color:${p.active ? 'var(--loss)' : 'var(--win)'};cursor:pointer;">
               ${p.active ? 'Deactivate' : 'Reactivate'}
             </button>
+            <button onclick="deletePlayer(${p.id}, '${p.name.replace(/'/g,"\\'")}')"
+              style="font-size:0.72rem;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;"
+              onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Delete</button>
           </div>
         </div>
       </div>`;
@@ -5381,6 +5385,30 @@ async function toggleMember(playerId, active) {
     if (data.success) await loadAndRenderMembers();
     else alert('Error: ' + (data.error || 'Unknown'));
   } catch(e) { console.error(e); }
+}
+
+async function deletePlayer(playerId, name) {
+  if (!confirm(`Delete ${name} entirely? This can't be undone. Use this only for genuine duplicates or mistakes -- if they have any real history, deactivate instead.`)) return;
+  try {
+    const res = await fetch(`${API}/players`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: getAdminPin(), id: playerId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      await loadAndRenderMembers();
+    } else if (res.status === 409 && data.counts) {
+      const parts = [];
+      if (data.counts.eventResults) parts.push(`${data.counts.eventResults} event result${data.counts.eventResults>1?'s':''}`);
+      if (data.counts.leagueGames) parts.push(`${data.counts.leagueGames} league game${data.counts.leagueGames>1?'s':''}`);
+      if (data.counts.leaguePods) parts.push(`${data.counts.leaguePods} pod assignment${data.counts.leaguePods>1?'s':''}`);
+      if (data.counts.playoffMatches) parts.push(`${data.counts.playoffMatches} playoff match${data.counts.playoffMatches>1?'es':''}`);
+      alert(`Can't delete ${name} -- they have ${parts.join(', ')}. Reassign or merge that history to another player first (e.g. via Player Name Aliases + repair scan), then deactivate instead of deleting if any doubt remains.`);
+    } else {
+      alert('Error: ' + (data.error || 'Unknown'));
+    }
+  } catch(e) { console.error(e); alert('Network error -- could not delete.'); }
 }
 
 
@@ -6391,6 +6419,114 @@ async function deleteDbEvent(id) {
   } catch(e) { console.error('Delete failed', e); }
 }
 
+async function deleteDbResult(id, playerName) {
+  if (!confirm(`Remove ${playerName}'s result? This only removes this one result -- the rest of the event is untouched.`)) return;
+  try {
+    const res = await fetch(`${API}/events`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: getAdminPin(), resultId: id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      await loadApprovedSubmissions();
+      rebuildStats();
+      await loadDbEvents();
+    } else {
+      alert('Could not remove result: ' + (data.error || 'unknown error'));
+    }
+  } catch(e) { console.error('Delete failed', e); alert('Network error -- could not remove result.'); }
+}
+
+function openEditEvent(id, name, eventDate, sortDate, format, totalPlayers, totalTeams, bcpUrl, edition) {
+  let modal = document.getElementById('edit-event-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'edit-event-modal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    document.body.appendChild(modal);
+  }
+  const field = (label, inputHtml) => `
+    <div>
+      <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">${label}</label>
+      ${inputHtml}
+    </div>`;
+  const inputStyle = "width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;";
+
+  modal.innerHTML = `
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;">
+      <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Edit Event</div>
+      <div style="display:grid;gap:10px;">
+        ${field('Event name', `<input id="ee-name" type="text" value="${name.replace(/"/g,'&quot;')}" style="${inputStyle}"/>`)}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          ${field('Event date (display text)', `<input id="ee-date" type="text" value="${eventDate.replace(/"/g,'&quot;')}" placeholder="e.g. 5-6 Sep 2026" style="${inputStyle}"/>`)}
+          ${field('Sort order (YYYYMMDD)', `<input id="ee-sortdate" type="number" value="${sortDate}" style="${inputStyle}"/>`)}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          ${field('Format', `<select id="ee-format" style="${inputStyle}">
+            ${['GT','RTT','Teams','Club','Championship'].map(f => `<option value="${f}" ${f===format?'selected':''}>${f}</option>`).join('')}
+          </select>`)}
+          ${field('Edition', `<select id="ee-edition" style="${inputStyle}">
+            <option value="10" ${edition===10?'selected':''}>10th</option>
+            <option value="11" ${edition===11?'selected':''}>11th</option>
+          </select>`)}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          ${field('Total players', `<input id="ee-players" type="number" min="0" value="${totalPlayers}" style="${inputStyle}"/>`)}
+          ${field('Total teams (if Teams format)', `<input id="ee-teams" type="number" min="0" value="${totalTeams}" style="${inputStyle}"/>`)}
+        </div>
+        ${field('BCP link', `<input id="ee-bcp" type="text" value="${bcpUrl.replace(/"/g,'&quot;')}" placeholder="https://www.bestcoastpairings.com/event/..." style="${inputStyle}"/>`)}
+        <div id="ee-msg" style="display:none;font-size:0.78rem;padding:6px 10px;border-radius:4px;"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
+          <button onclick="document.getElementById('edit-event-modal').style.display='none'"
+            style="padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.85rem;cursor:pointer;">Cancel</button>
+          <button onclick="saveDbEvent(${id})"
+            style="padding:8px 16px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;">Save Changes</button>
+        </div>
+      </div>
+    </div>`;
+  modal.style.display = 'flex';
+  modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+}
+
+async function saveDbEvent(id) {
+  const msg = document.getElementById('ee-msg');
+  const updates = {
+    name: document.getElementById('ee-name').value.trim(),
+    event_date: document.getElementById('ee-date').value.trim(),
+    sort_date: parseInt(document.getElementById('ee-sortdate').value) || 0,
+    format: document.getElementById('ee-format').value,
+    edition: parseInt(document.getElementById('ee-edition').value),
+    total_players: parseInt(document.getElementById('ee-players').value) || 0,
+    total_teams: parseInt(document.getElementById('ee-teams').value) || 0,
+    bcp_url: document.getElementById('ee-bcp').value.trim(),
+  };
+  msg.style.display = 'block'; msg.style.background = 'var(--surface2)'; msg.style.color = 'var(--muted)';
+  msg.textContent = 'Saving...';
+  try {
+    const res = await fetch(`${API}/events`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: getAdminPin(), eventId: id, updates })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.style.background = 'var(--win-bg)'; msg.style.color = 'var(--win)';
+      msg.textContent = '✓ Saved -- reloading...';
+      await loadApprovedSubmissions();
+      rebuildStats();
+      await loadDbEvents();
+      setTimeout(() => { document.getElementById('edit-event-modal').style.display = 'none'; }, 700);
+    } else {
+      msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+      msg.textContent = 'Error: ' + (data.error || 'unknown error');
+    }
+  } catch(e) {
+    msg.style.background = 'var(--loss-bg)'; msg.style.color = 'var(--loss)';
+    msg.textContent = 'Network error -- try again.';
+  }
+}
+
 function filterDbEvents() {
   const search = (document.getElementById('ev-db-search')?.value || '').toLowerCase().trim();
   const format = document.getElementById('ev-db-format')?.value || '';
@@ -6457,10 +6593,16 @@ function renderDbEvents() {
               ${r.dropped ? `<span style="font-size:0.62rem;color:var(--loss);border:1px solid var(--loss);border-radius:3px;padding:1px 4px;">dropped</span>` : ''}
               ${r.shadow ? `<span style="font-size:0.62rem;color:var(--accent);border:1px solid var(--accent-muted);border-radius:3px;padding:1px 4px;">shadow</span>` : ''}
             </div>
-            <button onclick="openEditResult(${r.id}, '${r.player_name.replace(/'/g,"\\'")}', '${r.faction.replace(/'/g,"\\'")}', ${r.place||0}, ${r.wins}, ${r.losses}, ${r.draws}, ${r.dropped}, ${r.shadow||false})"
-              style="font-size:0.65rem;padding:2px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;white-space:nowrap;"
-              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Edit</button>
+            <div style="display:flex;gap:4px;">
+              <button onclick="openEditResult(${r.id}, '${r.player_name.replace(/'/g,"\\'")}', '${r.faction.replace(/'/g,"\\'")}', ${r.place||0}, ${r.wins}, ${r.losses}, ${r.draws}, ${r.dropped}, ${r.shadow||false})"
+                style="font-size:0.65rem;padding:2px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;white-space:nowrap;"
+                onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+                onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Edit</button>
+              <button onclick="deleteDbResult(${r.id}, '${r.player_name.replace(/'/g,"\\'")}')"
+                style="font-size:0.65rem;padding:2px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;white-space:nowrap;"
+                onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
+                onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Remove</button>
+            </div>
           </div>`;
         }).join('')
       : `<div style="font-size:0.82rem;color:var(--muted);padding:8px 0;">No results recorded.</div>`;
@@ -6482,6 +6624,10 @@ function renderDbEvents() {
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
           <span id="dber-arr-${ev.id}" style="font-size:0.7rem;color:var(--muted);transition:transform 0.2s;">▼</span>
+          <button onclick="event.stopPropagation();openEditEvent(${ev.id}, '${ev.name.replace(/'/g,"\\'")}', '${(ev.event_date||'').replace(/'/g,"\\'")}', ${ev.sort_date||0}, '${ev.format}', ${ev.total_players||0}, ${ev.total_teams||0}, '${(ev.bcp_url||'').replace(/'/g,"\\'")}', ${ev.edition||11})"
+            style="font-size:0.72rem;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;"
+            onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Edit</button>
           <button onclick="event.stopPropagation();deleteDbEvent(${ev.id})"
             style="font-size:0.72rem;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;"
             onmouseover="this.style.borderColor='var(--loss)';this.style.color='var(--loss)'"
