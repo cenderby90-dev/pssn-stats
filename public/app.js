@@ -1741,6 +1741,7 @@ function getCalendarEvents() {
     type:     ev.format || 'GT',
     attended: Array.isArray(ev.results) && ev.results.some(r => D.players.some(p => p.name === r.player_name)),
     sortDate: ev.sort_date || 0,
+    endSortDate: ev.end_sort_date || ev.sort_date || 0,
     bcp:      ev.bcp_url || '',
     id:       ev.id,
   })).filter(ev => ev.sortDate > 0);
@@ -1759,11 +1760,18 @@ function buildCalendarMonthGrid(year, month, monthEvents, todaySortDate, selecte
   const startWeekday = (firstDay.getDay() + 6) % 7; // Monday = 0
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+  // Place each event on every day it spans within this month (clamped to the month's
+  // own boundaries) -- not just its start day -- so multi-day events show across their
+  // full range, not just a single cell.
   const eventsByDay = {};
-  monthEvents.forEach(ev => {
-    const day = ev.sortDate % 100;
-    (eventsByDay[day] = eventsByDay[day] || []).push(ev);
-  });
+  for (let d = 1; d <= daysInMonth; d++) {
+    const daySort = year * 10000 + (month + 1) * 100 + d;
+    monthEvents.forEach(ev => {
+      if (daySort >= ev.sortDate && daySort <= ev.endSortDate) {
+        (eventsByDay[d] = eventsByDay[d] || []).push(ev);
+      }
+    });
+  }
 
   const todayYear = Math.floor(todaySortDate / 10000);
   const todayMonth = Math.floor((todaySortDate % 10000) / 100) - 1;
@@ -1778,6 +1786,7 @@ function buildCalendarMonthGrid(year, month, monthEvents, todaySortDate, selecte
     const dayEvents = eventsByDay[d] || [];
     const primary = dayEvents[0];
     const hasEvents = dayEvents.length > 0;
+    const isMultiDay = primary && primary.endSortDate > primary.sortDate;
 
     const bg = hasEvents ? (typeSolid[primary.type] || 'var(--accent)') : 'var(--surface)';
     const textCol = hasEvents ? (typeText[primary.type] || '#fff') : (isToday ? 'var(--accent)' : 'var(--muted)');
@@ -1787,11 +1796,15 @@ function buildCalendarMonthGrid(year, month, monthEvents, todaySortDate, selecte
       ? `<div style="font-size:0.62rem;line-height:1.15;font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:2px;">${primary.name}</div>`
       : '';
     const moreTag = dayEvents.length > 1 ? `<div style="font-size:0.58rem;opacity:0.85;margin-top:1px;">+${dayEvents.length - 1} more</div>` : '';
+    const spanTag = isMultiDay
+      ? `<div style="font-size:0.56rem;opacity:0.75;margin-top:1px;">${sortDate === primary.sortDate ? 'starts' : sortDate === primary.endSortDate ? 'ends' : '···'}</div>`
+      : '';
 
     cells += `<div onclick="${hasEvents ? `selectCalDay(${sortDate})` : ''}" style="min-height:78px;padding:6px;border-radius:6px;background:${bg};border:${ring};color:${textCol};cursor:${hasEvents ? 'pointer' : 'default'};transition:transform 0.1s;" ${hasEvents ? `onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'"` : ''}>
       <div style="font-size:0.85rem;font-weight:${isToday || hasEvents ? '600' : '400'};">${d}</div>
       ${label}
       ${moreTag}
+      ${spanTag}
     </div>`;
   }
 
@@ -1903,24 +1916,36 @@ function renderCalDayDetail(dayEvents, sortDate) {
   el.innerHTML = html;
 }
 
-// Selects a day in the grid and shows its event(s) in the detail panel. Re-renders the
-// grid too so the selection ring moves to the clicked day.
+// Events whose [sortDate, endSortDate] range overlaps at all with the given calendar
+// month -- catches events that start in a previous month or end in a following one,
+// not just ones whose start date falls inside this exact month.
+function calEventsOverlappingMonth(calEvs, year, month) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthFirstSort = year * 10000 + (month + 1) * 100 + 1;
+  const monthLastSort = year * 10000 + (month + 1) * 100 + daysInMonth;
+  return calEvs.filter(ev =>
+    ev.sortDate <= monthLastSort && ev.endSortDate >= monthFirstSort &&
+    (calFormatFilter === 'all' || ev.type === calFormatFilter)
+  );
+}
+
+// Selects a day in the grid and shows its event(s) in the detail panel. Matches any
+// event whose range covers this day, not just one starting exactly on it. Re-renders
+// the grid too so the selection ring moves to the clicked day.
 function selectCalDay(sortDate) {
   calSelectedDay = sortDate;
   const calEvs = getCalendarEvents();
-  const dayEvents = calEvs.filter(ev => ev.sortDate === sortDate && (calFormatFilter === 'all' || ev.type === calFormatFilter));
+  const dayEvents = calEvs.filter(ev =>
+    ev.sortDate <= sortDate && ev.endSortDate >= sortDate &&
+    (calFormatFilter === 'all' || ev.type === calFormatFilter)
+  );
   renderCalDayDetail(dayEvents, sortDate);
 
   // Refresh grid selection ring without a full reload
   const viewDate = new Date();
   viewDate.setDate(1);
   viewDate.setMonth(viewDate.getMonth() + calMonthOffset);
-  const monthEvents = calEvs.filter(ev => {
-    const y = Math.floor(ev.sortDate / 10000);
-    const m = Math.floor((ev.sortDate % 10000) / 100) - 1;
-    return y === viewDate.getFullYear() && m === viewDate.getMonth() &&
-      (calFormatFilter === 'all' || ev.type === calFormatFilter);
-  });
+  const monthEvents = calEventsOverlappingMonth(calEvs, viewDate.getFullYear(), viewDate.getMonth());
   const gridEl = document.getElementById('calendar-month-grid');
   if (gridEl) gridEl.innerHTML = buildCalendarMonthGrid(viewDate.getFullYear(), viewDate.getMonth(), monthEvents, getTodaySortDate(), calSelectedDay);
 }
@@ -1945,16 +1970,12 @@ async function renderCalendar() {
   if (labelEl) labelEl.textContent = viewDate.toLocaleString('en-GB', { month: 'long', year: 'numeric' });
 
   const calEvs = getCalendarEvents();
-  const monthEvents = calEvs.filter(ev => {
-    const y = Math.floor(ev.sortDate / 10000);
-    const m = Math.floor((ev.sortDate % 10000) / 100) - 1;
-    return y === viewYear && m === viewMonth && (calFormatFilter === 'all' || ev.type === calFormatFilter);
-  });
+  const monthEvents = calEventsOverlappingMonth(calEvs, viewYear, viewMonth);
 
-  // Default selection: today if it's in view and has an event, else the nearest
-  // upcoming event this month, else the most recent past event this month, else none.
+  // Default selection: today if it's in view and covered by an event's range, else the
+  // nearest upcoming event this month, else the most recent past event this month, else none.
   let defaultDay = null;
-  if (monthEvents.some(ev => ev.sortDate === TODAY)) defaultDay = TODAY;
+  if (monthEvents.some(ev => ev.sortDate <= TODAY && ev.endSortDate >= TODAY)) defaultDay = TODAY;
   else {
     const upcoming = monthEvents.filter(ev => ev.sortDate >= TODAY).sort((a, b) => a.sortDate - b.sortDate)[0];
     const past = monthEvents.filter(ev => ev.sortDate < TODAY).sort((a, b) => b.sortDate - a.sortDate)[0];
@@ -1964,7 +1985,9 @@ async function renderCalendar() {
 
   if (gridEl) gridEl.innerHTML = buildCalendarMonthGrid(viewYear, viewMonth, monthEvents, TODAY, calSelectedDay);
 
-  const dayEvents = calSelectedDay ? monthEvents.filter(ev => ev.sortDate === calSelectedDay) : [];
+  const dayEvents = calSelectedDay
+    ? monthEvents.filter(ev => ev.sortDate <= calSelectedDay && ev.endSortDate >= calSelectedDay)
+    : [];
   renderCalDayDetail(dayEvents, calSelectedDay);
 }
 
@@ -6503,7 +6526,7 @@ async function deleteDbResult(id, playerName) {
   } catch(e) { console.error('Delete failed', e); alert('Network error -- could not remove result.'); }
 }
 
-function openEditEvent(id, name, eventDate, sortDate, format, totalPlayers, totalTeams, bcpUrl, edition) {
+function openEditEvent(id, name, eventDate, sortDate, format, totalPlayers, totalTeams, bcpUrl, edition, endSortDate) {
   let modal = document.getElementById('edit-event-modal');
   if (!modal) {
     modal = document.createElement('div');
@@ -6523,10 +6546,12 @@ function openEditEvent(id, name, eventDate, sortDate, format, totalPlayers, tota
       <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Edit Event</div>
       <div style="display:grid;gap:10px;">
         ${field('Event name', `<input id="ee-name" type="text" value="${name.replace(/"/g,'&quot;')}" style="${inputStyle}"/>`)}
+        ${field('Event date (display text)', `<input id="ee-date" type="text" value="${eventDate.replace(/"/g,'&quot;')}" placeholder="e.g. 5-6 Sep 2026" style="${inputStyle}"/>`)}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          ${field('Event date (display text)', `<input id="ee-date" type="text" value="${eventDate.replace(/"/g,'&quot;')}" placeholder="e.g. 5-6 Sep 2026" style="${inputStyle}"/>`)}
-          ${field('Sort order (YYYYMMDD)', `<input id="ee-sortdate" type="number" value="${sortDate}" style="${inputStyle}"/>`)}
+          ${field('Starts (YYYYMMDD)', `<input id="ee-sortdate" type="number" value="${sortDate}" style="${inputStyle}"/>`)}
+          ${field('Ends (YYYYMMDD)', `<input id="ee-endsortdate" type="number" value="${endSortDate || sortDate}" style="${inputStyle}"/>`)}
         </div>
+        <div style="font-size:0.68rem;color:var(--faint);margin-top:-4px;">Same as start date for a single-day event. This is what makes the event span multiple days on the Calendar tab.</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           ${field('Format', `<select id="ee-format" style="${inputStyle}">
             ${['GT','RTT','Teams','Club','Championship'].map(f => `<option value="${f}" ${f===format?'selected':''}>${f}</option>`).join('')}
@@ -6560,6 +6585,7 @@ async function saveDbEvent(id) {
     name: document.getElementById('ee-name').value.trim(),
     event_date: document.getElementById('ee-date').value.trim(),
     sort_date: parseInt(document.getElementById('ee-sortdate').value) || 0,
+    end_sort_date: parseInt(document.getElementById('ee-endsortdate').value) || 0,
     format: document.getElementById('ee-format').value,
     edition: parseInt(document.getElementById('ee-edition').value),
     total_players: parseInt(document.getElementById('ee-players').value) || 0,
@@ -6689,7 +6715,7 @@ function renderDbEvents() {
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
           <span id="dber-arr-${ev.id}" style="font-size:0.7rem;color:var(--muted);transition:transform 0.2s;">▼</span>
-          <button onclick="event.stopPropagation();openEditEvent(${ev.id}, '${ev.name.replace(/'/g,"\\'")}', '${(ev.event_date||'').replace(/'/g,"\\'")}', ${ev.sort_date||0}, '${ev.format}', ${ev.total_players||0}, ${ev.total_teams||0}, '${(ev.bcp_url||'').replace(/'/g,"\\'")}', ${ev.edition||11})"
+          <button onclick="event.stopPropagation();openEditEvent(${ev.id}, '${ev.name.replace(/'/g,"\\'")}', '${(ev.event_date||'').replace(/'/g,"\\'")}', ${ev.sort_date||0}, '${ev.format}', ${ev.total_players||0}, ${ev.total_teams||0}, '${(ev.bcp_url||'').replace(/'/g,"\\'")}', ${ev.edition||11}, ${ev.end_sort_date||ev.sort_date||0})"
             style="font-size:0.72rem;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;"
             onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
             onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Edit</button>
