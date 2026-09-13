@@ -4915,7 +4915,9 @@ function wizardReset() {
 async function wizardSubmitResult() {
   const msg = document.getElementById('wiz-message');
   const player = document.getElementById('wiz-player').value;
-  const faction = document.getElementById('wiz-faction').value;
+  const factionBase = document.getElementById('wiz-faction').value;
+  const dispositionSel = document.getElementById('wiz-disposition')?.value || '';
+  const faction = dispositionSel ? `${factionBase} - ${dispositionSel}` : factionBase;
   const placing = parseInt(document.getElementById('wiz-placing').value) || null;
   const total = parseInt(document.getElementById('wiz-total').value) || null;
   const wins = parseInt(document.getElementById('wiz-wins').value) || 0;
@@ -6505,7 +6507,24 @@ function toggleDbEventResults(id) {
   if (arr) arr.style.transform = open ? '' : 'rotate(180deg)';
 }
 
+const FORCE_DISPOSITIONS = ['Take and Hold', 'Purge the Foe', 'Reconnaissance', 'Disruption', 'Priority Assets'];
+const KNOWN_FACTIONS = ['Adepta Sororitas','Adeptus Custodes','Adeptus Mechanicus','Aeldari','Astra Militarum','Black Templars','Blood Angels','Chaos Daemons','Chaos Knights','Chaos Space Marines','Dark Angels','Death Guard','Deathwatch','Drukhari',"Emperor's Children",'Genestealer Cult','Grey Knights','Imperial Knights','Leagues of Votann','Necrons','Orks','Space Marines',"T'au Empire",'Thousand Sons','Tyranids','World Eaters'];
+
 function openEditResult(id, player, faction, place, wins, losses, draws, dropped, shadow) {
+  // Split the stored "Faction - Disposition" string back into its two parts. Splitting on
+  // a known disposition suffix (rather than assuming "Faction - X" always means X is a
+  // disposition) keeps chapter/sub-faction detail like "Space Marines (Iron Hands)" intact.
+  let baseFaction = faction || '';
+  let disposition = '';
+  for (const d of FORCE_DISPOSITIONS) {
+    const suffix = ` - ${d}`;
+    if (baseFaction.endsWith(suffix)) {
+      disposition = d;
+      baseFaction = baseFaction.slice(0, -suffix.length);
+      break;
+    }
+  }
+
   // Create/show inline edit modal
   let modal = document.getElementById('edit-result-modal');
   if (!modal) {
@@ -6521,8 +6540,16 @@ function openEditResult(id, player, faction, place, wins, losses, draws, dropped
       <div style="display:grid;gap:10px;">
         <div>
           <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Faction</label>
-          <select id="er-faction" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
-            ${['Adepta Sororitas','Adeptus Custodes','Adeptus Mechanicus','Aeldari','Astra Militarum','Black Templars','Blood Angels','Chaos Daemons','Chaos Knights','Chaos Space Marines','Dark Angels','Death Guard','Deathwatch','Drukhari',"Emperor's Children",'Genestealer Cult','Grey Knights','Imperial Knights','Leagues of Votann','Necrons','Orks','Space Marines',"T'au Empire",'Thousand Sons','Tyranids','World Eaters'].map(f => `<option value="${f}" ${f===faction?'selected':''}>${f}</option>`).join('')}
+          <input id="er-faction" type="text" list="er-faction-list" value="${baseFaction.replace(/"/g,'&quot;')}"
+            placeholder="e.g. Space Marines (Iron Hands)"
+            style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;"/>
+          <datalist id="er-faction-list">${KNOWN_FACTIONS.map(f => `<option value="${f}">`).join('')}</datalist>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;">Force Disposition (11th ed only)</label>
+          <select id="er-disposition" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+            <option value="">-- none / 10th edition --</option>
+            ${FORCE_DISPOSITIONS.map(d => `<option value="${d}" ${d===disposition?'selected':''}>${d}</option>`).join('')}
           </select>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
@@ -6569,8 +6596,10 @@ function openEditResult(id, player, faction, place, wins, losses, draws, dropped
 
 async function saveDbResult(id) {
   const msg = document.getElementById('er-msg');
+  const baseFaction = document.getElementById('er-faction').value.trim();
+  const disposition = document.getElementById('er-disposition').value;
   const updates = {
-    faction: document.getElementById('er-faction').value,
+    faction: disposition ? `${baseFaction} - ${disposition}` : baseFaction,
     wins:    parseInt(document.getElementById('er-wins').value),
     losses:  parseInt(document.getElementById('er-losses').value),
     draws:   parseInt(document.getElementById('er-draws').value),
