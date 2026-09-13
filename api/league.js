@@ -83,6 +83,11 @@ export default async function handler(req, res) {
       const seedings = calcSeedings(pods, players, games);
       const bracket = calcBracket(seedings, playoffs, allPlayoffRows);
 
+      // Pods carry their own pre-computed standings now -- calcSeedings already worked
+      // this out internally for byes/seeding, so the client gets it too instead of running
+      // a second, separately-maintained copy of the same ranking algorithm.
+      pods.forEach(pod => { pod.standings = seedings.standingsByPod[pod.id] || []; });
+
       return res.status(200).json({
         season, pods, players, games, pending,
         playoffs, pendingPlayoffs,
@@ -261,7 +266,7 @@ function calcSeedings(pods, players, games) {
   const byeWinners = rankedWinners.slice(0, totalByes);
   const qfWinners = rankedWinners.slice(totalByes); // winners without a bye, entering at QF
 
-  return { byeWinners, qfWinners, runnersUp, byeCutTied, numPods, totalByes };
+  return { byeWinners, qfWinners, runnersUp, byeCutTied, numPods, totalByes, standingsByPod: standings };
 }
 
 function calcPodStandings(playerNames, games, podName) {
