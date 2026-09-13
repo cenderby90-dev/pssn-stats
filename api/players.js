@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+import { checkPin } from './_pinAuth.js';
 
 const ADMIN_PIN = process.env.ADMIN_PIN;
 
@@ -21,7 +22,8 @@ export default async function handler(req, res) {
     // POST — add a new player (admin only)
     if (req.method === 'POST') {
       const { pin, name, factions } = req.body;
-      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+      const auth = await checkPin(req, pin, [ADMIN_PIN]);
+      if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
       if (!name) return res.status(400).json({ error: 'Name required' });
       await sql`
         INSERT INTO players (name, factions, active)
@@ -34,7 +36,8 @@ export default async function handler(req, res) {
     // PATCH — update a player (rename, update factions, deactivate)
     if (req.method === 'PATCH') {
       const { pin, id, name, factions, active } = req.body;
-      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+      const auth = await checkPin(req, pin, [ADMIN_PIN]);
+      if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
       if (name !== undefined) await sql`UPDATE players SET name = ${name} WHERE id = ${id}`;
       if (factions !== undefined) await sql`UPDATE players SET factions = ${factions} WHERE id = ${id}`;
       if (active !== undefined) await sql`UPDATE players SET active = ${active} WHERE id = ${id}`;
@@ -47,7 +50,8 @@ export default async function handler(req, res) {
     // manual duplicate-player cleanups done via direct SQL this season).
     if (req.method === 'DELETE') {
       const { pin, id } = req.body;
-      if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorised' });
+      const auth = await checkPin(req, pin, [ADMIN_PIN]);
+      if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
       if (!id) return res.status(400).json({ error: 'id required' });
 
       const { rows: nameRows } = await sql`SELECT name FROM players WHERE id = ${id}`;
