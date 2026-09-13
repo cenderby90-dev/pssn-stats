@@ -142,15 +142,22 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'resultId or eventId required' });
   }
 
-  // ── DELETE — remove an event and all its results ──
+  // ── DELETE — remove a single result, or an event and all its results ──
   if (req.method === 'DELETE') {
-    const { pin, eventId } = req.body;
+    const { pin, eventId, resultId } = req.body;
     if (pin !== ADMIN_PIN) return res.status(401).json({ error: 'Unauthorized' });
 
     try {
-      await sql`DELETE FROM event_results WHERE event_id = ${eventId}`;
-      await sql`DELETE FROM events WHERE id = ${eventId}`;
-      return res.status(200).json({ success: true });
+      if (resultId) {
+        await sql`DELETE FROM event_results WHERE id = ${resultId}`;
+        return res.status(200).json({ success: true });
+      }
+      if (eventId) {
+        await sql`DELETE FROM event_results WHERE event_id = ${eventId}`;
+        await sql`DELETE FROM events WHERE id = ${eventId}`;
+        return res.status(200).json({ success: true });
+      }
+      return res.status(400).json({ error: 'resultId or eventId required' });
     } catch (e) {
       return res.status(500).json({ error: e.message });
     }
