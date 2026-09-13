@@ -2,6 +2,11 @@ import { sql } from '@vercel/postgres';
 
 const ADMIN_PIN = process.env.ADMIN_PIN;
 
+// See api/submissions.js for why this exists -- applied here too since the result-editor's
+// faction field is now free text, and it's cheap insurance even though this endpoint is
+// PIN-gated.
+const stripTags = (s) => typeof s === 'string' ? s.replace(/[<>]/g, '').slice(0, 200) : s;
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
@@ -53,13 +58,13 @@ export default async function handler(req, res) {
       const evRes = await sql`
         INSERT INTO events (name, event_date, format, edition, total_players, total_teams, bcp_url, approved, sort_date)
         VALUES (
-          ${event.name},
-          ${event.event_date || ''},
+          ${stripTags(event.name)},
+          ${stripTags(event.event_date) || ''},
           ${event.format || 'GT'},
           ${event.edition || 11},
           ${event.total_players || 0},
           ${event.total_teams || 0},
-          ${event.bcp_url || ''},
+          ${stripTags(event.bcp_url) || ''},
           true,
           ${event.sort_date}
         )
@@ -73,12 +78,12 @@ export default async function handler(req, res) {
           VALUES (
             ${eventId},
             ${r.player_name},
-            ${r.faction || ''},
+            ${stripTags(r.faction) || ''},
             ${r.place || 0},
             ${r.wins || 0},
             ${r.losses || 0},
             ${r.draws || 0},
-            ${r.subteam || null},
+            ${stripTags(r.subteam) || null},
             ${r.shadow || false},
             ${r.dropped || false}
           )
@@ -102,14 +107,14 @@ export default async function handler(req, res) {
         await sql`
           UPDATE event_results SET
             player_name = COALESCE(${updates.player_name ?? null}, player_name),
-            faction   = COALESCE(${updates.faction   ?? null}, faction),
+            faction   = COALESCE(${stripTags(updates.faction) ?? null}, faction),
             wins      = COALESCE(${updates.wins      ?? null}, wins),
             losses    = COALESCE(${updates.losses    ?? null}, losses),
             draws     = COALESCE(${updates.draws     ?? null}, draws),
             place     = COALESCE(${updates.place     ?? null}, place),
             dropped   = COALESCE(${updates.dropped   ?? null}, dropped),
             shadow    = COALESCE(${updates.shadow    ?? null}, shadow),
-            subteam   = COALESCE(${updates.subteam   ?? null}, subteam)
+            subteam   = COALESCE(${stripTags(updates.subteam) ?? null}, subteam)
           WHERE id = ${resultId}
         `;
         return res.status(200).json({ success: true });
@@ -123,13 +128,13 @@ export default async function handler(req, res) {
       try {
         await sql`
           UPDATE events SET
-            name         = COALESCE(${updates.name         ?? null}, name),
-            event_date   = COALESCE(${updates.event_date   ?? null}, event_date),
+            name         = COALESCE(${stripTags(updates.name) ?? null}, name),
+            event_date   = COALESCE(${stripTags(updates.event_date) ?? null}, event_date),
             format       = COALESCE(${updates.format       ?? null}, format),
             sort_date    = COALESCE(${updates.sort_date    ?? null}, sort_date),
             total_players = COALESCE(${updates.total_players ?? null}, total_players),
             total_teams  = COALESCE(${updates.total_teams  ?? null}, total_teams),
-            bcp_url      = COALESCE(${updates.bcp_url      ?? null}, bcp_url),
+            bcp_url      = COALESCE(${stripTags(updates.bcp_url) ?? null}, bcp_url),
             edition      = COALESCE(${updates.edition      ?? null}, edition)
           WHERE id = ${eventId}
         `;
