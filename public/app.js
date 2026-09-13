@@ -203,54 +203,15 @@ function invalidateEventsCache() { _activeEventsCache = null; }
 function calcPodStandings(podId, players, games) {
   const podPlayers = players.filter(p => p.pod_id === podId).map(p => p.player_name);
   const podGames = games.filter(g => g.pod_id === podId);
+
+  // Standings (ranking, tiebreak resolution) are computed once, server-side, in
+  // api/league.js -- this just looks that up rather than re-running the same
+  // algorithm a second time. Previously this function had its own full copy of the
+  // ranking/tiebreak logic, which had to be manually kept in sync with the server's.
+  const pod = (leagueData?.pods || []).find(p => p.id === podId);
+  const sorted = (pod?.standings || []).map(s => ({ ...s }));
   const standings = {};
-  podPlayers.forEach(n => { standings[n] = { name: n, pts: 0, wins: 0, draws: 0, losses: 0, bp: 0, played: 0, tieResolvedBy: null }; });
-  podGames.forEach(g => {
-    if (!standings[g.player1]) standings[g.player1] = { name: g.player1, pts: 0, wins: 0, draws: 0, losses: 0, bp: 0, played: 0, tieResolvedBy: null };
-    if (!standings[g.player2]) standings[g.player2] = { name: g.player2, pts: 0, wins: 0, draws: 0, losses: 0, bp: 0, played: 0, tieResolvedBy: null };
-    standings[g.player1].bp += g.bp1; standings[g.player2].bp += g.bp2;
-    standings[g.player1].played++; standings[g.player2].played++;
-    if (g.bp1 > g.bp2) { standings[g.player1].pts += 2; standings[g.player1].wins++; standings[g.player2].losses++; }
-    else if (g.bp2 > g.bp1) { standings[g.player2].pts += 2; standings[g.player2].wins++; standings[g.player1].losses++; }
-    else { standings[g.player1].pts++; standings[g.player2].pts++; standings[g.player1].draws++; standings[g.player2].draws++; }
-  });
-
-  // Head-to-head: -1 if a ranks above b, 1 if b ranks above a, 0 if drawn/unplayed
-  const h2h = (a, b) => {
-    const g = podGames.find(g => (g.player1 === a && g.player2 === b) || (g.player1 === b && g.player2 === a));
-    if (!g) return 0;
-    const aBp = g.player1 === a ? g.bp1 : g.bp2;
-    const bBp = g.player1 === a ? g.bp2 : g.bp1;
-    return aBp > bBp ? -1 : aBp < bBp ? 1 : 0;
-  };
-
-  // Same tiebreak as the server: 2-way tie -> head-to-head, else/fallback -> battle points,
-  // still tied -> left tied and flagged (the rules call for a physical roll at that point).
-  const byPts = {};
-  Object.values(standings).forEach(p => { (byPts[p.pts] = byPts[p.pts] || []).push(p); });
-
-  const sorted = [];
-  Object.keys(byPts).map(Number).sort((a, b) => b - a).forEach(pts => {
-    const group = byPts[pts];
-    if (group.length === 1) { sorted.push(group[0]); return; }
-    if (group.length === 2) {
-      const [a, b] = group;
-      const r = h2h(a.name, b.name);
-      if (r !== 0) {
-        a.tieResolvedBy = 'head-to-head'; b.tieResolvedBy = 'head-to-head';
-        sorted.push(...(r < 0 ? [a, b] : [b, a]));
-        return;
-      }
-    }
-    const byBp = [...group].sort((x, y) => y.bp - x.bp);
-    for (let i = 0; i < byBp.length - 1; i++) {
-      if (byBp[i].bp === byBp[i + 1].bp) {
-        byBp[i].tieResolvedBy = 'unresolved'; byBp[i + 1].tieResolvedBy = 'unresolved';
-      } else if (!byBp[i].tieResolvedBy) byBp[i].tieResolvedBy = 'battle-points';
-    }
-    if (byBp.length && !byBp[byBp.length - 1].tieResolvedBy) byBp[byBp.length - 1].tieResolvedBy = 'battle-points';
-    sorted.push(...byBp);
-  });
+  sorted.forEach(s => { standings[s.name] = s; });
 
   return { sorted, standings, podGames, podPlayers };
 }
