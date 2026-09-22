@@ -3350,10 +3350,11 @@ let activePod = 0;
 let leagueLoaded = false;
 
 async function renderLeague() {
-  if (!leagueLoaded) {
-    await loadLeagueData();
-    leagueLoaded = true;
-  }
+  // Always refresh from the server when the League tab is opened, so
+  // results entered elsewhere (or by someone else) since the page loaded
+  // are reflected immediately instead of showing a stale in-memory snapshot.
+  await loadLeagueData();
+  leagueLoaded = true;
   renderPod();
 }
 
@@ -3382,14 +3383,14 @@ function buildPodTabBar() {
   bar.innerHTML = '';
   (leagueData.pods || []).forEach((pod, i) => {
     const btn = document.createElement('button');
-    btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+    btn.className = 'tab-btn' + (activePod === i ? ' active' : '');
     btn.textContent = pod.name;
     btn.onclick = () => switchPod(i);
     btn.id = `pod-btn-${i}`;
     bar.appendChild(btn);
   });
   const playoffBtn = document.createElement('button');
-  playoffBtn.className = 'tab-btn';
+  playoffBtn.className = 'tab-btn' + (activePod === 'playoffs' ? ' active' : '');
   playoffBtn.textContent = '🏆 Playoffs';
   playoffBtn.id = 'pod-btn-playoffs';
   playoffBtn.onclick = () => switchPod('playoffs');
@@ -3398,11 +3399,22 @@ function buildPodTabBar() {
   // Archive tab if any
   if ((leagueData.archive || []).length) {
     const archBtn = document.createElement('button');
-    archBtn.className = 'tab-btn';
-    archBtn.textContent = '📋 Archive';
+    archBtn.className = 'tab-btn' + (activePod === 'archive' ? ' active' : '');
     archBtn.id = 'pod-btn-archive';
+    archBtn.textContent = '📋 Archive';
     archBtn.onclick = () => switchPod('archive');
     bar.appendChild(archBtn);
+  }
+
+  // If the previously active pod no longer exists (e.g. season was reset),
+  // fall back to the first pod so the tab bar and content stay in sync.
+  if (typeof activePod === 'number' && !leagueData.pods?.[activePod]) {
+    activePod = 0;
+    const fallbackBtn = document.getElementById('pod-btn-0');
+    if (fallbackBtn) {
+      bar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      fallbackBtn.classList.add('active');
+    }
   }
 }
 
