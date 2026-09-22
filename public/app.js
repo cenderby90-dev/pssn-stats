@@ -1549,8 +1549,14 @@ function switchTab(tab) {
   if (tab === 'calendar') renderCalendar();
   if (tab === 'club') renderClub();
   if (tab === 'league') renderLeague();
-  if (tab === 'more') { buildAwards(); buildMilestones(); }
-  if (tab === 'stats') buildNowPanel();
+    if (tab === 'more') { buildAwards(); buildMilestones(); }
+  if (tab === 'stats') {
+    // Render immediately with whatever's cached, then refresh league data
+    // in the background and re-render so the League Status panel doesn't
+    // sit stale between visits (it previously only refreshed on page load).
+    buildNowPanel();
+    loadLeagueData().then(buildNowPanel);
+  }
   if (tab === 'members') initMembersTab();
   if (tab === 'submit') {
     updatePendingBadge();
