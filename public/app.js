@@ -1478,11 +1478,15 @@ function buildMemberStatsPreview(name) {
     </div>`;
 }
 
-function updateCosToggleUI(isOptedIn) {
-  const toggle = document.getElementById('members-cos-toggle');
-  const track = document.getElementById('members-cos-track');
-  const thumb = document.getElementById('members-cos-thumb');
-  const label = document.getElementById('members-cos-label');
+// prefix picks which set of toggle elements to update -- 'members' (Members tab)
+// or 'club' (My Club tab's compact profile card). Both read/write the same
+// shared identity (localStorage 'pssn_member' / window._memberName) and the
+// same opt-in data, so toggling in either place stays in sync with the other.
+function updateCosToggleUI(isOptedIn, prefix = 'members') {
+  const toggle = document.getElementById(`${prefix}-cos-toggle`);
+  const track = document.getElementById(`${prefix}-cos-track`);
+  const thumb = document.getElementById(`${prefix}-cos-thumb`);
+  const label = document.getElementById(`${prefix}-cos-label`);
   if (!toggle) return;
   toggle.checked = isOptedIn;
   track.style.background = isOptedIn ? 'var(--accent)' : 'var(--surface2)';
@@ -1492,13 +1496,15 @@ function updateCosToggleUI(isOptedIn) {
   label.textContent = isOptedIn ? 'Showing on leaderboard' : 'Show my ranking on the leaderboard';
 }
 
-async function handleCosToggle(checked) {
+async function handleCosToggle(checked, prefix = 'members') {
   const name = window._memberName;
   if (!name) return;
-  const status = document.getElementById('members-cos-status');
-  status.style.display = 'block';
-  status.style.color = 'var(--muted)';
-  status.textContent = 'Saving...';
+  const status = document.getElementById(`${prefix}-cos-status`);
+  if (status) {
+    status.style.display = 'block';
+    status.style.color = 'var(--muted)';
+    status.textContent = 'Saving...';
+  }
 
   // Set state directly based on checkbox value -- don't toggle, set explicitly
   const optins = getCosOptins();
@@ -1508,13 +1514,18 @@ async function handleCosToggle(checked) {
   // Read back from freshly loaded attendanceData to confirm
   const confirmed = getCosOptins();
   const isOptedIn = confirmed.has(name);
-  updateCosToggleUI(isOptedIn);
+  // Keep both copies of the toggle (Members tab + My Club tab) in sync,
+  // regardless of which one triggered the change.
+  updateCosToggleUI(isOptedIn, 'members');
+  updateCosToggleUI(isOptedIn, 'club');
 
-  status.style.color = 'var(--win)';
-  status.textContent = isOptedIn
-    ? '✓ You are now visible on the Champions of Shame leaderboard'
-    : '✓ Removed from the leaderboard';
-  setTimeout(() => { status.style.display = 'none'; }, 3000);
+  if (status) {
+    status.style.color = 'var(--win)';
+    status.textContent = isOptedIn
+      ? '✓ You are now visible on the Champions of Shame leaderboard'
+      : '✓ Removed from the leaderboard';
+    setTimeout(() => { status.style.display = 'none'; }, 3000);
+  }
 
   // Refresh the leaderboard and stats preview
   renderLeaderboard(activeFilter);
@@ -1538,7 +1549,7 @@ function clearMemberIdentity() {
 
 // -- tab switching --
 function switchTab(tab) {
-  const tabs = ['stats','calendar','league','submit','members','admin'];
+  const tabs = ['stats','club','calendar','league','submit','members','admin'];
   tabs.forEach(t => {
     const el = document.getElementById('tab-' + t);
     if (el) el.style.display = t === tab ? '' : 'none';
@@ -1996,9 +2007,63 @@ async function renderCalendar() {
 
 // -- club tab --
 let clubRendered = false;
-function renderClub() {
+async function renderClub() {
+  await renderClubProfile();
   renderCountdown();
   if (!clubRendered) { renderTimeline(); clubRendered = true; }
+}
+
+// "My Profile" card on the Club tab -- lets a player identify themselves and
+// control Champions of Shame leaderboard visibility without having to go
+// find the Members tab. Shares identity (localStorage 'pssn_member') and
+// opt-in state with the Members tab, so either one reflects the other.
+async function renderClubProfile() {
+  const picker = document.getElementById('club-profile-picker');
+  const toggleBox = document.getElementById('club-profile-toggle');
+  if (!picker || !toggleBox) return;
+
+  const sel = document.getElementById('club-me-select');
+  if (sel && !sel.dataset.built) {
+    sel.dataset.built = '1';
+    [...D.players].sort((a, b) => a.name.localeCompare(b.name)).forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.name;
+      opt.textContent = p.name;
+      sel.appendChild(opt);
+    });
+  }
+
+  const stored = localStorage.getItem('pssn_member');
+  if (stored && D.players.some(p => p.name === stored)) {
+    window._memberName = stored;
+    picker.style.display = 'none';
+    toggleBox.style.display = 'block';
+    document.getElementById('club-profile-name').textContent = stored;
+    // Load fresh attendance before reading opt-in state, same as the Members tab.
+    await loadAttendance();
+    const optins = getCosOptins();
+    updateCosToggleUI(optins.has(stored), 'club');
+  } else {
+    picker.style.display = 'block';
+    toggleBox.style.display = 'none';
+    if (sel) sel.value = '';
+  }
+}
+
+function clubSelectMember(name) {
+  if (!name) return;
+  localStorage.setItem('pssn_member', name);
+  window._memberName = name;
+  renderClubProfile();
+  // Keep the Members tab's name list highlighting in sync if it's already built.
+  const list = document.getElementById('members-name-list');
+  if (list) { list.dataset.rebuild = '1'; buildMemberNameList(); }
+}
+
+function clubChangeMember() {
+  localStorage.removeItem('pssn_member');
+  window._memberName = null;
+  renderClubProfile();
 }
 
 function renderCountdown() {
