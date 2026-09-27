@@ -41,7 +41,8 @@
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:1rem;">
       <div class="tab-bar" style="margin-top:0;border-bottom:none;">
         <button class="tab-btn active" onclick="switchTab('stats')">Season Stats</button>
-        <button class="tab-btn" onclick="switchTab('submit')">My Club</button>
+        <button class="tab-btn" onclick="switchTab('club')">My Club</button>
+        <button class="tab-btn" onclick="switchTab('submit')">Submit / Sign Up</button>
         <button class="tab-btn" onclick="switchTab('league')">League</button>
         <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
         <button class="tab-btn" onclick="switchTab('members')">Members</button>
@@ -299,8 +300,37 @@
 <!-- ── CLUB TAB ── -->
 <main class="page" id="tab-club" style="display:none;">
 
-  <!-- Event Countdown -->
+  <!-- My Profile / leaderboard visibility -->
   <div class="section-head" style="margin-top:0;">
+    <div class="section-title">My Profile</div>
+    <div class="section-rule"></div>
+  </div>
+  <div id="club-profile-card" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;margin-bottom:2rem;max-width:460px;">
+    <div id="club-profile-picker" style="display:none;">
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Select your name to personalise the site and manage your leaderboard visibility.</div>
+      <select id="club-me-select" onchange="clubSelectMember(this.value)"
+        style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;">
+        <option value="">Select your name...</option>
+      </select>
+    </div>
+    <div id="club-profile-toggle" style="display:none;">
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px;">Playing as <span id="club-profile-name" style="color:var(--text);font-weight:500;"></span> · <span onclick="clubChangeMember()" style="color:var(--accent);cursor:pointer;">not you?</span></div>
+      <div style="font-size:0.65rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Champions of Shame</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <span id="club-cos-label" style="font-size:0.85rem;color:var(--text);">Show on leaderboard</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;cursor:pointer;">
+          <input type="checkbox" id="club-cos-toggle" onchange="handleCosToggle(this.checked,'club')"
+            style="opacity:0;width:0;height:0;position:absolute;"/>
+          <span id="club-cos-track" style="position:absolute;inset:0;border-radius:12px;background:var(--surface2);border:1px solid var(--border);transition:all 0.2s;"></span>
+          <span id="club-cos-thumb" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:all 0.2s;"></span>
+        </label>
+      </div>
+      <div id="club-cos-status" style="font-size:0.72rem;margin-top:10px;display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Event Countdown -->
+  <div class="section-head" style="margin-top:2rem;">
     <div class="section-title">Next Event</div>
     <div class="section-rule"></div>
   </div>
